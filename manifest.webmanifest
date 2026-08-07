@@ -1,8 +1,8 @@
 {
-  "id": "./gemini-code-1786106926009.html",
+  "id": "./index.html",
   "name": "VFX Field Sheet",
   "short_name": "VFX Sheet",
-  "start_url": "./gemini-code-1786106926009.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0f172a",

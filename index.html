@@ -1,16 +1,1494 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>NK VFX Sheet</title>
+  
   <meta name="theme-color" content="#090d16">
-  <meta http-equiv="refresh" content="0; url=gemini-code-1786106926009.html">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-  <title>NK VFX Sheet</title>
+  <script src="vendor/tailwindcss.js"></script>
+  <script src="vendor/dexie.js"></script>
+  <script src="vendor/fabric.min.js"></script>
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="vendor/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body { 
+      -webkit-tap-highlight-color: transparent; 
+      overscroll-behavior: none; 
+    }
+    .form-label { 
+      display: block;
+      margin-bottom: 0.25rem;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .form-input, .form-select, textarea { 
+      width: 100%;
+      padding: 0.625rem;
+      background: #020617;
+      color: #f1f5f9;
+      border: 1px solid #1e293b;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color-scheme: dark;
+    }
+    .form-input:focus, .form-select:focus, textarea:focus { border-color: #fbbf24; outline: none; }
+    .form-input::placeholder, textarea::placeholder { color: #475569; }
+    option {
+      background-color: #020617;
+      color: #f1f5f9;
+    }
+  </style>
 </head>
-<body>
-  <p>Opening NK VFX Sheet…</p>
-  <script>location.replace('./gemini-code-1786106926009.html');</script>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans antialiased">
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight text-amber-400">NK VFX Sheet</h1>
+        <p class="text-xs text-slate-400">Multi-Cam VFX Field Production Logger</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="loadDefaultSettings()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
+          📥 Load Defaults
+        </button>
+        <button type="button" onclick="openPresetModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
+          ⚙️ Settings
+        </button>
+        <div id="netStatus" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
+          <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+          <span id="statusText" class="text-slate-300">Checking...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Form -->
+    <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+      
+      <!-- Edit Mode Banner -->
+      <div id="editModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span class="text-xs font-semibold text-amber-300">Editing Record ID: <span id="editingRecordId">-</span></span>
+        </div>
+        <button type="button" onclick="cancelEditMode()" class="text-xs text-slate-400 hover:text-slate-200 underline">Cancel (New Entry)</button>
+      </div>
+
+      <!-- Section 1: General Info -->
+      <div class="space-y-3">
+        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">1. General Information</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="form-label">Operator</label>
+            <input type="text" id="operator" placeholder="Name" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Show Title</label>
+            <input type="text" id="show_title" placeholder="Project Name" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" id="shoot_datetime" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Location</label>
+            <input type="text" id="location" placeholder="Stage A / Location" class="form-input">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="form-label">Episode</label>
+            <input type="text" id="episode" placeholder="Ep.01" class="form-input">
+          </div>
+          <div>
+            <label class="form-label">Scene</label>
+            <input type="text" id="scene" placeholder="S#12" required class="form-input font-mono font-bold text-amber-300">
+          </div>
+          <div>
+            <label class="form-label">Shot</label>
+            <input type="text" id="shot" placeholder="C#001" required class="form-input font-mono font-bold text-amber-300">
+          </div>
+          <div>
+            <label class="form-label">GPS Location</label>
+            <div class="flex flex-wrap sm:flex-nowrap gap-2">
+              <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-[120px]" readonly>
+              <button type="button" onclick="getGPSLocation()" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
+                📍 Get GPS
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-slate-800">
+
+      <!-- Section 2: Multi-Cam Setup -->
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">2. Multi-Camera Setup</h2>
+          <button type="button" onclick="openPresetModal()" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
+        </div>
+
+        <!-- Camera Tabs Header -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1" id="cameraTabHeader">
+          <button type="button" onclick="addCameraTab()" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
+            ➕ Add Camera
+          </button>
+        </div>
+
+        <!-- Camera Tab Content Area -->
+        <div id="cameraTabContents" class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-4">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <hr class="border-slate-800">
+
+      <!-- Section 3: HDRI Setup -->
+      <div class="space-y-3">
+        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">3. HDRI Setup</h2>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+          <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="hdri_captured" onchange="toggleHdriWeather(this.checked)" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            </label>
+            <span class="text-sm font-bold text-slate-200">HDRI Captured</span>
+          </div>
+
+          <!-- Weather Select Area -->
+          <div id="weatherContainer" class="hidden pt-2 border-t border-slate-900 grid grid-cols-1 md:grid-cols-2 gap-3 transition-all">
+            <div>
+              <label class="form-label">Weather Condition</label>
+              <select id="hdri_weather" class="form-select">
+                <option value="Sunny">☀️ Sunny / Clear</option>
+                <option value="Partly Cloudy">⛅ Partly Cloudy</option>
+                <option value="Overcast">☁️ Overcast</option>
+                <option value="Rain">🌧️ Rain</option>
+                <option value="Night">🌙 Night</option>
+                <option value="Interior Sky">💡 Interior / Artificial</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">HDRI Notes / EV Range (Optional)</label>
+              <input type="text" id="hdri_notes" placeholder="e.g. 7 bracket shots, EV -3 to +3" class="form-input">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-slate-800">
+
+      <!-- Section 4: Canvas & Notes -->
+      <div class="space-y-3">
+        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">4. VFX Field Notes & Sketch</h2>
+        
+        <div class="w-full">
+          <textarea id="notes" rows="2" placeholder="Write general notes, spatial info, lighting details..." class="form-input w-full"></textarea>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <!-- Canvas Toolbar -->
+          <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
+            <button type="button" onclick="setCanvasMode('draw')" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
+            <button type="button" onclick="setCanvasMode('select')" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
+            <button type="button" onclick="addTextToNote()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
+
+            <!-- Undo / Redo Buttons -->
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+              <button type="button" id="btnUndo" onclick="undoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
+              <button type="button" id="btnRedo" onclick="redoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="flex items-center gap-1.5 border-l border-slate-800 pl-2">
+              <span class="text-[10px] text-slate-400 uppercase font-bold">Color:</span>
+              <button type="button" onclick="setCanvasColor('#00ffff')" class="w-5 h-5 rounded-full bg-[#00ffff] border border-slate-600 focus:scale-110 transition-transform" title="Cyan"></button>
+              <button type="button" onclick="setCanvasColor('#f59e0b')" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-slate-600 focus:scale-110 transition-transform" title="Amber"></button>
+              <button type="button" onclick="setCanvasColor('#f43f5e')" class="w-5 h-5 rounded-full bg-[#f43f5e] border border-slate-600 focus:scale-110 transition-transform" title="Rose"></button>
+              <button type="button" onclick="setCanvasColor('#84cc16')" class="w-5 h-5 rounded-full bg-[#84cc16] border border-slate-600 focus:scale-110 transition-transform" title="Lime"></button>
+              <button type="button" onclick="setCanvasColor('#ffffff')" class="w-5 h-5 rounded-full bg-[#ffffff] border border-slate-600 focus:scale-110 transition-transform" title="White"></button>
+              <input type="color" id="customCanvasColor" value="#00ffff" onchange="setCanvasColor(this.value)" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
+            </div>
+            
+            <input type="file" id="noteImgInput" accept="image/*" capture="camera" class="hidden" onchange="addFreeImageToCanvas(event)">
+            <button type="button" onclick="document.getElementById('noteImgInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">
+              🖼️ Add Photo
+            </button>
+            
+            <div class="ml-auto flex gap-2">
+              <button type="button" onclick="deleteSelected()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
+              <button type="button" onclick="clearNoteCanvas()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Clear All</button>
+            </div>
+          </div>
+
+          <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 shadow-inner flex justify-center">
+            <canvas id="noteCanvas" width="760" height="480"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div id="submitBtnContainer" class="pt-2">
+        <button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">
+          Save VFX Sheet (IndexedDB)
+        </button>
+      </div>
+    </form>
+
+    <!-- Records History -->
+    <section class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Records History (<span id="totalCount">0</span>)</h2>
+        <div class="flex gap-2">
+          <button id="exportCsvBtn" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+            📊 Export CSV
+          </button>
+          <button id="exportPdfBtn" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+            📄 Export PDF
+          </button>
+          <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+            💾 Backup JSON
+          </button>
+          <button id="syncBtn" onclick="syncData()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+            Sync to FlowPT
+          </button>
+        </div>
+      </div>
+
+      <div id="recordList" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Presets & Settings Modal -->
+  <div id="presetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="font-bold text-amber-400 text-sm">Presets & Global Config Management</h3>
+        <button type="button" onclick="closePresetModal()" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+      </div>
+
+      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-slate-200 block">Default Setup & Preset Export/Import</span>
+            <span class="text-[11px] text-slate-500">Save current input as default, or share configuration via JSON file.</span>
+          </div>
+          <button type="button" onclick="saveCurrentAsDefaultSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
+            Save Current Form
+          </button>
+        </div>
+
+        <div class="flex gap-2 pt-1 border-t border-slate-900">
+          <button type="button" onclick="exportFullPresetsJSON()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+            📤 Export Config JSON
+          </button>
+          <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importFullPresetsJSON(event)">
+          <button type="button" onclick="document.getElementById('importJsonInput').click()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+            📥 Import Config JSON
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1 flex-1">
+        <div class="space-y-2">
+          <label class="form-label text-amber-300 font-bold">Camera Models</label>
+          <div class="flex gap-2">
+            <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
+            <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+          </div>
+          <ul id="cameraPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
+        </div>
+
+        <div class="space-y-2">
+          <label class="form-label text-amber-300 font-bold">Lens Models</label>
+          <div class="space-y-1.5">
+            <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
+            <div class="flex gap-2">
+              <input type="text" id="newLensFocalInput" placeholder="Focal Length (e.g. 25mm)" class="form-input text-xs">
+              <button type="button" onclick="addPresetItem('lens')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+            </div>
+          </div>
+          <ul id="lensPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-end gap-2">
+        <button type="button" onclick="resetPresetsToDefault()" class="text-xs text-rose-400 hover:text-rose-300 mr-auto">Reset All to System Default</button>
+        <button type="button" onclick="closePresetModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs border border-slate-700">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dexie DB
+    const db = new Dexie("NK_VfxSheetDB");
+    db.version(11).stores({
+      sheets: '++id, uuid, operator, show_title, scene, shot, synced, created_at',
+      presets: 'type'
+    }).upgrade(async tx => {
+      await tx.table('sheets').toCollection().modify(record => {
+        if (!record.uuid) record.uuid = newUuid();
+        if (record.syncError === undefined) record.syncError = '';
+        if (!record.canvas_version && record.canvas_json) record.canvas_version = 5;
+      });
+    });
+
+    let currentEditingId = null;
+    let cameraListState = [];
+    let activeCamIndex = 0;
+    let currentDrawingColor = '#00ffff';
+
+    function newUuid() {
+      return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
+    }
+
+    const defaultCameras = ["Sony FX6", "Sony Venice 2", "ARRI Alexa Mini LF", "RED V-Raptor", "DJI Inspire 3"];
+    const defaultLenses = [
+      { name: "ARRI Master Prime 18mm", focal: "18mm" },
+      { name: "ARRI Master Prime 35mm", focal: "35mm" },
+      { name: "ARRI Master Prime 50mm", focal: "50mm" },
+      { name: "ARRI Master Prime 85mm", focal: "85mm" },
+      { name: "Cooke S4/i 25mm", focal: "25mm" }
+    ];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initPresets();
+      await resetFormToDefault();
+      initFabricCanvas();
+      renderList();
+    });
+
+    function toggleHdriWeather(isCaptured) {
+      const container = document.getElementById('weatherContainer');
+      if (isCaptured) {
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    async function resetFormToDefault() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('shoot_datetime').value = now.toISOString().slice(0,16);
+      
+      const defaultSettings = await db.presets.get('user_defaults');
+      if (defaultSettings && defaultSettings.values) {
+        const v = defaultSettings.values;
+        document.getElementById('operator').value = v.operator || '';
+        document.getElementById('show_title').value = v.show_title || '';
+        document.getElementById('location').value = v.location || '';
+        
+        document.getElementById('hdri_captured').checked = v.hdri_captured || false;
+        toggleHdriWeather(v.hdri_captured || false);
+        document.getElementById('hdri_weather').value = v.hdri_weather || 'Sunny';
+        document.getElementById('hdri_notes').value = v.hdri_notes || '';
+
+        if (v.cameras && v.cameras.length > 0) {
+          cameraListState = v.cameras.map(c => ({ ...c }));
+        } else {
+          cameraListState = [ createEmptyCameraItem("Cam A") ];
+        }
+      } else {
+        cameraListState = [ createEmptyCameraItem("Cam A") ];
+        document.getElementById('hdri_captured').checked = false;
+        toggleHdriWeather(false);
+      }
+
+      activeCamIndex = 0;
+      renderCameraTabs();
+    }
+
+    function createEmptyCameraItem(label) {
+      return {
+        label: label,
+        camera_preset: '',
+        camera_custom: '',
+        lens_preset: '',
+        lens_custom: '',
+        focal_length: '',
+        t_stop: '',
+        clip_name: '',
+        lut_info: '',
+        cramerawork_preset: 'FIX (Lock-off)',
+        cramerawork_custom: '',
+        height_value: '',
+        distance_value: '',
+        tilt_value: '',
+        flag_chart: 'NO',
+        flag_cleanplate: 'NO',
+        flag_reference: 'NO'
+      };
+    }
+
+    function getGPSLocation() {
+      const gpsBtn = document.getElementById('gpsBtn');
+      const gpsInput = document.getElementById('gps_location');
+
+      if (!confirm('現在地（緯度・経度）をこの端末のVFX記録に保存します。続行しますか？')) return;
+
+      if (!navigator.geolocation) {
+        alert("GPS is not supported by your browser/device.");
+        return;
+      }
+
+      gpsBtn.innerText = "Locating...";
+      gpsBtn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          const alt = pos.coords.altitude ? `${Math.round(pos.coords.altitude)}m` : '';
+          gpsInput.value = `${lat}, ${lng} ${alt}`.trim();
+          gpsBtn.innerText = "📍 Get GPS";
+          gpsBtn.disabled = false;
+        },
+        (err) => {
+          alert(`GPS Error: ${err.message}`);
+          gpsBtn.innerText = "📍 Get GPS";
+          gpsBtn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    let cachedCamPresets = [];
+    let cachedLensPresets = [];
+
+    async function initPresets() {
+      let camRecord = await db.presets.get('camera');
+      if (!camRecord) {
+        await db.presets.put({ type: 'camera', list: defaultCameras });
+        camRecord = { list: defaultCameras };
+      }
+      cachedCamPresets = camRecord.list;
+
+      let lensRecord = await db.presets.get('lens');
+      if (!lensRecord) {
+        await db.presets.put({ type: 'lens', list: defaultLenses });
+        lensRecord = { list: defaultLenses };
+      }
+      cachedLensPresets = lensRecord.list;
+
+      renderCameraTabs();
+    }
+
+    async function saveCurrentAsDefaultSettings() {
+      saveActiveTabState();
+      const defaultValues = {
+        operator: document.getElementById('operator').value,
+        show_title: document.getElementById('show_title').value,
+        location: document.getElementById('location').value,
+        hdri_captured: document.getElementById('hdri_captured').checked,
+        hdri_weather: document.getElementById('hdri_weather').value,
+        hdri_notes: document.getElementById('hdri_notes').value,
+        cameras: cameraListState
+      };
+
+      await db.presets.put({ type: 'user_defaults', values: defaultValues });
+      alert("Current settings saved as user default!");
+    }
+
+    async function loadDefaultSettings() {
+      const defaultSettings = await db.presets.get('user_defaults');
+      if (!defaultSettings || !defaultSettings.values) {
+        alert("No saved default settings found.");
+        return;
+      }
+      const v = defaultSettings.values;
+      document.getElementById('operator').value = v.operator || '';
+      document.getElementById('show_title').value = v.show_title || '';
+      document.getElementById('location').value = v.location || '';
+      document.getElementById('hdri_captured').checked = v.hdri_captured || false;
+      toggleHdriWeather(v.hdri_captured || false);
+      document.getElementById('hdri_weather').value = v.hdri_weather || 'Sunny';
+      document.getElementById('hdri_notes').value = v.hdri_notes || '';
+
+      if (v.cameras && v.cameras.length > 0) {
+        cameraListState = v.cameras.map(c => ({ ...c }));
+      }
+      activeCamIndex = 0;
+      renderCameraTabs();
+      alert("Default settings loaded!");
+    }
+
+    async function exportFullPresetsJSON() {
+      saveActiveTabState();
+      const allPresets = await db.presets.toArray();
+      const exportData = {
+        app: "NK_VFX_Sheet",
+        version: 10,
+        exported_at: new Date().toISOString(),
+        presets: allPresets,
+        current_defaults: {
+          operator: document.getElementById('operator').value,
+          show_title: document.getElementById('show_title').value,
+          location: document.getElementById('location').value,
+          hdri_captured: document.getElementById('hdri_captured').checked,
+          hdri_weather: document.getElementById('hdri_weather').value,
+          hdri_notes: document.getElementById('hdri_notes').value,
+          cameras: cameraListState
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `NK_VFX_Presets_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function importFullPresetsJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (data.app !== "NK_VFX_Sheet" || !data.presets) {
+            throw new Error("Invalid preset JSON file format.");
+          }
+
+          for (const p of data.presets) {
+            await db.presets.put(p);
+          }
+
+          if (data.current_defaults) {
+            await db.presets.put({ type: 'user_defaults', values: data.current_defaults });
+          }
+
+          await initPresets();
+          await loadDefaultSettings();
+          renderPresetModalLists();
+          alert("Presets imported successfully!");
+        } catch (err) {
+          alert(`Import Error: ${err.message}`);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    function openPresetModal() {
+      renderPresetModalLists();
+      document.getElementById('presetModal').classList.remove('hidden');
+    }
+
+    function closePresetModal() {
+      document.getElementById('presetModal').classList.add('hidden');
+    }
+
+    async function renderPresetModalLists() {
+      const camRecord = await db.presets.get('camera');
+      const lensRecord = await db.presets.get('lens');
+
+      document.getElementById('cameraPresetList').innerHTML = (camRecord?.list || []).map((item, idx) => `
+        <li class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
+          <span class="text-slate-200">${item}</span>
+          <button type="button" onclick="removePresetItem('camera', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
+        </li>
+      `).join('');
+
+      document.getElementById('lensPresetList').innerHTML = (lensRecord?.list || []).map((item, idx) => `
+        <li class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
+          <div>
+            <span class="text-slate-200 block">${item.name}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${item.focal || 'No focal specs'}</span>
+          </div>
+          <button type="button" onclick="removePresetItem('lens', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
+        </li>
+      `).join('');
+    }
+
+    async function addPresetItem(type) {
+      if (type === 'camera') {
+        const input = document.getElementById('newCameraInput');
+        const val = input.value.trim();
+        if (!val) return;
+        const record = await db.presets.get('camera');
+        record.list.push(val);
+        await db.presets.put(record);
+        input.value = '';
+      } else if (type === 'lens') {
+        const nameInput = document.getElementById('newLensNameInput');
+        const focalInput = document.getElementById('newLensFocalInput');
+        if (!nameInput.value.trim()) return;
+        const record = await db.presets.get('lens');
+        record.list.push({ name: nameInput.value.trim(), focal: focalInput.value.trim() });
+        await db.presets.put(record);
+        nameInput.value = '';
+        focalInput.value = '';
+      }
+      await initPresets();
+      renderPresetModalLists();
+    }
+
+    async function removePresetItem(type, index) {
+      const record = await db.presets.get(type);
+      record.list.splice(index, 1);
+      await db.presets.put(record);
+      await initPresets();
+      renderPresetModalLists();
+    }
+
+    async function resetPresetsToDefault() {
+      if (confirm("Reset all presets to default?")) {
+        await db.presets.put({ type: 'camera', list: defaultCameras });
+        await db.presets.put({ type: 'lens', list: defaultLenses });
+        await db.presets.delete('user_defaults');
+        await initPresets();
+        renderPresetModalLists();
+      }
+    }
+
+    // Camera Tabs
+    function addCameraTab() {
+      saveActiveTabState();
+      const nextChar = String.fromCharCode(65 + cameraListState.length);
+      cameraListState.push(createEmptyCameraItem(`Cam ${nextChar}`));
+      activeCamIndex = cameraListState.length - 1;
+      renderCameraTabs();
+    }
+
+    function removeCameraTab(idx, e) {
+      e.stopPropagation();
+      if (cameraListState.length <= 1) {
+        alert("At least one camera entry is required.");
+        return;
+      }
+      cameraListState.splice(idx, 1);
+      if (activeCamIndex >= cameraListState.length) {
+        activeCamIndex = cameraListState.length - 1;
+      }
+      renderCameraTabs();
+    }
+
+    function switchCameraTab(idx) {
+      saveActiveTabState();
+      activeCamIndex = idx;
+      renderCameraTabs();
+    }
+
+    function saveActiveTabState() {
+      if (!cameraListState[activeCamIndex]) return;
+
+      cameraListState[activeCamIndex] = {
+        label: cameraListState[activeCamIndex].label,
+        camera_preset: document.getElementById('tab_camera_preset')?.value || '',
+        camera_custom: document.getElementById('tab_camera_custom')?.value || '',
+        lens_preset: document.getElementById('tab_lens_preset')?.value || '',
+        lens_custom: document.getElementById('tab_lens_custom')?.value || '',
+        focal_length: document.getElementById('tab_focal_length')?.value || '',
+        t_stop: document.getElementById('tab_t_stop')?.value || '',
+        clip_name: document.getElementById('tab_clip_name')?.value || '',
+        lut_info: document.getElementById('tab_lut_info')?.value || '',
+        cramerawork_preset: document.getElementById('tab_cramerawork_preset')?.value || 'FIX (Lock-off)',
+        cramerawork_custom: document.getElementById('tab_cramerawork_custom')?.value || '',
+        height_value: document.getElementById('tab_height_value')?.value || '',
+        distance_value: document.getElementById('tab_distance_value')?.value || '',
+        tilt_value: document.getElementById('tab_tilt_value')?.value || '',
+        flag_chart: document.getElementById('tab_flag_chart')?.value || 'NO',
+        flag_cleanplate: document.getElementById('tab_flag_cleanplate')?.value || 'NO',
+        flag_reference: document.getElementById('tab_flag_reference')?.value || 'NO'
+      };
+    }
+
+    function renderCameraTabs() {
+      const header = document.getElementById('cameraTabHeader');
+      const addBtn = header.querySelector('button[onclick="addCameraTab()"]');
+      
+      const existingTabs = header.querySelectorAll('.cam-tab-btn');
+      existingTabs.forEach(el => el.remove());
+
+      cameraListState.forEach((cam, idx) => {
+        const isActive = idx === activeCamIndex;
+        const tabBtn = document.createElement('div');
+        tabBtn.className = `cam-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors border ${
+          isActive 
+            ? 'bg-amber-500 text-slate-950 border-amber-400' 
+            : 'bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800'
+        }`;
+        tabBtn.onclick = () => switchCameraTab(idx);
+
+        tabBtn.innerHTML = `
+          <span>${cam.label}</span>
+          ${cameraListState.length > 1 ? `<button type="button" onclick="removeCameraTab(${idx}, event)" class="hover:text-rose-300 font-bold ml-1">✕</button>` : ''}
+        `;
+        header.insertBefore(tabBtn, addBtn);
+      });
+
+      renderCameraTabContent();
+    }
+
+    function renderCameraTabContent() {
+      const container = document.getElementById('cameraTabContents');
+      const cam = cameraListState[activeCamIndex];
+      if (!cam) return;
+
+      const isCamCustom = cam.camera_preset === '__custom__';
+      const isLensCustom = cam.lens_preset === '__custom__';
+      const isWorkCustom = cam.cramerawork_preset === '__custom__';
+
+      container.innerHTML = `
+        <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${cam.label} Settings</div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="form-label">${cam.label} - Camera Model</label>
+            <div class="flex gap-2">
+              <select id="tab_camera_preset" onchange="onTabPresetChange('camera')" class="form-select ${isCamCustom ? 'w-1/2' : 'w-full'}">
+                <option value="">(Select)</option>
+                ${cachedCamPresets.map(c => `<option value="${c}" ${cam.camera_preset === c ? 'selected' : ''}>${c}</option>`).join('')}
+                <option value="__custom__" ${isCamCustom ? 'selected' : ''}>Custom / Other</option>
+              </select>
+              <input type="text" id="tab_camera_custom" value="${cam.camera_custom || ''}" placeholder="Camera Model" class="form-input ${isCamCustom ? 'w-1/2' : 'hidden'}">
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">${cam.label} - Lens Model</label>
+            <div class="flex gap-2">
+              <select id="tab_lens_preset" onchange="onTabLensChange()" class="form-select ${isLensCustom ? 'w-1/2' : 'w-full'}">
+                <option value="">(Select)</option>
+                ${cachedLensPresets.map(l => `<option value="${l.name}" data-focal="${l.focal || ''}" ${cam.lens_preset === l.name ? 'selected' : ''}>${l.name}</option>`).join('')}
+                <option value="__custom__" data-focal="" ${isLensCustom ? 'selected' : ''}>Custom / Zoom</option>
+              </select>
+              <input type="text" id="tab_lens_custom" value="${cam.lens_custom || ''}" placeholder="Lens Model" class="form-input ${isLensCustom ? 'w-1/2' : 'hidden'}">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="form-label">Focal Length</label>
+            <input type="text" id="tab_focal_length" value="${cam.focal_length || ''}" placeholder="35mm" class="form-input font-mono">
+          </div>
+          <div>
+            <label class="form-label">Aperture (T-Stop)</label>
+            <input type="text" id="tab_t_stop" value="${cam.t_stop || ''}" placeholder="T2.8" class="form-input font-mono">
+          </div>
+          <div>
+            <label class="form-label">Clip Name</label>
+            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="A001_C001" class="form-input font-mono">
+          </div>
+          <div>
+            <label class="form-label">LUT Info</label>
+            <input type="text" id="tab_lut_info" value="${cam.lut_info || ''}" placeholder="Log3 to Rec709" class="form-input">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label class="form-label">${cam.label} Movement</label>
+            <div class="flex gap-2">
+              <select id="tab_cramerawork_preset" onchange="onTabPresetChange('cramerawork')" class="form-select ${isWorkCustom ? 'w-1/2' : 'w-full'}">
+                <option value="FIX (Lock-off)" ${cam.cramerawork_preset === 'FIX (Lock-off)' ? 'selected' : ''}>FIX (Lock-off)</option>
+                <option value="Pan / Tilt" ${cam.cramerawork_preset === 'Pan / Tilt' ? 'selected' : ''}>Pan / Tilt</option>
+                <option value="Dolly / Track" ${cam.cramerawork_preset === 'Dolly / Track' ? 'selected' : ''}>Dolly / Track</option>
+                <option value="Handheld" ${cam.cramerawork_preset === 'Handheld' ? 'selected' : ''}>Handheld</option>
+                <option value="Steadicam / Gimbal" ${cam.cramerawork_preset === 'Steadicam / Gimbal' ? 'selected' : ''}>Steadicam / Gimbal</option>
+                <option value="Crane / Jib" ${cam.cramerawork_preset === 'Crane / Jib' ? 'selected' : ''}>Crane / Jib</option>
+                <option value="Drone" ${cam.cramerawork_preset === 'Drone' ? 'selected' : ''}>Drone</option>
+                <option value="__custom__" ${isWorkCustom ? 'selected' : ''}>Custom / Other</option>
+              </select>
+              <input type="text" id="tab_cramerawork_custom" value="${cam.cramerawork_custom || ''}" placeholder="Movement" class="form-input ${isWorkCustom ? 'w-1/2' : 'hidden'}">
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">${cam.label} Lens Height</label>
+            <input type="text" id="tab_height_value" value="${cam.height_value || ''}" placeholder="150cm" class="form-input font-mono">
+          </div>
+
+          <div>
+            <label class="form-label">${cam.label} Target Distance</label>
+            <input type="text" id="tab_distance_value" value="${cam.distance_value || ''}" placeholder="3.5m" class="form-input font-mono">
+          </div>
+
+          <div>
+            <label class="form-label">${cam.label} Tilt Angle</label>
+            <input type="text" id="tab_tilt_value" value="${cam.tilt_value || ''}" placeholder="+10° / -5°" class="form-input font-mono">
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800/60">
+          <label class="form-label font-semibold text-amber-400/80 uppercase">${cam.label} Reference Checklist</label>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+              <span class="text-xs text-slate-300">Color Chart & Sphere</span>
+              <select id="tab_flag_chart" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
+                <option value="NO" ${cam.flag_chart === 'NO' ? 'selected' : ''}>NO</option>
+                <option value="YES" ${cam.flag_chart === 'YES' ? 'selected' : ''}>YES</option>
+              </select>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+              <span class="text-xs text-slate-300">Clean Plate</span>
+              <select id="tab_flag_cleanplate" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
+                <option value="NO" ${cam.flag_cleanplate === 'NO' ? 'selected' : ''}>NO</option>
+                <option value="YES" ${cam.flag_cleanplate === 'YES' ? 'selected' : ''}>YES</option>
+              </select>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+              <span class="text-xs text-slate-300">VFX Reference</span>
+              <select id="tab_flag_reference" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
+                <option value="NO" ${cam.flag_reference === 'NO' ? 'selected' : ''}>NO</option>
+                <option value="YES" ${cam.flag_reference === 'YES' ? 'selected' : ''}>YES</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function onTabPresetChange(type) {
+      const preset = document.getElementById(`tab_${type}_preset`);
+      const custom = document.getElementById(`tab_${type}_custom`);
+      if (preset.value === '__custom__') {
+        custom.classList.remove('hidden');
+        preset.classList.replace('w-full', 'w-1/2');
+        custom.classList.add('w-1/2');
+      } else {
+        custom.classList.add('hidden');
+        preset.classList.replace('w-1/2', 'w-full');
+      }
+    }
+
+    function onTabLensChange() {
+      onTabPresetChange('lens');
+      const preset = document.getElementById('tab_lens_preset');
+      const focalInput = document.getElementById('tab_focal_length');
+      const selectedOption = preset.options[preset.selectedIndex];
+      const focalVal = selectedOption.getAttribute('data-focal');
+      if (focalVal && preset.value !== '__custom__') {
+        focalInput.value = focalVal;
+      }
+    }
+
+    // Fabric Canvas & Undo/Redo Engine
+    let fCanvas = null;
+    let canvasHistory = [];
+    let historyIndex = -1;
+    let isUndoRedo = false;
+
+    function initFabricCanvas() {
+      fCanvas = new fabric.Canvas('noteCanvas', {
+        isDrawingMode: true,
+        backgroundColor: '#090d16'
+      });
+      fCanvas.freeDrawingBrush.color = currentDrawingColor;
+      fCanvas.freeDrawingBrush.width = 3;
+
+      // 初期の空状態を保存
+      saveCanvasState();
+
+      // オブジェクトの追加・修正・削除時に履歴登録
+      fCanvas.on('object:added', () => { if (!isUndoRedo) saveCanvasState(); });
+      fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
+      fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
+    }
+
+    function saveCanvasState() {
+      const json = JSON.stringify(fCanvas.toJSON());
+      
+      // 新しい操作があった場合、現在のインデックス以降のRedo履歴を破棄
+      if (historyIndex < canvasHistory.length - 1) {
+        canvasHistory = canvasHistory.slice(0, historyIndex + 1);
+      }
+
+      canvasHistory.push(json);
+      historyIndex = canvasHistory.length - 1;
+      updateUndoRedoButtons();
+    }
+
+    function undoCanvas() {
+      if (historyIndex > 0) {
+        isUndoRedo = true;
+        historyIndex--;
+        fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
+          fCanvas.renderAll();
+          isUndoRedo = false;
+          updateUndoRedoButtons();
+        });
+      }
+    }
+
+    function redoCanvas() {
+      if (historyIndex < canvasHistory.length - 1) {
+        isUndoRedo = true;
+        historyIndex++;
+        fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
+          fCanvas.renderAll();
+          isUndoRedo = false;
+          updateUndoRedoButtons();
+        });
+      }
+    }
+
+    function updateUndoRedoButtons() {
+      const btnUndo = document.getElementById('btnUndo');
+      const btnRedo = document.getElementById('btnRedo');
+
+      if (btnUndo) btnUndo.disabled = historyIndex <= 0;
+      if (btnRedo) btnRedo.disabled = historyIndex >= canvasHistory.length - 1;
+    }
+
+    function setCanvasColor(color) {
+      currentDrawingColor = color;
+      fCanvas.freeDrawingBrush.color = color;
+      document.getElementById('customCanvasColor').value = color;
+
+      const activeObj = fCanvas.getActiveObject();
+      if (activeObj && activeObj.type === 'i-text') {
+        activeObj.set('fill', color);
+        fCanvas.requestRenderAll();
+        saveCanvasState();
+      }
+    }
+
+    function setCanvasMode(mode) {
+      const btnDraw = document.getElementById('btnDraw');
+      const btnSelect = document.getElementById('btnSelect');
+
+      if (mode === 'draw') {
+        fCanvas.isDrawingMode = true;
+        btnDraw.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
+        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
+      } else {
+        fCanvas.isDrawingMode = false;
+        btnSelect.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
+        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
+      }
+    }
+
+    function addFreeImageToCanvas(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (f) => {
+        fabric.Image.fromURL(f.target.result, (img) => {
+          img.scaleToWidth(280);
+          img.set({
+            left: 50 + (Math.random() * 50),
+            top: 50 + (Math.random() * 50),
+            cornerColor: '#f59e0b',
+            cornerSize: 10,
+            transparentCorners: false
+          });
+          fCanvas.add(img);
+          fCanvas.setActiveObject(img);
+          setCanvasMode('select');
+        });
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    function addTextToNote() {
+      const text = new fabric.IText('Text...', {
+        left: 100,
+        top: 100,
+        fontFamily: 'sans-serif',
+        fill: currentDrawingColor,
+        fontSize: 18
+      });
+      fCanvas.add(text);
+      fCanvas.setActiveObject(text);
+      setCanvasMode('select');
+    }
+
+    function deleteSelected() {
+      const activeObjs = fCanvas.getActiveObjects();
+      if (activeObjs.length > 0) {
+        activeObjs.forEach(obj => fCanvas.remove(obj));
+        fCanvas.discardActiveObject();
+        fCanvas.requestRenderAll();
+      }
+    }
+
+    function clearNoteCanvas() {
+      fCanvas.clear();
+      fCanvas.setBackgroundColor('#090d16', () => {
+        fCanvas.renderAll();
+        canvasHistory = [];
+        historyIndex = -1;
+        saveCanvasState();
+      });
+    }
+
+    function exportCanvasToDataURL() {
+      return fCanvas.toDataURL({ format: 'png', multiplier: 1 });
+    }
+
+    function exportCanvasToBlob() {
+      return new Promise((resolve) => {
+        const dataURL = exportCanvasToDataURL();
+        fetch(dataURL).then(res => res.blob()).then(blob => resolve(blob));
+      });
+    }
+
+    // Load & Save
+    async function loadRecordForEdit(id) {
+      const record = await db.sheets.get(id);
+      if (!record) return alert("Record not found.");
+
+      currentEditingId = id;
+      document.getElementById('editModeBanner').classList.remove('hidden');
+      document.getElementById('editingRecordId').innerText = id;
+
+      document.getElementById('submitBtnContainer').innerHTML = `
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button" onclick="saveRecord(event, 'update')" class="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition-colors shadow-lg">
+            Update Record
+          </button>
+          <button type="button" onclick="saveRecord(event, 'new')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3.5 rounded-xl text-sm border border-slate-700 transition-colors">
+            Save as New Entry
+          </button>
+        </div>
+      `;
+
+      document.getElementById('operator').value = record.operator || '';
+      document.getElementById('show_title').value = record.show_title || '';
+      document.getElementById('shoot_datetime').value = record.shoot_datetime || '';
+      document.getElementById('location').value = record.location || '';
+      document.getElementById('gps_location').value = record.gps_location || '';
+      document.getElementById('episode').value = record.episode || '';
+      document.getElementById('scene').value = record.scene || '';
+      document.getElementById('shot').value = record.shot || '';
+
+      const isHdri = record.hdri_captured === 'YES' || record.hdri_captured === true;
+      document.getElementById('hdri_captured').checked = isHdri;
+      toggleHdriWeather(isHdri);
+      document.getElementById('hdri_weather').value = record.hdri_weather || 'Sunny';
+      document.getElementById('hdri_notes').value = record.hdri_notes || '';
+
+      if (record.cameras && record.cameras.length > 0) {
+        cameraListState = record.cameras.map(c => ({
+          label: c.label,
+          camera_preset: c.camera || '',
+          camera_custom: '',
+          lens_preset: c.lens || '',
+          lens_custom: '',
+          focal_length: c.focal_length || '',
+          t_stop: c.t_stop || '',
+          clip_name: c.clip_name || '',
+          lut_info: c.lut_info || '',
+          cramerawork_preset: c.cramerawork || 'FIX (Lock-off)',
+          cramerawork_custom: '',
+          height_value: c.height_value || '',
+          distance_value: c.distance_value || '',
+          tilt_value: c.tilt_value || '',
+          flag_chart: c.flag_chart || 'NO',
+          flag_cleanplate: c.flag_cleanplate || 'NO',
+          flag_reference: c.flag_reference || 'NO'
+        }));
+      } else {
+        cameraListState = [ createEmptyCameraItem("Cam A") ];
+      }
+      activeCamIndex = 0;
+      renderCameraTabs();
+
+      document.getElementById('notes').value = record.notes || '';
+
+      isUndoRedo = true;
+      fCanvas.clear();
+      if (record.canvas_json) {
+        fCanvas.loadFromJSON(record.canvas_json, () => {
+          fCanvas.renderAll();
+          setCanvasMode('select');
+          canvasHistory = [record.canvas_json];
+          historyIndex = 0;
+          isUndoRedo = false;
+          updateUndoRedoButtons();
+        });
+      } else {
+        fCanvas.setBackgroundColor('#090d16', () => {
+          fCanvas.renderAll();
+          canvasHistory = [];
+          historyIndex = -1;
+          isUndoRedo = false;
+          saveCanvasState();
+        });
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditMode() {
+      currentEditingId = null;
+      document.getElementById('editModeBanner').classList.add('hidden');
+      
+      document.getElementById('submitBtnContainer').innerHTML = `
+        <button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">
+          Save VFX Sheet (IndexedDB)
+        </button>
+      `;
+
+      document.getElementById('vfxForm').reset();
+      resetFormToDefault();
+      clearNoteCanvas();
+      setCanvasMode('draw');
+    }
+
+    async function saveRecord(e, mode) {
+      if (e) e.preventDefault();
+
+      const form = document.getElementById('vfxForm');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      saveActiveTabState();
+
+      const processedCameras = cameraListState.map(cam => {
+        const camModel = cam.camera_preset === '__custom__' ? cam.camera_custom : cam.camera_preset;
+        const lensModel = cam.lens_preset === '__custom__' ? cam.lens_custom : cam.lens_preset;
+        const workModel = cam.cramerawork_preset === '__custom__' ? cam.cramerawork_custom : cam.cramerawork_preset;
+        return {
+          label: cam.label,
+          camera: camModel,
+          lens: lensModel,
+          focal_length: cam.focal_length,
+          t_stop: cam.t_stop,
+          clip_name: cam.clip_name,
+          lut_info: cam.lut_info,
+          cramerawork: workModel,
+          height_value: cam.height_value,
+          distance_value: cam.distance_value,
+          tilt_value: cam.tilt_value,
+          flag_chart: cam.flag_chart,
+          flag_cleanplate: cam.flag_cleanplate,
+          flag_reference: cam.flag_reference
+        };
+      });
+
+      const isHdri = document.getElementById('hdri_captured').checked;
+      const noteCanvasBlob = await exportCanvasToBlob();
+      const canvasJson = JSON.stringify(fCanvas.toJSON());
+
+      const payload = {
+        operator: document.getElementById('operator').value,
+        show_title: document.getElementById('show_title').value,
+        shoot_datetime: document.getElementById('shoot_datetime').value,
+        location: document.getElementById('location').value,
+        gps_location: document.getElementById('gps_location').value,
+        episode: document.getElementById('episode').value,
+        scene: document.getElementById('scene').value,
+        shot: document.getElementById('shot').value,
+        hdri_captured: isHdri ? 'YES' : 'NO',
+        hdri_weather: isHdri ? document.getElementById('hdri_weather').value : '',
+        hdri_notes: isHdri ? document.getElementById('hdri_notes').value : '',
+        cameras: processedCameras,
+        notes: document.getElementById('notes').value,
+        // Canvas PNG is kept locally for editing; it is intentionally excluded from API sync.
+        images: [noteCanvasBlob],
+        canvas_json: canvasJson,
+        canvas_version: 5,
+        uuid: mode === 'update' && currentEditingId ? (await db.sheets.get(currentEditingId)).uuid : newUuid(),
+        synced: 0,
+        syncError: '',
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        if (mode === 'update' && currentEditingId) {
+          await db.sheets.update(currentEditingId, payload);
+          alert(`Record ID: ${currentEditingId} updated.`);
+        } else {
+          const newId = await db.sheets.add(payload);
+          alert(`Saved as new record (ID: ${newId}).`);
+        }
+      } catch (err) {
+        console.error("Save Record Error:", err);
+        alert("Failed to save record to IndexedDB.");
+      }
+
+      cancelEditMode();
+      await renderList();
+    }
+
+    // Render & Export
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+    }
+
+    async function renderList() {
+      const records = await db.sheets.reverse().toArray();
+      document.getElementById('totalCount').innerText = records.length;
+      
+      const listEl = document.getElementById('recordList');
+      if (records.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-600 text-center py-4">No records saved</p>`;
+        return;
+      }
+
+      listEl.innerHTML = records.map(r => {
+        const safe = escapeHtml;
+        const syncBadge = r.synced 
+          ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Synced</span>`
+          : `<span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded">Unsynced</span>`;
+
+        const gpsDisp = r.gps_location ? `<span class="text-amber-300 font-mono">📍 ${safe(r.gps_location)}</span>` : '';
+        const hdriDisp = r.hdri_captured === 'YES' 
+          ? `<span class="text-amber-400 font-bold">HDRI: YES (${safe(r.hdri_weather || '-')})</span>` 
+          : `<span class="text-slate-500">HDRI: NO</span>`;
+
+        const camSummary = (r.cameras || []).map(c => 
+          `<div class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-[10px] space-y-0.5">
+            <div class="flex justify-between font-bold text-slate-200">
+              <span>🎥 ${safe(c.label)}: ${safe(c.camera || '-')} (${safe(c.lens || '-')})</span>
+              <span>Work: ${safe(c.cramerawork || '-')}</span>
+            </div>
+            <div class="text-slate-400 flex justify-between">
+              <span>H:${safe(c.height_value || '-')} D:${safe(c.distance_value || '-')} Tilt:${safe(c.tilt_value || '-')}</span>
+              <span>Chart:${safe(c.flag_chart||'NO')} Clean:${safe(c.flag_cleanplate||'NO')} Ref:${safe(c.flag_reference||'NO')}</span>
+            </div>
+          </div>`
+        ).join('');
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="font-mono text-amber-400 font-bold text-sm">#${r.id} | ${safe(r.show_title)} ${safe(r.scene)}_${safe(r.shot)}</span>
+              <div class="flex gap-2 items-center">
+                ${syncBadge}
+                <button type="button" onclick="loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
+                  ✏️ Edit
+                </button>
+                <button type="button" onclick="deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 text-xs px-1">
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">
+              ${hdriDisp}
+              <span class="text-slate-400">${safe(r.hdri_notes || '')}</span>
+            </div>
+            <div class="space-y-1">
+              ${camSummary}
+            </div>
+            <div class="text-slate-400 flex flex-wrap justify-between text-[11px] pt-0.5 border-t border-slate-900">
+              <span>${gpsDisp}</span>
+              <span class="text-slate-500">Op: ${safe(r.operator || '-')}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function deleteRecord(id) {
+      if (confirm(`Delete Record ID: ${id}?`)) {
+        await db.sheets.delete(id);
+        if (currentEditingId === id) cancelEditMode();
+        renderList();
+      }
+    }
+
+    async function exportToCSV() {
+      const records = await db.sheets.reverse().toArray();
+      if (!records || records.length === 0) return alert("No records to export.");
+
+      const headers = ["ID", "Show Title", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
+      const rows = records.map(r => {
+        const camStr = (r.cameras || []).map(c => `${c.label}:${c.camera||''}(${c.lens||''}) Work:${c.cramerawork||''} H:${c.height_value||''} D:${c.distance_value||''} Tilt:${c.tilt_value||''} Ref:[Chart:${c.flag_chart} Clean:${c.flag_cleanplate} Ref:${c.flag_reference}]`).join('; ');
+        return [
+          r.id,
+          `"${(r.show_title || '').replace(/"/g, '""')}"`,
+          `"${(r.episode || '').replace(/"/g, '""')}"`,
+          `"${(r.scene || '').replace(/"/g, '""')}"`,
+          `"${(r.shot || '').replace(/"/g, '""')}"`,
+          `"${(r.shoot_datetime || '').replace(/"/g, '""')}"`,
+          `"${(r.operator || '').replace(/"/g, '""')}"`,
+          `"${(r.location || '').replace(/"/g, '""')}"`,
+          `"${(r.gps_location || '').replace(/"/g, '""')}"`,
+          `"${r.hdri_captured || 'NO'}"`,
+          `"${(r.hdri_weather || '').replace(/"/g, '""')}"`,
+          `"${(r.hdri_notes || '').replace(/"/g, '""')}"`,
+          `"${camStr.replace(/"/g, '""')}"`,
+          `"${(r.notes || '').replace(/"/g, '""')}"`
+        ].join(",");
+      });
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `VFX_Sheet_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function exportToPDF() {
+      if (!window.jspdf) return alert("PDF library is loading. Please try again.");
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape' });
+
+      const records = await db.sheets.reverse().toArray();
+      if (!records || records.length === 0) return alert("No records to export.");
+
+      doc.setFontSize(14);
+      doc.text("NK VFX Field Sheet Report", 14, 15);
+      doc.setFontSize(9);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 21);
+
+      const tableHeaders = [["ID", "Show / Scene / Shot", "Date & Time", "Operator", "HDRI Setup", "Cameras Setup & VFX Checklist"]];
+      const tableData = records.map(r => {
+        const hdriStr = `HDRI: ${r.hdri_captured || 'NO'}\nWeather: ${r.hdri_weather || '-'}\n${r.hdri_notes || ''}`;
+        const camStr = (r.cameras || []).map(c => `${c.label}: ${c.camera||'-'} (${c.lens||'-'}) | ${c.cramerawork||'-'} | H:${c.height_value||'-'} D:${c.distance_value||'-'} Tilt:${c.tilt_value||'-'} | Chart:${c.flag_chart||'NO'} Clean:${c.flag_cleanplate||'NO'} Ref:${c.flag_reference||'NO'}`).join('\n');
+        return [
+          r.id,
+          `${r.show_title || ''}\n${r.scene || ''}_${r.shot || ''}`,
+          r.shoot_datetime || '-',
+          r.operator || '-',
+          hdriStr,
+          camStr || '-'
+        ];
+      });
+
+      doc.autoTable({
+        startY: 25,
+        head: tableHeaders,
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [245, 158, 11], textColor: [15, 23, 42], fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5, overflow: 'linebreak' },
+        columnStyles: {
+          0: { cellWidth: 12 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 45 },
+          5: { cellWidth: 125 }
+        }
+      });
+
+      try {
+        const canvasDataURL = exportCanvasToDataURL();
+        if (canvasDataURL) {
+          const finalY = doc.lastAutoTable.finalY || 100;
+          if (finalY + 70 > doc.internal.pageSize.getHeight()) {
+            doc.addPage();
+            doc.setFontSize(10);
+            doc.text("Latest Field Note Sketch / Diagram:", 14, 15);
+            doc.addImage(canvasDataURL, 'PNG', 14, 20, 140, 88);
+          } else {
+            doc.setFontSize(10);
+            doc.text("Latest Field Note Sketch / Diagram:", 14, finalY + 10);
+            doc.addImage(canvasDataURL, 'PNG', 14, finalY + 15, 140, 88);
+          }
+        }
+      } catch (err) {
+        console.error("PDF Canvas Embed Error:", err);
+      }
+
+      doc.save(`VFX_Sheet_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    async function syncData() {
+      if (!navigator.onLine) return alert("You are currently offline.");
+
+      const WORKER_URL = '/api/sync';
+      const unsynced = await db.sheets.where('synced').equals(0).toArray();
+
+      if (unsynced.length === 0) return alert("No unsynced records.");
+
+      const syncBtn = document.getElementById('syncBtn');
+      syncBtn.disabled = true;
+      syncBtn.innerText = "Syncing...";
+
+      let successCount = 0;
+      for (const item of unsynced) {
+        try {
+          // Image blobs and Fabric JSON can exceed mobile request limits. Keep them in
+          // IndexedDB and JSON backup; FlowPT receives the structured shot metadata.
+          const payload = { ...item, asset_status: item.images?.length ? 'local_only' : 'none' };
+          delete payload.images;
+          delete payload.canvas_json;
+
+          const res = await fetch(WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            await db.sheets.update(item.id, { synced: 1, synced_at: new Date().toISOString(), syncError: '' });
+            successCount++;
+          } else {
+            await db.sheets.update(item.id, { syncError: `HTTP ${res.status}` });
+          }
+        } catch (err) {
+          console.error("Sync Error:", err);
+          await db.sheets.update(item.id, { syncError: String(err.message || err) });
+        }
+      }
+
+      alert(`${successCount} records synced to FlowPT.`);
+      syncBtn.disabled = false;
+      syncBtn.innerText = "Sync to FlowPT";
+      renderList();
+    }
+
+    async function exportBackupJSON() {
+      const records = await db.sheets.toArray();
+      if (!records.length) return alert('No records to back up.');
+      // Blobs cannot be represented in JSON. The editable Fabric canvas JSON is retained.
+      const portableRecords = records.map(({ images, ...record }) => ({ ...record, asset_status: images?.length ? 'canvas_png_local_only' : 'none' }));
+      const backup = { app: 'NK_VFX_Sheet', format: 'vfx-sheet-record-backup', version: 1, exported_at: new Date().toISOString(), records: portableRecords };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = `NK_VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      alert(`${records.length} records backed up. Canvas PNG images remain on this device; Fabric sketch data is included.`);
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function updateOnlineStatus() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (navigator.onLine) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        text.innerText = "Online";
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+        text.innerText = "Offline";
+      }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('Service Worker registration failed:', error)));
+    }
+  </script>
 </body>
 </html>

@@ -1,7 +1,6 @@
-const CACHE_NAME = 'nk-vfx-sheet-v11';
+const CACHE_NAME = 'nk-vfx-sheet-v12';
 const APP_SHELL = [
   './index.html',
-  './gemini-code-1786106926009.html',
   './manifest.webmanifest',
   './icon.svg',
   './icon-180.png',
@@ -27,5 +26,5 @@ self.addEventListener('fetch', event => {
     const copy = response.clone();
     if (new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
     return response;
-  }).catch(() => caches.match('./gemini-code-1786106926009.html'))));
+  }).catch(() => caches.match('./index.html'))));
 });
