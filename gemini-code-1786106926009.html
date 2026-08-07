@@ -22,12 +22,24 @@
       overscroll-behavior: none; 
     }
     .form-label { 
-      @apply block text-xs text-slate-400 mb-1 font-medium; 
+      display: block;
+      margin-bottom: 0.25rem;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 500;
     }
     .form-input, .form-select, textarea { 
-      @apply w-full bg-slate-950 text-slate-100 border border-slate-800 rounded-lg p-2.5 text-sm focus:border-amber-400 focus:outline-none placeholder-slate-600; 
+      width: 100%;
+      padding: 0.625rem;
+      background: #020617;
+      color: #f1f5f9;
+      border: 1px solid #1e293b;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
       color-scheme: dark;
     }
+    .form-input:focus, .form-select:focus, textarea:focus { border-color: #fbbf24; outline: none; }
+    .form-input::placeholder, textarea::placeholder { color: #475569; }
     option {
       background-color: #020617;
       color: #f1f5f9;
