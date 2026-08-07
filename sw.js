@@ -1,10 +1,16 @@
-const CACHE_NAME = 'vfx-sheet-v3';
+const CACHE_NAME = 'nk-vfx-sheet-v11';
 const APP_SHELL = [
   './index.html',
+  './gemini-code-1786106926009.html',
   './manifest.webmanifest',
   './icon.svg',
   './icon-180.png',
-  './icon-512.png'
+  './icon-512.png',
+  './vendor/tailwindcss.js',
+  './vendor/dexie.js',
+  './vendor/fabric.min.js',
+  './vendor/jspdf.umd.min.js',
+  './vendor/jspdf.plugin.autotable.min.js'
 ];
 
 self.addEventListener('install', event => {
@@ -21,5 +27,5 @@ self.addEventListener('fetch', event => {
     const copy = response.clone();
     if (new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
     return response;
-  }).catch(() => caches.match('./index.html'))));
+  }).catch(() => caches.match('./gemini-code-1786106926009.html'))));
 });

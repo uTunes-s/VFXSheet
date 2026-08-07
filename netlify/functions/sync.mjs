@@ -23,7 +23,7 @@ export default async request => {
     return Response.json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  if (!record || typeof record !== 'object' || typeof record.uuid !== 'string' || !record.uuid || typeof record.sequence !== 'string' || typeof record.shot !== 'string') {
+  if (!record || typeof record !== 'object' || typeof record.uuid !== 'string' || !record.uuid || typeof record.scene !== 'string' || !record.scene || typeof record.shot !== 'string' || !record.shot || !Array.isArray(record.cameras)) {
     return Response.json({ error: 'invalid_record' }, { status: 400 });
   }
 

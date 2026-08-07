@@ -3,6 +3,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/"
+  to = "/gemini-code-1786106926009.html"
+  status = 200
+
+[[redirects]]
   from = "/api/sync"
   to = "/.netlify/functions/sync"
   status = 200
