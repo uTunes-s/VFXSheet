@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>VFX Slate</title>
+  
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 16px; background: #0f172a; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; -webkit-tap-highlight-color: transparent; }
+    main { max-width: 720px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 0 16px; border-bottom: 1px solid #334155; }
+    h1 { margin: 0; color: #fbbf24; font-size: 24px; } h2 { margin: 0; font-size: 14px; color: #cbd5e1; }
+    header p, label, .hint { margin: 4px 0 0; color: #94a3b8; font-size: 12px; }
+    #netStatus { display: flex; align-items: center; gap: 8px; border: 1px solid #334155; border-radius: 999px; padding: 7px 10px; font-size: 13px; white-space: nowrap; }
+    #statusDot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; } .online { background: #10b981 !important; } .offline { background: #fb7185 !important; }
+    form, section { margin-top: 20px; padding: 20px; background: #1e293b; border: 1px solid #334155; border-radius: 16px; }
+    .grid2, .grid3 { display: grid; gap: 12px; margin-bottom: 12px; } .grid2 { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: repeat(3, 1fr); }
+    label { display: block; margin: 0 0 5px; } input, select, textarea { width: 100%; min-height: 44px; padding: 10px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: inherit; font: inherit; } textarea { min-height: 76px; resize: vertical; }
+    button, .file-button { min-height: 44px; border: 0; border-radius: 9px; padding: 10px 14px; background: #0284c7; color: white; font-weight: 700; font: inherit; cursor: pointer; } button:disabled { opacity: .55; cursor: wait; } #saveButton { width: 100%; margin-top: 14px; background: #f59e0b; color: #0f172a; }
+    .section-title, .actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; } .actions { justify-content: flex-start; margin-top: 14px; } .file-button { display: inline-flex; align-items: center; } .file-button input { display: none; }
+    #recordList { margin-top: 14px; max-height: 350px; overflow-y: auto; } .record { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid #334155; } .record:last-child { border-bottom: 0; } .record-name { color: #fbbf24; font: 700 14px ui-monospace, SFMono-Regular, Menlo, monospace; } .record-detail { margin-top: 3px; color: #94a3b8; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; } .badge { height: fit-content; padding: 4px 7px; border: 1px solid #f59e0b66; border-radius: 5px; color: #fbbf24; font-size: 11px; white-space: nowrap; }
+    #message { min-height: 20px; margin: 12px 0 0; color: #bae6fd; font-size: 13px; } .error { color: #fda4af !important; }
+    @media (max-width: 520px) { .grid3 { grid-template-columns: 1fr; } body { padding: 12px; } form, section { padding: 16px; } }
+  </style>
+</head>
+<body>
+
+  <main>
+    <!-- ヘッダー / ステータス -->
+    <header class="flex justify-between items-center border-b border-slate-700 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-amber-400">VFX Field Sheet</h1>
+        <p class="text-xs text-slate-400">Offline-First Logger</p>
+      </div>
+      <div id="netStatus" class="flex items-center gap-2 text-sm px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
+        <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+        <span id="statusText" class="text-slate-300">確認中...</span>
+      </div>
+    </header>
+
+    <!-- VFXデータ入力フォーム -->
+    <form id="vfxForm" class="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/60 shadow-xl space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Sequence</label>
+          <input type="text" id="sequence" placeholder="SQ010" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-lg font-mono focus:border-amber-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Shot / Cut</label>
+          <input type="text" id="shot" placeholder="CUT001" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-lg font-mono focus:border-amber-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Focal Length</label>
+          <input type="text" id="focal_length" placeholder="35mm" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 font-mono focus:border-amber-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">FPS</label>
+          <select id="fps" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 font-mono focus:border-amber-400 focus:outline-none">
+            <option value="23.976">23.976</option>
+            <option value="24" selected>24</option>
+            <option value="29.97">29.97</option>
+            <option value="59.94">59.94</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">T-Stop</label>
+          <input type="text" id="t_stop" placeholder="T2.8" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 font-mono focus:border-amber-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">VFX Notes</label>
+        <textarea id="notes" rows="2" placeholder="グリーンバック、トラッキングマーカー配置..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:border-amber-400 focus:outline-none"></textarea>
+      </div>
+
+      <button id="saveButton" type="submit" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-lg transition-colors shadow-lg">
+        ローカル保存 (IndexedDB)
+      </button>
+      <p id="message" role="status" aria-live="polite"></p>
+    </form>
+
+    <!-- ローカル保存データ一覧 & 同期エリア -->
+    <section class="bg-slate-800/40 p-6 rounded-2xl border border-slate-800 space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Unsynced Records (<span id="unsyncedCount">0</span>)</h2>
+        <button id="syncBtn" onclick="syncData()" class="bg-sky-600 hover:bg-sky-500 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <span>FlowPTへ同期</span>
+        </button>
+      </div>
+
+      <div id="recordList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+        <!-- 登録したリストがここに動的表示されます -->
+      </div>
+      <div class="actions">
+        <button id="exportBtn" type="button">未同期データをJSON保存</button>
+        <label class="file-button">JSONを復元<input id="importInput" type="file" accept="application/json,.json"></label>
+      </div>
+      <p class="hint">同期前でもJSONファイルを別端末・共有ストレージへ退避してください。</p>
+    </section>
+  </main>
+
+  <script>
+    'use strict';
+
+    const DB_NAME = 'VfxSheetDatabase';
+    const DB_VERSION = 2;
+    const STORE_NAME = 'sheets';
+    // Netlify Function。認証情報はサーバー環境変数だけに置きます。
+    const WORKER_URL = '/api/sync';
+
+    const form = document.getElementById('vfxForm');
+    const message = document.getElementById('message');
+    const syncBtn = document.getElementById('syncBtn');
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = () => {
+          const database = request.result;
+          const store = database.objectStoreNames.contains(STORE_NAME)
+            ? request.transaction.objectStore(STORE_NAME)
+            : database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          if (!store.indexNames.contains('synced')) store.createIndex('synced', 'synced');
+          if (!store.indexNames.contains('created_at')) store.createIndex('created_at', 'created_at');
+          if (!store.indexNames.contains('uuid')) store.createIndex('uuid', 'uuid', { unique: true });
+          // v1の数値フラグをv2の状態文字列へ移行し、既存の未同期記録を表示対象にする。
+          if (request.oldVersion < 2) {
+            store.openCursor().onsuccess = event => {
+              const cursor = event.target.result;
+              if (!cursor) return;
+              const legacy = cursor.value;
+              if (!legacy.uuid) legacy.uuid = newUuid();
+              if (legacy.synced === 0) legacy.synced = 'pending';
+              else if (legacy.synced === 1) legacy.synced = 'synced';
+              cursor.update(legacy); cursor.continue();
+            };
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function withStore(mode, callback) {
+      return openDb().then(database => new Promise((resolve, reject) => {
+        const transaction = database.transaction(STORE_NAME, mode);
+        const store = transaction.objectStore(STORE_NAME);
+        let result;
+        try { result = callback(store); } catch (error) { database.close(); reject(error); return; }
+        transaction.oncomplete = () => { database.close(); resolve(result); };
+        transaction.onerror = () => { database.close(); reject(transaction.error); };
+        transaction.onabort = () => { database.close(); reject(transaction.error); };
+      }));
+    }
+
+    function requestResult(request) {
+      return new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    const records = {
+      add: item => withStore('readwrite', store => requestResult(store.add(item))),
+      update: item => withStore('readwrite', store => requestResult(store.put(item))),
+      all: () => withStore('readonly', store => requestResult(store.getAll())),
+      unsynced: () => withStore('readonly', store => requestResult(store.index('synced').getAll('pending'))),
+      byUuid: uuid => withStore('readonly', store => requestResult(store.index('uuid').get(uuid)))
+    };
+
+    function newUuid() {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      return `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
+    }
+
+    function showMessage(text, isError = false) {
+      message.textContent = text;
+      message.classList.toggle('error', isError);
+    }
+
+    function value(id) { return document.getElementById(id).value.trim(); }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const saveButton = document.getElementById('saveButton');
+      saveButton.disabled = true;
+      try {
+        const uuid = newUuid();
+        await records.add({
+          id: uuid, uuid,
+          sequence: value('sequence'), shot: value('shot'),
+          focal_length: value('focal_length'), fps: document.getElementById('fps').value,
+          t_stop: value('t_stop'), notes: value('notes'),
+          synced: 'pending', syncError: '', created_at: new Date().toISOString()
+        });
+        document.getElementById('shot').value = '';
+        document.getElementById('notes').value = '';
+        showMessage('端末内に保存しました。同期前にJSONバックアップも作成してください。');
+        await renderList();
+      } catch (error) {
+        console.error('Save failed:', error);
+        showMessage('保存できませんでした。端末の空き容量とブラウザ設定を確認してください。', true);
+      } finally { saveButton.disabled = false; }
+    });
+
+    function createRecordElement(record) {
+      const row = document.createElement('article'); row.className = 'record';
+      const details = document.createElement('div');
+      const name = document.createElement('div'); name.className = 'record-name'; name.textContent = `${record.sequence}_${record.shot}`;
+      const camera = document.createElement('div'); camera.className = 'record-detail'; camera.textContent = [record.focal_length, record.t_stop, `${record.fps}fps`].filter(Boolean).join(' / ');
+      const note = document.createElement('div'); note.className = 'record-detail'; note.textContent = record.notes || 'メモなし';
+      details.append(name, camera, note);
+      const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = '未同期';
+      row.append(details, badge);
+      return row;
+    }
+
+    async function renderList() {
+      const unsynced = (await records.unsynced()).sort((a, b) => b.created_at.localeCompare(a.created_at));
+      document.getElementById('unsyncedCount').textContent = unsynced.length;
+      const list = document.getElementById('recordList'); list.replaceChildren();
+      if (!unsynced.length) { list.textContent = '未同期のデータはありません'; list.className = 'hint'; return; }
+      list.className = '';
+      unsynced.forEach(record => list.appendChild(createRecordElement(record)));
+    }
+
+    async function syncData() {
+      if (!navigator.onLine) { showMessage('ネットワーク接続がありません。データは端末に安全に残っています。', true); return; }
+      const unsynced = await records.unsynced();
+      if (!unsynced.length) { showMessage('同期するデータはありません。'); return; }
+      syncBtn.disabled = true; syncBtn.textContent = '送信中…';
+      let successes = 0;
+      for (const item of unsynced) {
+        try {
+          const response = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          item.synced = 'synced'; item.synced_at = new Date().toISOString(); item.syncError = '';
+          await records.update(item); successes++;
+        } catch (error) {
+          item.syncError = String(error.message || error); await records.update(item);
+        }
+      }
+      syncBtn.disabled = false; syncBtn.textContent = 'FlowPTへ同期';
+      showMessage(`${successes}件を同期しました。失敗分は未同期のまま再試行できます。`, successes !== unsynced.length);
+      await renderList();
+    }
+    window.syncData = syncData;
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      const data = await records.unsynced();
+      const blob = new Blob([JSON.stringify({ format: 'vfx-sheet-backup', version: 1, exported_at: new Date().toISOString(), records: data }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const link = document.createElement('a');
+      link.href = url; link.download = `vfx-sheet-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click();
+      URL.revokeObjectURL(url); showMessage(`${data.length}件の未同期データをJSONに書き出しました。`);
+    });
+
+    document.getElementById('importInput').addEventListener('change', async event => {
+      const file = event.target.files[0]; if (!file) return;
+      try {
+        const backup = JSON.parse(await file.text());
+        if (backup.format !== 'vfx-sheet-backup' || !Array.isArray(backup.records)) throw new Error('形式が違います');
+        let imported = 0;
+        for (const source of backup.records) {
+          if (!source.uuid || await records.byUuid(source.uuid)) continue;
+          await records.add({ ...source, id: source.id || newUuid(), synced: source.synced === 'synced' ? 'synced' : 'pending' }); imported++;
+        }
+        showMessage(`${imported}件を復元しました。`); await renderList();
+      } catch (error) { showMessage('復元できませんでした。VFX SheetのJSONバックアップを選択してください。', true); }
+      event.target.value = '';
+    });
+
+    function updateOnlineStatus() {
+      const online = navigator.onLine;
+      document.getElementById('statusDot').className = online ? 'online' : 'offline';
+      document.getElementById('statusText').textContent = online ? 'ネットワーク接続あり' : 'オフライン保存中';
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus(); renderList().catch(error => showMessage(`データベースを開けません: ${error.message}`, true));
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('Service Worker registration failed:', error)));
+    }
+  </script>
+</body>
+</html>
