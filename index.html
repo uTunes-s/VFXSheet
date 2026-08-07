@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>NK VFX Sheet</title>
+  <title>VFX Sheet</title>
   
   <meta name="theme-color" content="#090d16">
   <link rel="manifest" href="manifest.webmanifest">
@@ -52,7 +52,7 @@
     <!-- Header -->
     <header class="flex justify-between items-center border-b border-slate-800 pb-3">
       <div>
-        <h1 class="text-xl font-bold tracking-tight text-amber-400">NK VFX Sheet</h1>
+        <h1 class="text-xl font-bold tracking-tight text-amber-400">VFX Sheet</h1>
         <p class="text-xs text-slate-400">Multi-Cam VFX Field Production Logger</p>
       </div>
       <div class="flex items-center gap-2">
@@ -167,8 +167,8 @@
           <!-- Weather Select Area -->
           <div id="weatherContainer" class="hidden pt-2 border-t border-slate-900 grid grid-cols-1 md:grid-cols-2 gap-3 transition-all">
             <div>
-              <label class="form-label">Weather Condition</label>
-              <select id="hdri_weather" class="form-select">
+              <label class="form-label">Weather Conditions <span class="text-slate-500">(multiple)</span></label>
+              <select id="hdri_weather" multiple size="4" class="form-select">
                 <option value="Sunny">☀️ Sunny / Clear</option>
                 <option value="Partly Cloudy">⛅ Partly Cloudy</option>
                 <option value="Overcast">☁️ Overcast</option>
@@ -195,6 +195,17 @@
           <textarea id="notes" rows="2" placeholder="Write general notes, spatial info, lighting details..." class="form-input w-full"></textarea>
         </div>
 
+        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <div class="flex-1">
+            <label class="form-label">Shot Data Thumbnail</label>
+            <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
+          </div>
+          <input type="file" id="shotThumbnailInput" accept="image/*" capture="environment" class="hidden" onchange="setShotThumbnail(event)">
+          <button type="button" onclick="document.getElementById('shotThumbnailInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Add Thumbnail</button>
+          <button type="button" onclick="clearShotThumbnail()" class="text-xs text-rose-300 px-2 py-2">Clear</button>
+          <img id="shotThumbnailPreview" alt="Shot thumbnail preview" class="hidden h-16 w-24 rounded border border-slate-700 object-cover">
+        </div>
+
         <div class="space-y-2 pt-1">
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
@@ -206,6 +217,14 @@
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <button type="button" id="btnUndo" onclick="undoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
               <button type="button" id="btnRedo" onclick="redoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
+            </div>
+
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+              <span class="text-[10px] text-slate-400 uppercase font-bold">Layer:</span>
+              <button type="button" onclick="moveSelectedLayer('front')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring forward">↑</button>
+              <button type="button" onclick="moveSelectedLayer('back')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send backward">↓</button>
+              <button type="button" onclick="moveSelectedLayer('top')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring to front">⇈</button>
+              <button type="button" onclick="moveSelectedLayer('bottom')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send to back">⇊</button>
             </div>
 
             <!-- Color Palette -->
@@ -378,6 +397,48 @@
       }
     }
 
+    function getWeatherValues() {
+      return [...document.getElementById('hdri_weather').selectedOptions].map(option => option.value);
+    }
+
+    function setWeatherValues(values) {
+      const selected = new Set(Array.isArray(values) ? values : String(values || '').split(', ').filter(Boolean));
+      [...document.getElementById('hdri_weather').options].forEach(option => { option.selected = selected.has(option.value); });
+    }
+
+    function setShotThumbnail(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) return alert('Please select an image file.');
+      const preview = document.getElementById('shotThumbnailPreview');
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove('hidden');
+      preview.dataset.hasNewFile = 'true';
+    }
+
+    function clearShotThumbnail() {
+      const preview = document.getElementById('shotThumbnailPreview');
+      if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+      preview.removeAttribute('src'); preview.classList.add('hidden'); preview.dataset.hasNewFile = '';
+      document.getElementById('shotThumbnailInput').value = '';
+    }
+
+    function moveSelectedLayer(direction) {
+      const active = fCanvas?.getActiveObject();
+      if (!active) return alert('Select a sketch object first.');
+      if (direction === 'front') fCanvas.bringForward(active);
+      if (direction === 'back') fCanvas.sendBackwards(active);
+      if (direction === 'top') fCanvas.bringToFront(active);
+      if (direction === 'bottom') fCanvas.sendToBack(active);
+      fCanvas.requestRenderAll(); saveCanvasState();
+    }
+
+    function incrementTrailingNumber(value) {
+      const match = String(value || '').match(/^(.*?)(\d+)([^\d]*)$/);
+      if (!match) return value;
+      return `${match[1]}${String(Number(match[2]) + 1).padStart(match[2].length, '0')}${match[3]}`;
+    }
+
     async function resetFormToDefault() {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -392,7 +453,7 @@
         
         document.getElementById('hdri_captured').checked = v.hdri_captured || false;
         toggleHdriWeather(v.hdri_captured || false);
-        document.getElementById('hdri_weather').value = v.hdri_weather || 'Sunny';
+        setWeatherValues(v.hdri_weather || ['Sunny']);
         document.getElementById('hdri_notes').value = v.hdri_notes || '';
 
         if (v.cameras && v.cameras.length > 0) {
@@ -492,7 +553,7 @@
         show_title: document.getElementById('show_title').value,
         location: document.getElementById('location').value,
         hdri_captured: document.getElementById('hdri_captured').checked,
-        hdri_weather: document.getElementById('hdri_weather').value,
+        hdri_weather: getWeatherValues(),
         hdri_notes: document.getElementById('hdri_notes').value,
         cameras: cameraListState
       };
@@ -513,7 +574,7 @@
       document.getElementById('location').value = v.location || '';
       document.getElementById('hdri_captured').checked = v.hdri_captured || false;
       toggleHdriWeather(v.hdri_captured || false);
-      document.getElementById('hdri_weather').value = v.hdri_weather || 'Sunny';
+      setWeatherValues(v.hdri_weather || ['Sunny']);
       document.getElementById('hdri_notes').value = v.hdri_notes || '';
 
       if (v.cameras && v.cameras.length > 0) {
@@ -528,7 +589,7 @@
       saveActiveTabState();
       const allPresets = await db.presets.toArray();
       const exportData = {
-        app: "NK_VFX_Sheet",
+        app: "VFX_Sheet",
         version: 10,
         exported_at: new Date().toISOString(),
         presets: allPresets,
@@ -537,7 +598,7 @@
           show_title: document.getElementById('show_title').value,
           location: document.getElementById('location').value,
           hdri_captured: document.getElementById('hdri_captured').checked,
-          hdri_weather: document.getElementById('hdri_weather').value,
+          hdri_weather: getWeatherValues(),
           hdri_notes: document.getElementById('hdri_notes').value,
           cameras: cameraListState
         }
@@ -547,7 +608,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `NK_VFX_Presets_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `VFX_Sheet_Presets_${new Date().toISOString().slice(0,10)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -562,7 +623,7 @@
       reader.onload = async (event) => {
         try {
           const data = JSON.parse(event.target.result);
-          if (data.app !== "NK_VFX_Sheet" || !data.presets) {
+          if (!['VFX_Sheet', 'NK_VFX_Sheet'].includes(data.app) || !data.presets) {
             throw new Error("Invalid preset JSON file format.");
           }
 
@@ -1076,7 +1137,7 @@
       const isHdri = record.hdri_captured === 'YES' || record.hdri_captured === true;
       document.getElementById('hdri_captured').checked = isHdri;
       toggleHdriWeather(isHdri);
-      document.getElementById('hdri_weather').value = record.hdri_weather || 'Sunny';
+      setWeatherValues(record.hdri_weather || ['Sunny']);
       document.getElementById('hdri_notes').value = record.hdri_notes || '';
 
       if (record.cameras && record.cameras.length > 0) {
@@ -1106,6 +1167,13 @@
       renderCameraTabs();
 
       document.getElementById('notes').value = record.notes || '';
+      clearShotThumbnail();
+      if (record.shot_thumbnail) {
+        const preview = document.getElementById('shotThumbnailPreview');
+        preview.src = URL.createObjectURL(record.shot_thumbnail);
+        preview.classList.remove('hidden');
+        preview.dataset.hasNewFile = '';
+      }
 
       isUndoRedo = true;
       fCanvas.clear();
@@ -1147,6 +1215,26 @@
       setCanvasMode('draw');
     }
 
+    function prepareNextRecord() {
+      currentEditingId = null;
+      document.getElementById('editModeBanner').classList.add('hidden');
+      document.getElementById('submitBtnContainer').innerHTML = `<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>`;
+      const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('shoot_datetime').value = now.toISOString().slice(0, 16);
+      document.getElementById('shot').value = incrementTrailingNumber(document.getElementById('shot').value);
+      saveActiveTabState();
+      cameraListState = cameraListState.map(camera => ({
+        ...camera,
+        lens_preset: '', lens_custom: '', focal_length: '', t_stop: '',
+        cramerawork_preset: 'FIX (Lock-off)', cramerawork_custom: '',
+        height_value: '', distance_value: '', tilt_value: '',
+        clip_name: incrementTrailingNumber(camera.clip_name)
+      }));
+      activeCamIndex = 0;
+      renderCameraTabs();
+      clearShotThumbnail();
+    }
+
     async function saveRecord(e, mode) {
       if (e) e.preventDefault();
 
@@ -1182,6 +1270,9 @@
 
       const isHdri = document.getElementById('hdri_captured').checked;
       const noteCanvasBlob = await exportCanvasToBlob();
+      const thumbnailInput = document.getElementById('shotThumbnailInput');
+      const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
+      const shotThumbnail = thumbnailInput.files[0] || existingRecord?.shot_thumbnail || null;
       const canvasJson = JSON.stringify(fCanvas.toJSON());
 
       const payload = {
@@ -1194,12 +1285,13 @@
         scene: document.getElementById('scene').value,
         shot: document.getElementById('shot').value,
         hdri_captured: isHdri ? 'YES' : 'NO',
-        hdri_weather: isHdri ? document.getElementById('hdri_weather').value : '',
+        hdri_weather: isHdri ? getWeatherValues() : [],
         hdri_notes: isHdri ? document.getElementById('hdri_notes').value : '',
         cameras: processedCameras,
         notes: document.getElementById('notes').value,
         // Canvas PNG is kept locally for editing; it is intentionally excluded from API sync.
         images: [noteCanvasBlob],
+        shot_thumbnail: shotThumbnail,
         canvas_json: canvasJson,
         canvas_version: 5,
         uuid: mode === 'update' && currentEditingId ? (await db.sheets.get(currentEditingId)).uuid : newUuid(),
@@ -1208,20 +1300,23 @@
         created_at: new Date().toISOString()
       };
 
+      let saved = false;
       try {
         if (mode === 'update' && currentEditingId) {
           await db.sheets.update(currentEditingId, payload);
           alert(`Record ID: ${currentEditingId} updated.`);
+          saved = true;
         } else {
           const newId = await db.sheets.add(payload);
           alert(`Saved as new record (ID: ${newId}).`);
+          saved = true;
         }
       } catch (err) {
         console.error("Save Record Error:", err);
         alert("Failed to save record to IndexedDB.");
       }
 
-      cancelEditMode();
+      if (saved) prepareNextRecord();
       await renderList();
     }
 
@@ -1240,15 +1335,16 @@
         return;
       }
 
-      listEl.innerHTML = records.map(r => {
+      const cards = await Promise.all(records.map(async r => {
         const safe = escapeHtml;
+        const thumbnailUrl = r.shot_thumbnail ? await blobToBase64(r.shot_thumbnail) : '';
         const syncBadge = r.synced 
           ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Synced</span>`
           : `<span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded">Unsynced</span>`;
 
         const gpsDisp = r.gps_location ? `<span class="text-amber-300 font-mono">📍 ${safe(r.gps_location)}</span>` : '';
         const hdriDisp = r.hdri_captured === 'YES' 
-          ? `<span class="text-amber-400 font-bold">HDRI: YES (${safe(r.hdri_weather || '-')})</span>` 
+          ? `<span class="text-amber-400 font-bold">HDRI: YES (${safe(Array.isArray(r.hdri_weather) ? r.hdri_weather.join(' / ') : r.hdri_weather || '-')})</span>`
           : `<span class="text-slate-500">HDRI: NO</span>`;
 
         const camSummary = (r.cameras || []).map(c => 
@@ -1278,6 +1374,7 @@
                 </button>
               </div>
             </div>
+            ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="Shot thumbnail" class="h-28 w-full rounded-lg border border-slate-800 object-cover">` : ''}
             <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">
               ${hdriDisp}
               <span class="text-slate-400">${safe(r.hdri_notes || '')}</span>
@@ -1291,7 +1388,8 @@
             </div>
           </div>
         `;
-      }).join('');
+      }));
+      listEl.innerHTML = cards.join('');
     }
 
     async function deleteRecord(id) {
@@ -1342,67 +1440,52 @@
     async function exportToPDF() {
       if (!window.jspdf) return alert("PDF library is loading. Please try again.");
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape' });
-
       const records = await db.sheets.reverse().toArray();
       if (!records || records.length === 0) return alert("No records to export.");
-
-      doc.setFontSize(14);
-      doc.text("NK VFX Field Sheet Report", 14, 15);
-      doc.setFontSize(9);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 21);
-
-      const tableHeaders = [["ID", "Show / Scene / Shot", "Date & Time", "Operator", "HDRI Setup", "Cameras Setup & VFX Checklist"]];
-      const tableData = records.map(r => {
-        const hdriStr = `HDRI: ${r.hdri_captured || 'NO'}\nWeather: ${r.hdri_weather || '-'}\n${r.hdri_notes || ''}`;
-        const camStr = (r.cameras || []).map(c => `${c.label}: ${c.camera||'-'} (${c.lens||'-'}) | ${c.cramerawork||'-'} | H:${c.height_value||'-'} D:${c.distance_value||'-'} Tilt:${c.tilt_value||'-'} | Chart:${c.flag_chart||'NO'} Clean:${c.flag_cleanplate||'NO'} Ref:${c.flag_reference||'NO'}`).join('\n');
-        return [
-          r.id,
-          `${r.show_title || ''}\n${r.scene || ''}_${r.shot || ''}`,
-          r.shoot_datetime || '-',
-          r.operator || '-',
-          hdriStr,
-          camStr || '-'
-        ];
-      });
-
-      doc.autoTable({
-        startY: 25,
-        head: tableHeaders,
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [245, 158, 11], textColor: [15, 23, 42], fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5, overflow: 'linebreak' },
-        columnStyles: {
-          0: { cellWidth: 12 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 45 },
-          5: { cellWidth: 125 }
-        }
-      });
-
-      try {
-        const canvasDataURL = exportCanvasToDataURL();
-        if (canvasDataURL) {
-          const finalY = doc.lastAutoTable.finalY || 100;
-          if (finalY + 70 > doc.internal.pageSize.getHeight()) {
-            doc.addPage();
-            doc.setFontSize(10);
-            doc.text("Latest Field Note Sketch / Diagram:", 14, 15);
-            doc.addImage(canvasDataURL, 'PNG', 14, 20, 140, 88);
-          } else {
-            doc.setFontSize(10);
-            doc.text("Latest Field Note Sketch / Diagram:", 14, finalY + 10);
-            doc.addImage(canvasDataURL, 'PNG', 14, finalY + 15, 140, 88);
-          }
-        }
-      } catch (err) {
-        console.error("PDF Canvas Embed Error:", err);
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      for (let index = 0; index < records.length; index++) {
+        if (index) doc.addPage();
+        const page = await renderRecordPdfPage(records[index]);
+        doc.addImage(page, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
       }
-
       doc.save(`VFX_Sheet_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    async function imageFromBlob(blob) {
+      if (!blob) return null;
+      const url = URL.createObjectURL(blob);
+      try { return await new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = url; }); }
+      finally { URL.revokeObjectURL(url); }
+    }
+
+    async function renderRecordPdfPage(record) {
+      const canvas = document.createElement('canvas'); canvas.width = 1240; canvas.height = 1754;
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 36px sans-serif'; ctx.fillText('VFX Sheet', 60, 72);
+      ctx.fillStyle = '#64748b'; ctx.font = '20px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 60, 106);
+      let y = 155;
+      const drawText = (label, value) => { ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(label, 60, y); ctx.fillStyle = '#0f172a'; ctx.font = '22px sans-serif'; const lines = wrapPdfText(ctx, String(value || '-'), 1120); lines.forEach(line => { y += 30; ctx.fillText(line, 60, y); }); y += 26; };
+      drawText('Show / Scene / Shot', `${record.show_title || ''}  ${record.scene || ''}_${record.shot || ''}`);
+      drawText('Operator / Location', `${record.operator || '-'}  /  ${record.location || '-'}`);
+      drawText('HDRI', record.hdri_captured === 'YES' ? `${Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather || '-'}  ${record.hdri_notes || ''}` : 'Not captured');
+      drawText('Notes', record.notes || '-');
+      drawText('Cameras', (record.cameras || []).map(c => `${c.label}: ${c.camera || '-'} / ${c.lens || '-'} / ${c.focal_length || '-'} / ${c.t_stop || '-'} / ${c.clip_name || '-'} / ${c.cramerawork || '-'}`).join('\n'));
+      const thumb = await imageFromBlob(record.shot_thumbnail); const sketch = await imageFromBlob(record.images?.[0]);
+      const imageY = Math.max(y, 780); const imageHeight = 310; const imageWidth = 530;
+      ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnail', 60, imageY); ctx.fillText('Field Sketch', 650, imageY);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(60, imageY + 15, imageWidth, imageHeight); ctx.fillRect(650, imageY + 15, imageWidth, imageHeight);
+      if (thumb) drawImageContain(ctx, thumb, 60, imageY + 15, imageWidth, imageHeight);
+      if (sketch) drawImageContain(ctx, sketch, 650, imageY + 15, imageWidth, imageHeight);
+      return canvas.toDataURL('image/png');
+    }
+
+    function wrapPdfText(ctx, text, maxWidth) {
+      return text.split('\n').flatMap(paragraph => { const lines = []; let line = ''; for (const char of paragraph) { if (ctx.measureText(line + char).width > maxWidth && line) { lines.push(line); line = char; } else line += char; } if (line) lines.push(line); return lines; });
+    }
+
+    function drawImageContain(ctx, image, x, y, width, height) {
+      const ratio = Math.min(width / image.width, height / image.height); const w = image.width * ratio; const h = image.height * ratio;
+      ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
     }
 
     async function syncData() {
@@ -1454,11 +1537,11 @@
       const records = await db.sheets.toArray();
       if (!records.length) return alert('No records to back up.');
       // Blobs cannot be represented in JSON. The editable Fabric canvas JSON is retained.
-      const portableRecords = records.map(({ images, ...record }) => ({ ...record, asset_status: images?.length ? 'canvas_png_local_only' : 'none' }));
-      const backup = { app: 'NK_VFX_Sheet', format: 'vfx-sheet-record-backup', version: 1, exported_at: new Date().toISOString(), records: portableRecords };
+      const portableRecords = records.map(({ images, shot_thumbnail, ...record }) => ({ ...record, asset_status: images?.length || shot_thumbnail ? 'local_image_assets_not_included' : 'none' }));
+      const backup = { app: 'VFX_Sheet', format: 'vfx-sheet-record-backup', version: 1, exported_at: new Date().toISOString(), records: portableRecords };
       const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
       const a = document.createElement('a');
-      a.href = url; a.download = `NK_VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.href = url; a.download = `VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       alert(`${records.length} records backed up. Canvas PNG images remain on this device; Fabric sketch data is included.`);
     }
