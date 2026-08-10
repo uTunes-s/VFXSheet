@@ -1891,7 +1891,7 @@
       const fontData = await japanesePdfFontPromise;
       if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
         doc.addFileToVFS('DroidSansJapanese.ttf', fontData);
-        doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal');
+        doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
       }
       doc.setFont('DroidSansJapanese', 'normal');
     }
