@@ -599,6 +599,7 @@
     function createEmptyCameraItem(label) {
       return {
         label: label,
+        reel_name: getCameraReelPrefix(label),
         camera_preset: '',
         camera_custom: '',
         lens_preset: '',
@@ -946,11 +947,20 @@
       return match ? match[match.length - 1].toUpperCase() : 'A';
     }
 
+    function updateClipNameHint() {
+      const reelInput = document.getElementById('tab_reel_name');
+      const clipInput = document.getElementById('tab_clip_name');
+      if (!reelInput || !clipInput) return;
+      reelInput.value = reelInput.value.toUpperCase();
+      clipInput.placeholder = `${reelInput.value || getCameraReelPrefix(cameraListState[activeCamIndex]?.label)}001C001`;
+    }
+
     function saveActiveTabState() {
       if (!cameraListState[activeCamIndex]) return;
 
       cameraListState[activeCamIndex] = {
         label: cameraListState[activeCamIndex].label,
+        reel_name: document.getElementById('tab_reel_name')?.value.trim().toUpperCase() || getCameraReelPrefix(cameraListState[activeCamIndex].label),
         camera_preset: document.getElementById('tab_camera_preset')?.value || '',
         camera_custom: document.getElementById('tab_camera_custom')?.value || '',
         lens_preset: document.getElementById('tab_lens_preset')?.value || '',
@@ -1009,6 +1019,13 @@
       container.innerHTML = `
         <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${cam.label} Settings</div>
 
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="form-label">${cam.label} Reel Name</label>
+            <input type="text" id="tab_reel_name" value="${cam.reel_name || getCameraReelPrefix(cam.label)}" maxlength="8" placeholder="A" class="form-input font-mono uppercase" oninput="updateClipNameHint()">
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="form-label">${cam.label} - Camera Model</label>
@@ -1046,7 +1063,7 @@
           </div>
           <div>
             <label class="form-label">Clip Name</label>
-            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${getCameraReelPrefix(cam.label)}001C001" class="form-input font-mono">
+            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${cam.reel_name || getCameraReelPrefix(cam.label)}001C001" class="form-input font-mono">
           </div>
           <div>
             <label class="form-label">LUT Info</label>
@@ -1350,6 +1367,7 @@
       if (record.cameras && record.cameras.length > 0) {
         cameraListState = record.cameras.map(c => ({
           label: c.label,
+          reel_name: c.reel_name || getCameraReelPrefix(c.label),
           camera_preset: c.camera || '',
           camera_custom: '',
           lens_preset: c.lens || '',
@@ -1428,6 +1446,7 @@
       saveActiveTabState();
       cameraListState = cameraListState.map(camera => ({
         ...camera,
+        reel_name: camera.reel_name || getCameraReelPrefix(camera.label),
         lens_preset: '', lens_custom: '', focal_length: '', t_stop: '',
         cramerawork_preset: 'FIX (Lock-off)', cramerawork_custom: '',
         height_value: '', distance_value: '', tilt_value: '',
@@ -1455,6 +1474,7 @@
         const workModel = cam.cramerawork_preset === '__custom__' ? cam.cramerawork_custom : cam.cramerawork_preset;
         return {
           label: cam.label,
+          reel_name: cam.reel_name || getCameraReelPrefix(cam.label),
           camera: camModel,
           lens: lensModel,
           focal_length: cam.focal_length,
