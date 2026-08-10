@@ -280,11 +280,11 @@
             📄 Export PDF
           </button>
           <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
-            💾 Backup JSON
+            💾 Full Backup JSON
           </button>
           <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="importBackupJSON(event)">
           <button type="button" onclick="document.getElementById('importBackupInput').click()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
-            📥 Import Backup JSON
+            📥 Import Full Backup
           </button>
           <button id="syncBtn" onclick="syncData()" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             Sync to FlowPT
@@ -1927,14 +1927,21 @@
     async function exportBackupJSON() {
       const records = await db.sheets.toArray();
       if (!records.length) return alert('No records to back up.');
-      // Blobs cannot be represented in JSON. The editable Fabric canvas JSON is retained.
-      const portableRecords = records.map(({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({ ...record, asset_status: images?.length || shot_thumbnail || shot_thumbnails?.length ? 'local_image_assets_not_included' : 'none' }));
-      const backup = { app: 'VFX_Sheet', format: 'vfx-sheet-record-backup', version: 1, exported_at: new Date().toISOString(), records: portableRecords };
+      const portableRecords = await Promise.all(records.map(async ({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({
+        ...record,
+        asset_status: images?.length || shot_thumbnail || shot_thumbnails?.length ? 'included' : 'none',
+        assets: {
+          images: await Promise.all((images || []).map(blobToBase64)),
+          shot_thumbnail: shot_thumbnail ? await blobToBase64(shot_thumbnail) : null,
+          shot_thumbnails: await Promise.all((shot_thumbnails || []).map(blobToBase64))
+        }
+      })));
+      const backup = { app: 'VFX_Sheet', format: 'vfx-sheet-record-backup', version: 2, exported_at: new Date().toISOString(), records: portableRecords };
       const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url; a.download = `VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      alert(`${records.length} records backed up. Canvas PNG images remain on this device; Fabric sketch data is included.`);
+      alert(`${records.length} records backed up. 写真・サムネイル・Fabricスケッチデータを含むフルバックアップです。`);
     }
 
     async function importBackupJSON(event) {
@@ -1949,39 +1956,68 @@
         if (!data.records.every(record => record && typeof record === 'object')) {
           throw new Error('バックアップ内のレコード形式が正しくありません。');
         }
-        if (!confirm(`${data.records.length}件のレコードをインポートします。\n同じUUIDのレコードはバックアップ内容で更新されます。\nこの端末にある写真・サムネイルは維持されます。\n\n続行しますか？`)) return;
+        const includesAssets = data.records.some(record => record.assets && typeof record.assets === 'object');
+        if (!confirm(`${data.records.length}件のレコードをインポートします。\n同じUUIDのレコードはバックアップ内容で更新されます。\n${includesAssets ? '写真・サムネイルもIndexedDBへ復元します。' : '旧形式のバックアップのため、既存の写真・サムネイルは維持します。'}\n\n続行しますか？`)) return;
+
+        const restoredRecords = await Promise.all(data.records.map(async backupRecord => ({
+          record: backupRecord,
+          assets: backupRecord.assets ? await restoreBackupAssets(backupRecord.assets) : null
+        })));
 
         let created = 0;
         let updated = 0;
         await db.transaction('rw', db.sheets, async () => {
-          for (const backupRecord of data.records) {
+          for (const { record: backupRecord, assets } of restoredRecords) {
             const uuid = backupRecord.uuid || newUuid();
             const existing = await db.sheets.where('uuid').equals(uuid).first();
-            const { id: backupId, images, shot_thumbnail, shot_thumbnails, ...portableRecord } = backupRecord;
+            const { id: backupId, images, shot_thumbnail, shot_thumbnails, assets: ignoredAssets, ...portableRecord } = backupRecord;
+            const restoredAssetFields = assets || {
+              images: existing?.images,
+              shot_thumbnail: existing?.shot_thumbnail,
+              shot_thumbnails: existing?.shot_thumbnails
+            };
             if (existing) {
               await db.sheets.put({
                 ...portableRecord,
                 id: existing.id,
                 uuid,
-                images: existing.images,
-                shot_thumbnail: existing.shot_thumbnail,
-                shot_thumbnails: existing.shot_thumbnails
+                ...restoredAssetFields
               });
               updated++;
             } else {
-              await db.sheets.add({ ...portableRecord, uuid });
+              await db.sheets.add({ ...portableRecord, uuid, ...restoredAssetFields });
               created++;
             }
           }
         });
 
         await renderList();
-        alert(`バックアップをインポートしました。\n新規: ${created}件 / 更新: ${updated}件\n写真・サムネイルはバックアップJSONに含まれないため、元の端末以外では復元されません。`);
+        alert(`バックアップをインポートしました。\n新規: ${created}件 / 更新: ${updated}件${includesAssets ? '\n写真・サムネイルをIndexedDBへ復元しました。' : '\n旧形式のため、写真・サムネイルは復元されません。'}`);
       } catch (error) {
         alert(`Backup Import Error: ${error.message}`);
       } finally {
         event.target.value = '';
       }
+    }
+
+    async function restoreBackupAssets(assets) {
+      if (!Array.isArray(assets.images) || !Array.isArray(assets.shot_thumbnails)) {
+        throw new Error('バックアップ内の画像データ形式が正しくありません。');
+      }
+      return {
+        images: await Promise.all(assets.images.map(dataUrlToBlob)),
+        shot_thumbnail: assets.shot_thumbnail ? await dataUrlToBlob(assets.shot_thumbnail) : undefined,
+        shot_thumbnails: await Promise.all(assets.shot_thumbnails.map(dataUrlToBlob))
+      };
+    }
+
+    async function dataUrlToBlob(dataUrl) {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
+        throw new Error('バックアップ内の画像データが正しくありません。');
+      }
+      const response = await fetch(dataUrl);
+      if (!response.ok) throw new Error('画像データを復元できませんでした。');
+      return response.blob();
     }
 
     function blobToBase64(blob) {
