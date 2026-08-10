@@ -1896,6 +1896,14 @@
         doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
       }
       doc.setFont('DroidSansJapanese', 'normal');
+      // Some WebKit/jsPDF combinations leave the Unicode metrics object unset
+      // even though the TrueType parser supplies widthOfString/widthOfGlyph.
+      // jsPDF's table layout always dereferences this object, so provide the
+      // fallback table used when a glyph width is unavailable.
+      const font = doc.getFont('DroidSansJapanese', 'normal');
+      font.metadata.Unicode = font.metadata.Unicode || { encoding: {}, kerning: {}, widths: { 0: 1000 } };
+      font.metadata.Unicode.widths = font.metadata.Unicode.widths || { 0: 1000 };
+      font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
     }
 
     async function renderTextPdfRecord(doc, record) {
