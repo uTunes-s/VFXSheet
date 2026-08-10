@@ -1658,12 +1658,12 @@
       const canvas = document.createElement('canvas'); canvas.width = 1240; canvas.height = 1754;
       const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#0f172a'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('VFX Sheet', 40, 55);
-      ctx.fillStyle = '#64748b'; ctx.font = '16px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 40, 81);
-      let y = 112;
+      ctx.fillStyle = '#64748b'; ctx.font = '14px sans-serif'; ctx.fillText(`Record #${record.id}`, 40, 79);
+      drawPdfHeaderMeta(ctx, record);
+      let y = 128;
       y = drawPdfSectionTitle(ctx, '1. General Information', y);
       y = drawPdfTable(ctx, y, [
-        [{ label: 'Operator', value: record.operator }, { label: 'Show Title', value: record.show_title }, { label: 'Date & Time', value: record.shoot_datetime }, { label: 'Location', value: record.location }],
-        [{ label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }, { label: 'GPS', value: record.gps_location }]
+        [{ label: 'Location', value: record.location }, { label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }]
       ], 4);
 
       y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 12);
@@ -1702,6 +1702,25 @@
       return y + 14;
     }
 
+    function drawPdfHeaderMeta(ctx, record) {
+      const values = [
+        ['Operator', record.operator],
+        ['Show Title', record.show_title],
+        ['Date & Time', record.shoot_datetime],
+        ['GPS', record.gps_location]
+      ];
+      const width = 270; const x = 1200 - width; const labelWidth = 88;
+      ctx.font = 'bold 11px sans-serif';
+      values.forEach(([label, value], index) => {
+        const y = 26 + index * 20;
+        ctx.fillStyle = '#94a3b8'; ctx.fillText(label, x, y);
+        ctx.fillStyle = '#334155'; ctx.font = '12px sans-serif';
+        const text = wrapPdfText(ctx, String(value || '-'), width - labelWidth).slice(0, 1)[0] || '-';
+        ctx.fillText(text, x + labelWidth, y);
+        ctx.font = 'bold 11px sans-serif';
+      });
+    }
+
     function drawPdfTable(ctx, y, rows, columns) {
       const x = 40; const width = 1160; const cellWidth = width / columns; const cellHeight = 54;
       rows.forEach(row => {
@@ -1724,20 +1743,11 @@
       ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 50, y + 19);
       y += 28;
       y = drawPdfTable(ctx, y, [[
-        { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }
-      ]], 2);
-      y = drawPdfTable(ctx, y, [[
-        { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }
-      ]], 4);
-      y = drawPdfTable(ctx, y, [[
-        { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }
-      ]], 3);
+        { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }, { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }
+      ]], 6);
       return drawPdfTable(ctx, y, [[
-        { label: 'Color Chart & Sphere', value: camera.flag_chart || 'NO' },
-        { label: 'Clean Plate', value: camera.flag_cleanplate || 'NO' },
-        { label: 'VFX Reference', value: camera.flag_reference || 'NO' },
-        { label: 'Tilt', value: camera.tilt_value || '-' }
-      ]], 4);
+        { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }, { label: 'Chart', value: camera.flag_chart || 'NO' }, { label: 'Clean Plate', value: camera.flag_cleanplate || 'NO' }, { label: 'VFX Ref.', value: camera.flag_reference || 'NO' }
+      ]], 7);
     }
 
     function wrapPdfText(ctx, text, maxWidth) {
