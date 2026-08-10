@@ -46,7 +46,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans antialiased">
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-28 md:p-6 md:pb-28 font-sans antialiased">
 
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
@@ -62,9 +62,6 @@
         <button type="button" onclick="loadDefaultSettings()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
           📥 Load Defaults
         </button>
-        <button type="button" onclick="openPresetModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
-          ⚙️ Settings
-        </button>
         <div id="netStatus" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
           <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
           <span id="statusText" class="text-slate-300">Checking...</span>
@@ -72,7 +69,8 @@
       </div>
     </header>
 
-    <!-- Main Form -->
+    <!-- Record Sheet Page -->
+    <section id="recordPage">
     <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
       
       <!-- Edit Mode Banner -->
@@ -267,9 +265,10 @@
         </button>
       </div>
     </form>
+    </section>
 
-    <!-- Records History -->
-    <section class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
+    <!-- History Page -->
+    <section id="historyPage" class="hidden bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Records History (<span id="totalCount">0</span>)</h2>
         <div class="flex flex-wrap gap-2 justify-end">
@@ -297,6 +296,20 @@
       </div>
     </section>
   </div>
+
+  <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700 bg-slate-950/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur" aria-label="Main navigation">
+    <div class="mx-auto grid max-w-md grid-cols-3 gap-2">
+      <button type="button" id="recordNavBtn" onclick="switchAppPage('record')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
+        <span class="text-xl leading-5">📝</span><span>Record Sheet</span>
+      </button>
+      <button type="button" id="historyNavBtn" onclick="switchAppPage('history')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
+        <span class="text-xl leading-5">📚</span><span>History <span id="historyNavCount">(0)</span></span>
+      </button>
+      <button type="button" onclick="openPresetModal()" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
+        <span class="text-xl leading-5">⚙️</span><span>Settings</span>
+      </button>
+    </div>
+  </nav>
 
   <!-- Presets & Settings Modal -->
   <div id="presetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -506,6 +519,22 @@
       initFabricCanvas();
       renderList();
     });
+
+    function switchAppPage(page) {
+      const isRecordPage = page === 'record';
+      document.getElementById('recordPage').classList.toggle('hidden', !isRecordPage);
+      document.getElementById('historyPage').classList.toggle('hidden', isRecordPage);
+
+      const recordButton = document.getElementById('recordNavBtn');
+      const historyButton = document.getElementById('historyNavBtn');
+      recordButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-amber-400' : 'text-slate-400 hover:text-slate-100'}`;
+      historyButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-slate-400 hover:text-slate-100' : 'text-amber-400'}`;
+      recordButton.toggleAttribute('aria-current', isRecordPage);
+      historyButton.toggleAttribute('aria-current', !isRecordPage);
+
+      if (!isRecordPage) renderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     function toggleHdriWeather(isCaptured) {
       const container = document.getElementById('weatherContainer');
@@ -1605,6 +1634,7 @@
     async function renderList() {
       const records = await db.sheets.reverse().toArray();
       document.getElementById('totalCount').innerText = records.length;
+      document.getElementById('historyNavCount').innerText = `(${records.length})`;
       
       const listEl = document.getElementById('recordList');
       if (records.length === 0) {
