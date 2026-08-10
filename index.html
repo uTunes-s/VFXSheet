@@ -322,6 +322,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Camera Models</label>
+          <p class="text-[10px] text-slate-500">ONの機種だけが入力時のプルダウンに表示されます。候補は Camera Database by Matchmove Machine を参考にしています。</p>
           <div class="flex gap-2">
             <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
             <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
@@ -372,7 +373,38 @@
       return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
     }
 
-    const defaultCameras = ["Sony FX6", "Sony Venice 2", "ARRI Alexa Mini LF", "RED V-Raptor", "DJI Inspire 3"];
+    // Camera names are curated from the Camera Database by Matchmove Machine.
+    // Keep the catalogue local so the field app remains fully usable offline.
+    const defaultCameras = [
+      { name: 'ARRI Alexa 35', enabled: false },
+      { name: 'ARRI Alexa 35 Live', enabled: false },
+      { name: 'ARRI Alexa 65', enabled: false },
+      { name: 'ARRI Alexa LF', enabled: false },
+      { name: 'ARRI Alexa Mini', enabled: false },
+      { name: 'ARRI Alexa Mini LF', enabled: true },
+      { name: 'ARRI Alexa SXT', enabled: false },
+      { name: 'Blackmagic Design Cinema Camera 6K', enabled: false },
+      { name: 'Blackmagic Design PYXIS 6K', enabled: false },
+      { name: 'Blackmagic Design URSA Cine 12K', enabled: false },
+      { name: 'Canon C300 MK III', enabled: false },
+      { name: 'Canon C500 MK II', enabled: false },
+      { name: 'DJI Inspire 3', enabled: true },
+      { name: 'DJI Ronin 4D (Zenmuse X9-8K)', enabled: false },
+      { name: 'Freefly Ember S35', enabled: false },
+      { name: 'Freefly Wave 4K', enabled: false },
+      { name: 'Panasonic EVA1 5.7K', enabled: false },
+      { name: 'Panasonic Varicam 35 / LT', enabled: false },
+      { name: 'RED Komodo 6K', enabled: false },
+      { name: 'RED Komodo-X', enabled: false },
+      { name: 'RED V-Raptor 8K S35', enabled: false },
+      { name: 'RED V-Raptor 8K VV', enabled: true },
+      { name: 'Sony Burano', enabled: false },
+      { name: 'Sony FX6', enabled: true },
+      { name: 'Sony FX9', enabled: false },
+      { name: 'Sony Venice 6K FF35', enabled: false },
+      { name: 'Sony Venice II 6K', enabled: false },
+      { name: 'Sony Venice II 8.6K', enabled: true }
+    ];
     const defaultLenses = [
       { name: "ARRI Master Prime 18mm", focal: "18mm" },
       { name: "ARRI Master Prime 35mm", focal: "35mm" },
@@ -528,13 +560,30 @@
     let cachedCamPresets = [];
     let cachedLensPresets = [];
 
+    function normalizeCameraPresets(list = []) {
+      const byName = new Map();
+      [...list, ...defaultCameras].forEach(item => {
+        const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
+        if (!normalized.name) return;
+        const existing = byName.get(normalized.name);
+        byName.set(normalized.name, existing ? { ...normalized, enabled: existing.enabled } : normalized);
+      });
+      return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     async function initPresets() {
       let camRecord = await db.presets.get('camera');
       if (!camRecord) {
-        await db.presets.put({ type: 'camera', list: defaultCameras });
-        camRecord = { list: defaultCameras };
+        camRecord = { type: 'camera', list: defaultCameras };
+        await db.presets.put(camRecord);
+      } else {
+        const normalized = normalizeCameraPresets(camRecord.list);
+        if (JSON.stringify(normalized) !== JSON.stringify(camRecord.list)) {
+          camRecord = { ...camRecord, list: normalized };
+          await db.presets.put(camRecord);
+        }
       }
-      cachedCamPresets = camRecord.list;
+      cachedCamPresets = normalizeCameraPresets(camRecord.list).filter(camera => camera.enabled).map(camera => camera.name);
 
       let lensRecord = await db.presets.get('lens');
       if (!lensRecord) {
@@ -660,10 +709,14 @@
       const camRecord = await db.presets.get('camera');
       const lensRecord = await db.presets.get('lens');
 
-      document.getElementById('cameraPresetList').innerHTML = (camRecord?.list || []).map((item, idx) => `
+      const cameras = normalizeCameraPresets(camRecord?.list || []);
+      document.getElementById('cameraPresetList').innerHTML = cameras.map((item, idx) => `
         <li class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
-          <span class="text-slate-200">${item}</span>
-          <button type="button" onclick="removePresetItem('camera', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
+          <label class="flex min-w-0 items-center gap-2 cursor-pointer">
+            <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleCameraPreset(${idx}, this.checked)" class="accent-amber-400">
+            <span class="text-slate-200 truncate">${escapeHtml(item.name)}</span>
+          </label>
+          ${defaultCameras.some(camera => camera.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('camera', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}
         </li>
       `).join('');
 
@@ -684,7 +737,9 @@
         const val = input.value.trim();
         if (!val) return;
         const record = await db.presets.get('camera');
-        record.list.push(val);
+        record.list = normalizeCameraPresets(record.list);
+        if (record.list.some(camera => camera.name === val)) return alert('This camera model is already registered.');
+        record.list.push({ name: val, enabled: true });
         await db.presets.put(record);
         input.value = '';
       } else if (type === 'lens') {
@@ -701,8 +756,19 @@
       renderPresetModalLists();
     }
 
+    async function toggleCameraPreset(index, enabled) {
+      const record = await db.presets.get('camera');
+      record.list = normalizeCameraPresets(record.list);
+      if (!record.list[index]) return;
+      record.list[index].enabled = enabled;
+      await db.presets.put(record);
+      await initPresets();
+      renderPresetModalLists();
+    }
+
     async function removePresetItem(type, index) {
       const record = await db.presets.get(type);
+      if (type === 'camera') record.list = normalizeCameraPresets(record.list);
       record.list.splice(index, 1);
       await db.presets.put(record);
       await initPresets();
