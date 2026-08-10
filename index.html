@@ -917,7 +917,7 @@
     function addCameraTab() {
       saveActiveTabState();
       const nextChar = String.fromCharCode(65 + cameraListState.length);
-      cameraListState.push(createEmptyCameraItem(`Cam ${nextChar}`));
+      cameraListState.push(createEmptyCameraItem(`Cam${nextChar}`));
       activeCamIndex = cameraListState.length - 1;
       renderCameraTabs();
     }
@@ -942,17 +942,22 @@
       renderCameraTabs();
     }
 
+    function editCameraReelName(idx, event) {
+      event.stopPropagation();
+      saveActiveTabState();
+      const camera = cameraListState[idx];
+      const name = prompt('カメラ／リール名を入力してください。', camera.label);
+      if (name === null) return;
+      const reelName = name.trim().toUpperCase();
+      if (!reelName) return alert('リール名を入力してください。');
+      camera.label = reelName;
+      camera.reel_name = reelName;
+      renderCameraTabs();
+    }
+
     function getCameraReelPrefix(label) {
       const match = String(label || '').match(/[A-Za-z]/g);
       return match ? match[match.length - 1].toUpperCase() : 'A';
-    }
-
-    function updateClipNameHint() {
-      const reelInput = document.getElementById('tab_reel_name');
-      const clipInput = document.getElementById('tab_clip_name');
-      if (!reelInput || !clipInput) return;
-      reelInput.value = reelInput.value.toUpperCase();
-      clipInput.placeholder = `${reelInput.value || getCameraReelPrefix(cameraListState[activeCamIndex]?.label)}001C001`;
     }
 
     function saveActiveTabState() {
@@ -960,7 +965,7 @@
 
       cameraListState[activeCamIndex] = {
         label: cameraListState[activeCamIndex].label,
-        reel_name: document.getElementById('tab_reel_name')?.value.trim().toUpperCase() || getCameraReelPrefix(cameraListState[activeCamIndex].label),
+        reel_name: cameraListState[activeCamIndex].reel_name || cameraListState[activeCamIndex].label,
         camera_preset: document.getElementById('tab_camera_preset')?.value || '',
         camera_custom: document.getElementById('tab_camera_custom')?.value || '',
         lens_preset: document.getElementById('tab_lens_preset')?.value || '',
@@ -999,6 +1004,7 @@
 
         tabBtn.innerHTML = `
           <span>${cam.label}</span>
+          <button type="button" onclick="editCameraReelName(${idx}, event)" class="rounded border border-current/30 px-1 text-[10px] hover:bg-black/10">Edit</button>
           ${cameraListState.length > 1 ? `<button type="button" onclick="removeCameraTab(${idx}, event)" class="hover:text-rose-300 font-bold ml-1">✕</button>` : ''}
         `;
         header.insertBefore(tabBtn, addBtn);
@@ -1018,13 +1024,6 @@
 
       container.innerHTML = `
         <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${cam.label} Settings</div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div>
-            <label class="form-label">${cam.label} Reel Name</label>
-            <input type="text" id="tab_reel_name" value="${cam.reel_name || getCameraReelPrefix(cam.label)}" maxlength="8" placeholder="A" class="form-input font-mono uppercase" oninput="updateClipNameHint()">
-          </div>
-        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
@@ -1063,7 +1062,7 @@
           </div>
           <div>
             <label class="form-label">Clip Name</label>
-            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${cam.reel_name || getCameraReelPrefix(cam.label)}001C001" class="form-input font-mono">
+            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${cam.reel_name || cam.label}001C001" class="form-input font-mono">
           </div>
           <div>
             <label class="form-label">LUT Info</label>
