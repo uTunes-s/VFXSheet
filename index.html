@@ -584,10 +584,10 @@
         if (v.cameras && v.cameras.length > 0) {
           cameraListState = v.cameras.map(c => ({ ...c }));
         } else {
-          cameraListState = [ createEmptyCameraItem("Cam A") ];
+          cameraListState = [ createEmptyCameraItem("A") ];
         }
       } else {
-        cameraListState = [ createEmptyCameraItem("Cam A") ];
+        cameraListState = [ createEmptyCameraItem("A") ];
         document.getElementById('hdri_captured').checked = false;
         toggleHdriWeather(false);
       }
@@ -917,7 +917,7 @@
     function addCameraTab() {
       saveActiveTabState();
       const nextChar = String.fromCharCode(65 + cameraListState.length);
-      cameraListState.push(createEmptyCameraItem(`Cam${nextChar}`));
+      cameraListState.push(createEmptyCameraItem(nextChar));
       activeCamIndex = cameraListState.length - 1;
       renderCameraTabs();
     }
@@ -946,7 +946,7 @@
       event.stopPropagation();
       saveActiveTabState();
       const camera = cameraListState[idx];
-      const name = prompt('カメラ／リール名を入力してください。', camera.label);
+      const name = prompt('カメラ／リール名を入力してください。', getCameraReelName(camera));
       if (name === null) return;
       const reelName = name.trim().toUpperCase();
       if (!reelName) return alert('リール名を入力してください。');
@@ -958,6 +958,14 @@
     function getCameraReelPrefix(label) {
       const match = String(label || '').match(/[A-Za-z]/g);
       return match ? match[match.length - 1].toUpperCase() : 'A';
+    }
+
+    function getCameraReelName(camera) {
+      return String(camera?.reel_name || camera?.label || 'A').replace(/^Cam\s*/i, '').trim().toUpperCase() || 'A';
+    }
+
+    function getCameraFieldLabel(camera) {
+      return `Cam ${getCameraReelName(camera)}`;
     }
 
     function saveActiveTabState() {
@@ -1003,7 +1011,7 @@
         tabBtn.onclick = () => switchCameraTab(idx);
 
         tabBtn.innerHTML = `
-          <span>${cam.label}</span>
+          <span>${getCameraReelName(cam)}</span>
           <button type="button" onclick="editCameraReelName(${idx}, event)" class="rounded border border-current/30 px-1 text-[10px] hover:bg-black/10">Edit</button>
           ${cameraListState.length > 1 ? `<button type="button" onclick="removeCameraTab(${idx}, event)" class="hover:text-rose-300 font-bold ml-1">✕</button>` : ''}
         `;
@@ -1023,11 +1031,11 @@
       const isWorkCustom = cam.cramerawork_preset === '__custom__';
 
       container.innerHTML = `
-        <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${cam.label} Settings</div>
+        <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${getCameraFieldLabel(cam)} Settings</div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="form-label">${cam.label} - Camera Model</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} - Camera Model</label>
             <div class="flex gap-2">
               <select id="tab_camera_preset" onchange="onTabPresetChange('camera')" class="form-select ${isCamCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
@@ -1039,7 +1047,7 @@
           </div>
 
           <div>
-            <label class="form-label">${cam.label} - Lens Model</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} - Lens Model</label>
             <div class="flex gap-2">
               <select id="tab_lens_preset" onchange="onTabLensChange()" class="form-select ${isLensCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
@@ -1062,7 +1070,7 @@
           </div>
           <div>
             <label class="form-label">Clip Name</label>
-            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${cam.reel_name || cam.label}001C001" class="form-input font-mono">
+            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${getCameraReelName(cam)}001C001" class="form-input font-mono">
           </div>
           <div>
             <label class="form-label">LUT Info</label>
@@ -1072,7 +1080,7 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">${cam.label} Movement</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} Movement</label>
             <div class="flex gap-2">
               <select id="tab_cramerawork_preset" onchange="onTabPresetChange('cramerawork')" class="form-select ${isWorkCustom ? 'w-1/2' : 'w-full'}">
                 <option value="FIX (Lock-off)" ${cam.cramerawork_preset === 'FIX (Lock-off)' ? 'selected' : ''}>FIX (Lock-off)</option>
@@ -1089,23 +1097,23 @@
           </div>
 
           <div>
-            <label class="form-label">${cam.label} Lens Height</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} Lens Height</label>
             <input type="text" id="tab_height_value" value="${cam.height_value || ''}" placeholder="150cm" class="form-input font-mono">
           </div>
 
           <div>
-            <label class="form-label">${cam.label} Target Distance</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} Target Distance</label>
             <input type="text" id="tab_distance_value" value="${cam.distance_value || ''}" placeholder="3.5m" class="form-input font-mono">
           </div>
 
           <div>
-            <label class="form-label">${cam.label} Tilt Angle</label>
+            <label class="form-label">${getCameraFieldLabel(cam)} Tilt Angle</label>
             <input type="text" id="tab_tilt_value" value="${cam.tilt_value || ''}" placeholder="+10° / -5°" class="form-input font-mono">
           </div>
         </div>
 
         <div class="pt-2 border-t border-slate-800/60">
-          <label class="form-label font-semibold text-amber-400/80 uppercase">${cam.label} Reference Checklist</label>
+          <label class="form-label font-semibold text-amber-400/80 uppercase">${getCameraFieldLabel(cam)} Reference Checklist</label>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
               <span class="text-xs text-slate-300">Color Chart & Sphere</span>
@@ -1385,7 +1393,7 @@
           flag_reference: c.flag_reference || 'NO'
         }));
       } else {
-        cameraListState = [ createEmptyCameraItem("Cam A") ];
+        cameraListState = [ createEmptyCameraItem("A") ];
       }
       activeCamIndex = 0;
       renderCameraTabs();
@@ -1698,7 +1706,7 @@
       ], 4);
 
       y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 12);
-      const cameras = record.cameras?.length ? record.cameras : [{ label: 'Cam A' }];
+      const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
       cameras.forEach((camera, index) => {
         y = drawPdfCameraTable(ctx, y, camera, index + 1);
         y += 10;
