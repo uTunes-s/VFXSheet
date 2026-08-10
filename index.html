@@ -291,7 +291,7 @@
         </div>
       </div>
 
-      <div id="recordList" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+      <div id="recordList" class="space-y-2">
         <!-- Rendered via JS -->
       </div>
     </section>
@@ -310,6 +310,16 @@
       </button>
     </div>
   </nav>
+
+  <div id="editRecordModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="editRecordModalTitle">
+    <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+        <h2 id="editRecordModalTitle" class="text-sm font-bold text-amber-400">Edit VFX Sheet</h2>
+        <button type="button" onclick="closeEditRecordModal()" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+      </div>
+      <div id="editRecordModalContent" class="flex-1 overflow-y-auto p-3 md:p-5"></div>
+    </div>
+  </div>
 
   <!-- Presets & Settings Modal -->
   <div id="presetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -386,6 +396,7 @@
     });
 
     let currentEditingId = null;
+    let isEditingInModal = false;
     let cameraListState = [];
     let activeCamIndex = 0;
     let currentDrawingColor = '#00ffff';
@@ -1418,6 +1429,8 @@
       const record = await db.sheets.get(id);
       if (!record) return alert("Record not found.");
 
+      openEditRecordModal();
+
       currentEditingId = id;
       document.getElementById('editModeBanner').classList.remove('hidden');
       document.getElementById('editingRecordId').innerText = id;
@@ -1501,7 +1514,26 @@
         });
       }
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openEditRecordModal() {
+      const modal = document.getElementById('editRecordModal');
+      const form = document.getElementById('vfxForm');
+      document.getElementById('editRecordModalContent').appendChild(form);
+      modal.classList.remove('hidden');
+      isEditingInModal = true;
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeEditRecordModal() {
+      if (!isEditingInModal) return;
+      const form = document.getElementById('vfxForm');
+      document.getElementById('recordPage').appendChild(form);
+      document.getElementById('editRecordModal').classList.add('hidden');
+      isEditingInModal = false;
+      document.body.classList.remove('overflow-hidden');
+      if (currentEditingId) cancelEditMode();
     }
 
     function cancelEditMode() {
@@ -1622,7 +1654,13 @@
         alert("Failed to save record to IndexedDB.");
       }
 
-      if (saved) prepareNextRecord();
+      if (saved) {
+        if (isEditingInModal) {
+          closeEditRecordModal();
+        } else {
+          prepareNextRecord();
+        }
+      }
       await renderList();
     }
 

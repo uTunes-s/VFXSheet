@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v31';
+const CACHE_NAME = 'vfx-sheet-v32';
 const APP_SHELL = [
   './index.html',
   './manifest.webmanifest',
