@@ -200,8 +200,10 @@
             <label class="form-label">Shot Data Thumbnail</label>
             <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
           </div>
-          <input type="file" id="shotThumbnailInput" accept="image/*" capture="environment" class="hidden" onchange="setShotThumbnail(event)">
-          <button type="button" onclick="document.getElementById('shotThumbnailInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Add Thumbnail</button>
+          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" class="hidden" onchange="setShotThumbnail(event)">
+          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" onchange="setShotThumbnail(event)">
+          <button type="button" onclick="document.getElementById('shotThumbnailLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
+          <button type="button" onclick="document.getElementById('shotThumbnailCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
           <button type="button" onclick="clearShotThumbnail()" class="text-xs text-rose-300 px-2 py-2">Clear</button>
           <img id="shotThumbnailPreview" alt="Shot thumbnail preview" class="hidden h-16 w-24 rounded border border-slate-700 object-cover">
         </div>
@@ -238,10 +240,10 @@
               <input type="color" id="customCanvasColor" value="#00ffff" onchange="setCanvasColor(this.value)" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
             </div>
             
-            <input type="file" id="noteImgInput" accept="image/*" capture="camera" class="hidden" onchange="addFreeImageToCanvas(event)">
-            <button type="button" onclick="document.getElementById('noteImgInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">
-              🖼️ Add Photo
-            </button>
+            <input type="file" id="noteImgLibraryInput" accept="image/*" class="hidden" onchange="addFreeImageToCanvas(event)">
+            <input type="file" id="noteImgCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addFreeImageToCanvas(event)">
+            <button type="button" onclick="document.getElementById('noteImgLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">🖼️ Library</button>
+            <button type="button" onclick="document.getElementById('noteImgCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">📷 Camera</button>
             
             <div class="ml-auto flex gap-2">
               <button type="button" onclick="deleteSelected()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
@@ -322,7 +324,6 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Camera Models</label>
-          <p class="text-[10px] text-slate-500">ONの機種だけが入力時のプルダウンに表示されます。候補は Camera Database by Matchmove Machine を参考にしています。</p>
           <div class="flex gap-2">
             <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
             <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
@@ -332,7 +333,6 @@
 
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Lens Models</label>
-          <p class="text-[10px] text-slate-500">Cinematography Salon Lens Database を参考にした候補です。ONのレンズだけが入力時に種類別で表示されます。</p>
           <div class="space-y-1.5">
             <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
             <div class="flex gap-2">
@@ -531,7 +531,8 @@
       const preview = document.getElementById('shotThumbnailPreview');
       if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
       preview.removeAttribute('src'); preview.classList.add('hidden'); preview.dataset.hasNewFile = '';
-      document.getElementById('shotThumbnailInput').value = '';
+      document.getElementById('shotThumbnailLibraryInput').value = '';
+      document.getElementById('shotThumbnailCameraInput').value = '';
     }
 
     function moveSelectedLayer(direction) {
@@ -1434,9 +1435,9 @@
 
       const isHdri = document.getElementById('hdri_captured').checked;
       const noteCanvasBlob = await exportCanvasToBlob();
-      const thumbnailInput = document.getElementById('shotThumbnailInput');
+      const thumbnailFile = document.getElementById('shotThumbnailLibraryInput').files[0] || document.getElementById('shotThumbnailCameraInput').files[0];
       const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
-      const shotThumbnail = thumbnailInput.files[0] || existingRecord?.shot_thumbnail || null;
+      const shotThumbnail = thumbnailFile || existingRecord?.shot_thumbnail || null;
       const canvasJson = JSON.stringify(fCanvas.toJSON());
 
       const payload = {
@@ -1527,7 +1528,7 @@
         return `
           <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
             <div class="flex justify-between items-center">
-              <span class="font-mono text-amber-400 font-bold text-sm">#${r.id} | ${safe(r.show_title)} ${safe(r.scene)}_${safe(r.shot)}</span>
+              <span class="font-mono text-amber-400 font-bold text-sm">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')} ${safe(r.scene)}_${safe(r.shot)}</span>
               <div class="flex gap-2 items-center">
                 ${syncBadge}
                 <button type="button" onclick="loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
@@ -1629,11 +1630,10 @@
       ctx.fillStyle = '#64748b'; ctx.font = '20px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 60, 106);
       let y = 155;
       const drawText = (label, value) => { ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(label, 60, y); ctx.fillStyle = '#0f172a'; ctx.font = '22px sans-serif'; const lines = wrapPdfText(ctx, String(value || '-'), 1120); lines.forEach(line => { y += 30; ctx.fillText(line, 60, y); }); y += 26; };
-      drawText('Show / Scene / Shot', `${record.show_title || ''}  ${record.scene || ''}_${record.shot || ''}`);
-      drawText('Operator / Location', `${record.operator || '-'}  /  ${record.location || '-'}`);
-      drawText('HDRI', record.hdri_captured === 'YES' ? `${Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather || '-'}  ${record.hdri_notes || ''}` : 'Not captured');
-      drawText('Notes', record.notes || '-');
-      drawText('Cameras', (record.cameras || []).map(c => `${c.label}: ${c.camera || '-'} / ${c.lens || '-'} / ${c.focal_length || '-'} / ${c.t_stop || '-'} / ${c.clip_name || '-'} / ${c.cramerawork || '-'}`).join('\n'));
+      drawText('1. General Information', `Operator: ${record.operator || '-'}\nShow Title: ${record.show_title || '-'}\nDate & Time: ${record.shoot_datetime || '-'}\nLocation: ${record.location || '-'}\nEpisode: ${record.episode || '-'}\nScene / Shot: ${record.scene || '-'} / ${record.shot || '-'}\nGPS: ${record.gps_location || '-'}`);
+      drawText('2. Multi-Camera Setup', (record.cameras || []).map(c => `${c.label}: ${c.camera || '-'} / ${c.lens || '-'} / ${c.focal_length || '-'} / ${c.t_stop || '-'}\nClip: ${c.clip_name || '-'}  LUT: ${c.lut_info || '-'}  Movement: ${c.cramerawork || '-'}\nHeight: ${c.height_value || '-'}  Distance: ${c.distance_value || '-'}  Tilt: ${c.tilt_value || '-'}  Chart: ${c.flag_chart || 'NO'}  Clean Plate: ${c.flag_cleanplate || 'NO'}  Reference: ${c.flag_reference || 'NO'}`).join('\n\n'));
+      drawText('3. HDRI Setup', record.hdri_captured === 'YES' ? `Captured: YES\nWeather: ${Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather || '-'}\nNotes / EV: ${record.hdri_notes || '-'}` : 'Captured: NO');
+      drawText('4. VFX Field Notes & Sketch', record.notes || '-');
       const thumb = await imageFromBlob(record.shot_thumbnail); const sketch = await imageFromBlob(record.images?.[0]);
       const imageY = Math.max(y, 780); const imageHeight = 310; const imageWidth = 530;
       ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnail', 60, imageY); ctx.fillText('Field Sketch', 650, imageY);
