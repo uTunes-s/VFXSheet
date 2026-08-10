@@ -1913,7 +1913,7 @@
         const records = await getRecordsForHistoryAction();
         if (!records || records.length === 0) return alert("No records to export.");
 
-        const headers = ["ID", "Project", "Shooting Data Name", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "Camerawork", "Height", "Distance", "Angle"];
+        const headers = ["ID", "Project", "Shooting Data Name", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "Clip Name", "Camerawork", "Height", "Distance", "Angle"];
         const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
         const formatShootDate = value => {
           const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
@@ -1935,6 +1935,7 @@
             camera.lens,
             camera.focal_length,
             camera.t_stop,
+            camera.clip_name,
             camera.cramerawork,
             camera.height_value,
             camera.distance_value,
