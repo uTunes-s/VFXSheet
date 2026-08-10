@@ -332,6 +332,7 @@
 
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Lens Models</label>
+          <p class="text-[10px] text-slate-500">Cinematography Salon Lens Database を参考にした候補です。ONのレンズだけが入力時に種類別で表示されます。</p>
           <div class="space-y-1.5">
             <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
             <div class="flex gap-2">
@@ -375,20 +376,21 @@
 
     // Camera names are curated from the Camera Database by Matchmove Machine.
     // Keep the catalogue local so the field app remains fully usable offline.
+    const presetCategories = ['Cine', 'Photo', 'Phone', 'Drone', 'Custom'];
     const defaultCameras = [
-      { name: 'ARRI Alexa 35', enabled: false },
+      { name: 'ARRI Alexa 35', category: 'Cine', enabled: false },
       { name: 'ARRI Alexa 35 Live', enabled: false },
       { name: 'ARRI Alexa 65', enabled: false },
       { name: 'ARRI Alexa LF', enabled: false },
       { name: 'ARRI Alexa Mini', enabled: false },
-      { name: 'ARRI Alexa Mini LF', enabled: true },
+      { name: 'ARRI Alexa Mini LF', category: 'Cine', enabled: false },
       { name: 'ARRI Alexa SXT', enabled: false },
       { name: 'Blackmagic Design Cinema Camera 6K', enabled: false },
       { name: 'Blackmagic Design PYXIS 6K', enabled: false },
       { name: 'Blackmagic Design URSA Cine 12K', enabled: false },
       { name: 'Canon C300 MK III', enabled: false },
       { name: 'Canon C500 MK II', enabled: false },
-      { name: 'DJI Inspire 3', enabled: true },
+      { name: 'DJI Inspire 3', category: 'Drone', enabled: true },
       { name: 'DJI Ronin 4D (Zenmuse X9-8K)', enabled: false },
       { name: 'Freefly Ember S35', enabled: false },
       { name: 'Freefly Wave 4K', enabled: false },
@@ -397,20 +399,56 @@
       { name: 'RED Komodo 6K', enabled: false },
       { name: 'RED Komodo-X', enabled: false },
       { name: 'RED V-Raptor 8K S35', enabled: false },
-      { name: 'RED V-Raptor 8K VV', enabled: true },
+      { name: 'RED V-Raptor 8K VV', category: 'Cine', enabled: false },
       { name: 'Sony Burano', enabled: false },
-      { name: 'Sony FX6', enabled: true },
+      { name: 'Sony FX3', category: 'Cine', enabled: true },
+      { name: 'Sony FX6', category: 'Cine', enabled: false },
       { name: 'Sony FX9', enabled: false },
       { name: 'Sony Venice 6K FF35', enabled: false },
       { name: 'Sony Venice II 6K', enabled: false },
-      { name: 'Sony Venice II 8.6K', enabled: true }
+      { name: 'Sony Venice II 8.6K', category: 'Cine', enabled: true },
+      { name: 'Canon EOS R5 C', category: 'Photo', enabled: false },
+      { name: 'Canon EOS R5 Mark II', category: 'Photo', enabled: false },
+      { name: 'Fujifilm GFX100 II', category: 'Photo', enabled: false },
+      { name: 'Nikon Z8', category: 'Photo', enabled: false },
+      { name: 'Sony Alpha 1 II', category: 'Photo', enabled: false },
+      { name: 'Sony Alpha 7S III', category: 'Photo', enabled: false },
+      { name: 'Apple iPhone 15 Pro / Pro Max', category: 'Phone', enabled: false },
+      { name: 'Apple iPhone 16 Pro / Pro Max', category: 'Phone', enabled: false },
+      { name: 'Samsung Galaxy S24 Ultra', category: 'Phone', enabled: false },
+      { name: 'Google Pixel 9 Pro', category: 'Phone', enabled: false },
+      { name: 'DJI Mavic 3 Cine', category: 'Drone', enabled: false },
+      { name: 'DJI Mavic 3 Pro Cine', category: 'Drone', enabled: false },
+      { name: 'DJI Mavic 4 Pro', category: 'Drone', enabled: false },
+      { name: 'DJI Air 3S', category: 'Drone', enabled: false },
+      { name: 'DJI Mini 4 Pro', category: 'Drone', enabled: false }
     ];
     const defaultLenses = [
-      { name: "ARRI Master Prime 18mm", focal: "18mm" },
-      { name: "ARRI Master Prime 35mm", focal: "35mm" },
-      { name: "ARRI Master Prime 50mm", focal: "50mm" },
-      { name: "ARRI Master Prime 85mm", focal: "85mm" },
-      { name: "Cooke S4/i 25mm", focal: "25mm" }
+      { name: 'ARRI Master Prime 18mm', focal: '18mm', category: 'Cine', enabled: false },
+      { name: 'ARRI Master Prime 35mm', focal: '35mm', category: 'Cine', enabled: false },
+      { name: 'ARRI Master Prime 50mm', focal: '50mm', category: 'Cine', enabled: false },
+      { name: 'ARRI Master Prime 85mm', focal: '85mm', category: 'Cine', enabled: false },
+      { name: 'ARRI Signature Prime 25mm', focal: '25mm', category: 'Cine', enabled: false },
+      { name: 'Cooke S4/i 25mm', focal: '25mm', category: 'Cine', enabled: true },
+      { name: 'Cooke S4/i 50mm', focal: '50mm', category: 'Cine', enabled: false },
+      { name: 'Cooke Panchro Classic 32mm', focal: '32mm', category: 'Cine', enabled: false },
+      { name: 'Angénieux Optimo 24-290mm', focal: '24-290mm', category: 'Cine', enabled: false },
+      { name: 'Angénieux Optimo Prime 50mm', focal: '50mm', category: 'Cine', enabled: false },
+      { name: 'Zeiss Supreme Prime 29mm', focal: '29mm', category: 'Cine', enabled: false },
+      { name: 'Leica Summilux-C 35mm', focal: '35mm', category: 'Cine', enabled: false },
+      { name: 'Canon RF 24-70mm F2.8 L IS USM', focal: '24-70mm', category: 'Photo', enabled: false },
+      { name: 'Canon RF 50mm F1.2 L USM', focal: '50mm', category: 'Photo', enabled: false },
+      { name: 'Sony FE 24-70mm F2.8 GM II', focal: '24-70mm', category: 'Photo', enabled: false },
+      { name: 'Sony FE 35mm F1.4 GM', focal: '35mm', category: 'Photo', enabled: false },
+      { name: 'NIKKOR Z 24-70mm f/2.8 S', focal: '24-70mm', category: 'Photo', enabled: false },
+      { name: 'Fujifilm GF 32-64mm F4 R LM WR', focal: '32-64mm', category: 'Photo', enabled: false },
+      { name: 'iPhone 15 Pro Main Camera 24mm equiv.', focal: '24mm equiv.', category: 'Phone', enabled: false },
+      { name: 'iPhone 15 Pro Ultra Wide 13mm equiv.', focal: '13mm equiv.', category: 'Phone', enabled: false },
+      { name: 'iPhone 15 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', enabled: false },
+      { name: 'DJI Inspire 3 DL 18mm F2.8 ASPH', focal: '18mm', category: 'Drone', enabled: false },
+      { name: 'DJI Inspire 3 DL 24mm F2.8 LS ASPH', focal: '24mm', category: 'Drone', enabled: false },
+      { name: 'DJI Inspire 3 DL 35mm F2.8 LS ASPH', focal: '35mm', category: 'Drone', enabled: false },
+      { name: 'DJI Inspire 3 DL 50mm F2.8 LS ASPH', focal: '50mm', category: 'Drone', enabled: false }
     ];
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -562,11 +600,22 @@
 
     function normalizeCameraPresets(list = []) {
       const byName = new Map();
-      [...list, ...defaultCameras].forEach(item => {
-        const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
+      [...defaultCameras, ...list].forEach(item => {
+        const normalized = typeof item === 'string' ? { name: item, category: 'Custom', enabled: true } : { name: item.name, category: item.category || 'Cine', enabled: item.enabled !== false };
         if (!normalized.name) return;
         const existing = byName.get(normalized.name);
-        byName.set(normalized.name, existing ? { ...normalized, enabled: existing.enabled } : normalized);
+        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
+      });
+      return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function normalizeLensPresets(list = []) {
+      const byName = new Map();
+      [...defaultLenses, ...list].forEach(item => {
+        const normalized = { name: item.name, focal: item.focal || '', category: item.category || 'Cine', enabled: item.enabled !== false };
+        if (!normalized.name) return;
+        const existing = byName.get(normalized.name);
+        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
       });
       return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -583,14 +632,20 @@
           await db.presets.put(camRecord);
         }
       }
-      cachedCamPresets = normalizeCameraPresets(camRecord.list).filter(camera => camera.enabled).map(camera => camera.name);
+      cachedCamPresets = normalizeCameraPresets(camRecord.list).filter(camera => camera.enabled);
 
       let lensRecord = await db.presets.get('lens');
       if (!lensRecord) {
-        await db.presets.put({ type: 'lens', list: defaultLenses });
-        lensRecord = { list: defaultLenses };
+        lensRecord = { type: 'lens', list: defaultLenses };
+        await db.presets.put(lensRecord);
+      } else {
+        const normalized = normalizeLensPresets(lensRecord.list);
+        if (JSON.stringify(normalized) !== JSON.stringify(lensRecord.list)) {
+          lensRecord = { ...lensRecord, list: normalized };
+          await db.presets.put(lensRecord);
+        }
       }
-      cachedLensPresets = lensRecord.list;
+      cachedLensPresets = normalizeLensPresets(lensRecord.list).filter(lens => lens.enabled);
 
       renderCameraTabs();
     }
@@ -709,26 +764,18 @@
       const camRecord = await db.presets.get('camera');
       const lensRecord = await db.presets.get('lens');
 
-      const cameras = normalizeCameraPresets(camRecord?.list || []);
-      document.getElementById('cameraPresetList').innerHTML = cameras.map((item, idx) => `
-        <li class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
-          <label class="flex min-w-0 items-center gap-2 cursor-pointer">
-            <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="toggleCameraPreset(${idx}, this.checked)" class="accent-amber-400">
-            <span class="text-slate-200 truncate">${escapeHtml(item.name)}</span>
-          </label>
-          ${defaultCameras.some(camera => camera.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('camera', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}
-        </li>
-      `).join('');
-
-      document.getElementById('lensPresetList').innerHTML = (lensRecord?.list || []).map((item, idx) => `
-        <li class="flex justify-between items-center bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
-          <div>
-            <span class="text-slate-200 block">${item.name}</span>
-            <span class="text-[10px] text-slate-500 font-mono">${item.focal || 'No focal specs'}</span>
-          </div>
-          <button type="button" onclick="removePresetItem('lens', ${idx})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
-        </li>
-      `).join('');
+      const renderGroups = (items, type, defaults) => presetCategories.map(category => {
+        const group = items.map((item, index) => ({ item, index })).filter(({ item }) => item.category === category);
+        if (!group.length) return '';
+        return `<li class="pt-2 first:pt-0"><div class="sticky top-0 bg-slate-950 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400">${category}</div>${group.map(({ item, index }) => `
+          <div class="flex justify-between items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
+            <label class="flex min-w-0 items-center gap-2 cursor-pointer"><input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="togglePresetItem('${type}', ${index}, this.checked)" class="accent-amber-400"><span class="text-slate-200 truncate">${escapeHtml(item.name)}</span></label>
+            ${type === 'lens' ? `<span class="text-[10px] text-slate-500 font-mono">${escapeHtml(item.focal || '')}</span>` : ''}
+            ${defaults.some(defaultItem => defaultItem.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('${type}', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}
+          </div>`).join('')}</li>`;
+      }).join('');
+      document.getElementById('cameraPresetList').innerHTML = renderGroups(normalizeCameraPresets(camRecord?.list || []), 'camera', defaultCameras);
+      document.getElementById('lensPresetList').innerHTML = renderGroups(normalizeLensPresets(lensRecord?.list || []), 'lens', defaultLenses);
     }
 
     async function addPresetItem(type) {
@@ -739,7 +786,7 @@
         const record = await db.presets.get('camera');
         record.list = normalizeCameraPresets(record.list);
         if (record.list.some(camera => camera.name === val)) return alert('This camera model is already registered.');
-        record.list.push({ name: val, enabled: true });
+        record.list.push({ name: val, category: 'Custom', enabled: true });
         await db.presets.put(record);
         input.value = '';
       } else if (type === 'lens') {
@@ -747,7 +794,9 @@
         const focalInput = document.getElementById('newLensFocalInput');
         if (!nameInput.value.trim()) return;
         const record = await db.presets.get('lens');
-        record.list.push({ name: nameInput.value.trim(), focal: focalInput.value.trim() });
+        record.list = normalizeLensPresets(record.list);
+        if (record.list.some(lens => lens.name === nameInput.value.trim())) return alert('This lens model is already registered.');
+        record.list.push({ name: nameInput.value.trim(), focal: focalInput.value.trim(), category: 'Custom', enabled: true });
         await db.presets.put(record);
         nameInput.value = '';
         focalInput.value = '';
@@ -756,9 +805,9 @@
       renderPresetModalLists();
     }
 
-    async function toggleCameraPreset(index, enabled) {
-      const record = await db.presets.get('camera');
-      record.list = normalizeCameraPresets(record.list);
+    async function togglePresetItem(type, index, enabled) {
+      const record = await db.presets.get(type);
+      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : normalizeLensPresets(record.list);
       if (!record.list[index]) return;
       record.list[index].enabled = enabled;
       await db.presets.put(record);
@@ -768,7 +817,7 @@
 
     async function removePresetItem(type, index) {
       const record = await db.presets.get(type);
-      if (type === 'camera') record.list = normalizeCameraPresets(record.list);
+      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : normalizeLensPresets(record.list);
       record.list.splice(index, 1);
       await db.presets.put(record);
       await initPresets();
@@ -882,7 +931,7 @@
             <div class="flex gap-2">
               <select id="tab_camera_preset" onchange="onTabPresetChange('camera')" class="form-select ${isCamCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
-                ${cachedCamPresets.map(c => `<option value="${c}" ${cam.camera_preset === c ? 'selected' : ''}>${c}</option>`).join('')}
+                ${renderPresetOptions(cachedCamPresets, cam.camera_preset)}
                 <option value="__custom__" ${isCamCustom ? 'selected' : ''}>Custom / Other</option>
               </select>
               <input type="text" id="tab_camera_custom" value="${cam.camera_custom || ''}" placeholder="Camera Model" class="form-input ${isCamCustom ? 'w-1/2' : 'hidden'}">
@@ -894,7 +943,7 @@
             <div class="flex gap-2">
               <select id="tab_lens_preset" onchange="onTabLensChange()" class="form-select ${isLensCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
-                ${cachedLensPresets.map(l => `<option value="${l.name}" data-focal="${l.focal || ''}" ${cam.lens_preset === l.name ? 'selected' : ''}>${l.name}</option>`).join('')}
+                ${renderPresetOptions(cachedLensPresets, cam.lens_preset, true)}
                 <option value="__custom__" data-focal="" ${isLensCustom ? 'selected' : ''}>Custom / Zoom</option>
               </select>
               <input type="text" id="tab_lens_custom" value="${cam.lens_custom || ''}" placeholder="Lens Model" class="form-input ${isLensCustom ? 'w-1/2' : 'hidden'}">
@@ -982,6 +1031,14 @@
           </div>
         </div>
       `;
+    }
+
+    function renderPresetOptions(items, selectedName, includeFocal = false) {
+      return presetCategories.map(category => {
+        const group = items.filter(item => item.category === category);
+        if (!group.length) return '';
+        return `<optgroup label="${category}">${group.map(item => `<option value="${escapeHtml(item.name)}" ${includeFocal ? `data-focal="${escapeHtml(item.focal || '')}"` : ''} ${selectedName === item.name ? 'selected' : ''}>${escapeHtml(item.name)}${includeFocal && item.focal ? ` (${escapeHtml(item.focal)})` : ''}</option>`).join('')}</optgroup>`;
+      }).join('');
     }
 
     function onTabPresetChange(type) {
