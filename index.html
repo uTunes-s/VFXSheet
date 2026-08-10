@@ -1912,19 +1912,24 @@
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const text = value => String(value ?? '').trim() || '-';
-      const addSection = (title, body, startY) => {
+      const addSection = (title, rows, startY) => {
         doc.setFontSize(11);
         doc.setTextColor(180, 83, 9);
         doc.text(title, margin, startY);
-        doc.autoTable({
-          startY: startY + 2,
-          margin: { left: margin, right: margin },
-          theme: 'grid',
-          styles: { font: 'DroidSansJapanese', fontSize: 7.5, cellPadding: 2, textColor: [15, 23, 42], lineColor: [203, 213, 225] },
-          headStyles: { fillColor: [226, 232, 240], textColor: [15, 23, 42], fontStyle: 'normal' },
-          body
+        let y = startY + 5;
+        doc.setFontSize(7.5);
+        rows.forEach((row, index) => {
+          const line = row.map(value => text(value)).join('  |  ');
+          // Japanese glyph widths vary by font and jsPDF/WebKit version. Fixed
+          // character clipping avoids relying on those metrics for layout.
+          const clipped = [...line].slice(0, 58).join('');
+          doc.setFillColor(index % 2 ? 248 : 241, index % 2 ? 250 : 245, index % 2 ? 252 : 249);
+          doc.rect(margin, y - 3.2, pageWidth - margin * 2, 5.6, 'F');
+          doc.setTextColor(15, 23, 42);
+          doc.text(clipped, margin + 2, y);
+          y += 6;
         });
-        return doc.lastAutoTable.finalY + 8;
+        return y + 4;
       };
 
       doc.setTextColor(15, 23, 42);
