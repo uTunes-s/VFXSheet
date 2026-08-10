@@ -363,7 +363,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1 flex-1">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Camera Models</label>
           <div class="flex gap-2">
@@ -383,6 +383,15 @@
             </div>
           </div>
           <ul id="lensPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
+        </div>
+
+        <div class="space-y-2">
+          <label class="form-label text-amber-300 font-bold">Camera Movement</label>
+          <div class="flex gap-2">
+            <input type="text" id="newMovementInput" placeholder="e.g. Motion Control" class="form-input text-xs">
+            <button type="button" onclick="addPresetItem('movement')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+          </div>
+          <ul id="movementPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
       </div>
 
@@ -424,6 +433,7 @@
     // Camera names are curated from the Camera Database by Matchmove Machine.
     // Keep the catalogue local so the field app remains fully usable offline.
     const presetCategories = ['Cine', 'Photo', 'Phone', 'Drone', 'Custom'];
+    const defaultMovements = ['Fix', 'Pan', 'Rail', 'Steady', 'Jib', 'Crane', 'Handy', 'Drone', 'Rail Jib', 'Other'].map(name => ({ name, enabled: true }));
     const defaultCameras = [
       { name: 'ARRI Alexa 35', category: 'Cine', enabled: false },
       { name: 'ARRI Alexa 35 Live', enabled: false },
@@ -681,7 +691,7 @@
         t_stop: '',
         clip_name: '',
         lut_info: '',
-        cramerawork_preset: 'FIX (Lock-off)',
+        cramerawork_preset: 'Fix',
         cramerawork_custom: '',
         height_value: '',
         distance_value: '',
@@ -749,6 +759,7 @@
 
     let cachedCamPresets = [];
     let cachedLensPresets = [];
+    let cachedMovementPresets = [];
 
     function normalizeCameraPresets(list = []) {
       const byName = new Map();
@@ -770,6 +781,15 @@
         byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
       });
       return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function normalizeMovementPresets(list = []) {
+      const byName = new Map();
+      [...defaultMovements, ...list].forEach(item => {
+        const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
+        if (normalized.name) byName.set(normalized.name, { ...(byName.get(normalized.name) || {}), ...normalized });
+      });
+      return [...byName.values()];
     }
 
     async function initPresets() {
@@ -798,6 +818,16 @@
         }
       }
       cachedLensPresets = normalizeLensPresets(lensRecord.list).filter(lens => lens.enabled);
+
+      let movementRecord = await db.presets.get('movement');
+      if (!movementRecord) {
+        movementRecord = { type: 'movement', list: defaultMovements };
+        await db.presets.put(movementRecord);
+      } else {
+        const normalized = normalizeMovementPresets(movementRecord.list);
+        if (JSON.stringify(normalized) !== JSON.stringify(movementRecord.list)) await db.presets.put({ ...movementRecord, list: normalized });
+      }
+      cachedMovementPresets = normalizeMovementPresets((await db.presets.get('movement')).list).filter(item => item.enabled);
 
       renderCameraTabs();
     }
@@ -956,6 +986,7 @@
     async function renderPresetModalLists() {
       const camRecord = await db.presets.get('camera');
       const lensRecord = await db.presets.get('lens');
+      const movementRecord = await db.presets.get('movement');
 
       const renderGroups = (items, type, defaults) => presetCategories.map(category => {
         const group = items.map((item, index) => ({ item, index })).filter(({ item }) => item.category === category);
@@ -969,6 +1000,7 @@
       }).join('');
       document.getElementById('cameraPresetList').innerHTML = renderGroups(normalizeCameraPresets(camRecord?.list || []), 'camera', defaultCameras);
       document.getElementById('lensPresetList').innerHTML = renderGroups(normalizeLensPresets(lensRecord?.list || []), 'lens', defaultLenses);
+      document.getElementById('movementPresetList').innerHTML = normalizeMovementPresets(movementRecord?.list || []).map((item, index) => `<li class="flex justify-between items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800"><label class="flex min-w-0 items-center gap-2 cursor-pointer"><input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="togglePresetItem('movement', ${index}, this.checked)" class="accent-amber-400"><span class="text-slate-200 truncate">${escapeHtml(item.name)}</span></label>${defaultMovements.some(defaultItem => defaultItem.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('movement', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}</li>`).join('');
     }
 
     async function addPresetItem(type) {
@@ -993,6 +1025,16 @@
         await db.presets.put(record);
         nameInput.value = '';
         focalInput.value = '';
+      } else if (type === 'movement') {
+        const input = document.getElementById('newMovementInput');
+        const val = input.value.trim();
+        if (!val) return;
+        const record = await db.presets.get('movement');
+        record.list = normalizeMovementPresets(record.list);
+        if (record.list.some(item => item.name === val)) return alert('This movement is already registered.');
+        record.list.push({ name: val, enabled: true });
+        await db.presets.put(record);
+        input.value = '';
       }
       await initPresets();
       renderPresetModalLists();
@@ -1000,7 +1042,7 @@
 
     async function togglePresetItem(type, index, enabled) {
       const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : normalizeLensPresets(record.list);
+      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
       if (!record.list[index]) return;
       record.list[index].enabled = enabled;
       await db.presets.put(record);
@@ -1010,7 +1052,7 @@
 
     async function removePresetItem(type, index) {
       const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : normalizeLensPresets(record.list);
+      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
       record.list.splice(index, 1);
       await db.presets.put(record);
       await initPresets();
@@ -1021,6 +1063,7 @@
       if (confirm("Reset all presets to default?")) {
         await db.presets.put({ type: 'camera', list: defaultCameras });
         await db.presets.put({ type: 'lens', list: defaultLenses });
+        await db.presets.put({ type: 'movement', list: defaultMovements });
         await db.presets.delete('user_defaults');
         await initPresets();
         renderPresetModalLists();
@@ -1197,13 +1240,7 @@
             <label class="form-label">${getCameraFieldLabel(cam)} Movement</label>
             <div class="flex gap-2">
               <select id="tab_cramerawork_preset" onchange="onTabPresetChange('cramerawork')" class="form-select ${isWorkCustom ? 'w-1/2' : 'w-full'}">
-                <option value="FIX (Lock-off)" ${cam.cramerawork_preset === 'FIX (Lock-off)' ? 'selected' : ''}>FIX (Lock-off)</option>
-                <option value="Pan / Tilt" ${cam.cramerawork_preset === 'Pan / Tilt' ? 'selected' : ''}>Pan / Tilt</option>
-                <option value="Dolly / Track" ${cam.cramerawork_preset === 'Dolly / Track' ? 'selected' : ''}>Dolly / Track</option>
-                <option value="Handheld" ${cam.cramerawork_preset === 'Handheld' ? 'selected' : ''}>Handheld</option>
-                <option value="Steadicam / Gimbal" ${cam.cramerawork_preset === 'Steadicam / Gimbal' ? 'selected' : ''}>Steadicam / Gimbal</option>
-                <option value="Crane / Jib" ${cam.cramerawork_preset === 'Crane / Jib' ? 'selected' : ''}>Crane / Jib</option>
-                <option value="Drone" ${cam.cramerawork_preset === 'Drone' ? 'selected' : ''}>Drone</option>
+                ${(cachedMovementPresets.some(item => item.name === cam.cramerawork_preset) ? [] : (cam.cramerawork_preset && cam.cramerawork_preset !== '__custom__' ? [{ name: cam.cramerawork_preset }] : [])).concat(cachedMovementPresets).map(item => `<option value="${escapeHtml(item.name)}" ${cam.cramerawork_preset === item.name ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
                 <option value="__custom__" ${isWorkCustom ? 'selected' : ''}>Custom / Other</option>
               </select>
               <input type="text" id="tab_cramerawork_custom" value="${cam.cramerawork_custom || ''}" placeholder="Movement" class="form-input ${isWorkCustom ? 'w-1/2' : 'hidden'}">
@@ -1494,7 +1531,7 @@
           t_stop: c.t_stop || '',
           clip_name: c.clip_name || '',
           lut_info: c.lut_info || '',
-          cramerawork_preset: c.cramerawork || 'FIX (Lock-off)',
+          cramerawork_preset: c.cramerawork || 'Fix',
           cramerawork_custom: '',
           height_value: c.height_value || '',
           distance_value: c.distance_value || '',
@@ -1637,7 +1674,7 @@
         ...camera,
         reel_name: camera.reel_name || getCameraReelPrefix(camera.label),
         lens_preset: '', lens_custom: '', focal_length: '', t_stop: '',
-        cramerawork_preset: 'FIX (Lock-off)', cramerawork_custom: '',
+        cramerawork_preset: 'Fix', cramerawork_custom: '',
         height_value: '', distance_value: '', tilt_value: '',
         clip_name: incrementTrailingNumber(camera.clip_name)
       }));
