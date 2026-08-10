@@ -1655,8 +1655,10 @@
     }
 
     async function renderRecordPdfPage(record) {
-      const canvas = document.createElement('canvas'); canvas.width = 1240; canvas.height = 1754;
+      // Render the entire page at 2× so jsPDF receives a sharper raster page.
+      const canvas = document.createElement('canvas'); canvas.width = 2480; canvas.height = 3508;
       const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(2, 2);
       ctx.fillStyle = '#0f172a'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('VFX Sheet', 40, 55);
       ctx.fillStyle = '#64748b'; ctx.font = '14px sans-serif'; ctx.fillText(`Record #${record.id}`, 40, 79);
       drawPdfHeaderMeta(ctx, record);
@@ -1683,7 +1685,7 @@
       y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 12);
       y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
       const thumbnails = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(imageFromBlob));
-      const sketch = await imageFromBlob(record.images?.[0]);
+      const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
       let imageY = Math.max(y + 14, 760);
       if (thumbnails.length) {
         ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnails', 60, imageY);
@@ -1695,6 +1697,39 @@
       ctx.fillStyle = '#e2e8f0'; ctx.fillRect(40, imageY + 12, 1160, 760);
       if (sketch) drawImageContain(ctx, sketch, 40, imageY + 12, 1160, 760);
       return canvas.toDataURL('image/png');
+    }
+
+    async function renderHighResolutionSketch(record) {
+      if (!record.canvas_json || !window.fabric) return null;
+      const element = document.createElement('canvas');
+      const staticCanvas = new fabric.StaticCanvas(element, { width: 760, height: 480, backgroundColor: '#090d16' });
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          staticCanvas.loadFromJSON(record.canvas_json, () => {
+            try {
+              staticCanvas.renderAll();
+              // Fabric rerenders vectors, text and embedded photos at 3× rather than
+              // enlarging the 760×480 thumbnail saved with older records.
+              resolve(staticCanvas.toDataURL({ format: 'png', multiplier: 3 }));
+            } catch (error) { reject(error); }
+          });
+        });
+        return await imageFromDataUrl(dataUrl);
+      } catch (error) {
+        console.info('High-resolution sketch rendering unavailable.', error);
+        return null;
+      } finally {
+        staticCanvas.dispose();
+      }
+    }
+
+    function imageFromDataUrl(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = dataUrl;
+      });
     }
 
     function drawPdfSectionTitle(ctx, title, y) {
