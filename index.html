@@ -15,6 +15,7 @@
   <script src="vendor/fabric.min.js"></script>
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
+  <script src="vendor/japanese-pdf-font.js"></script>
 
   <style>
     body { 
@@ -1882,20 +1883,10 @@
 
     async function loadJapanesePdfFont(doc) {
       if (!japanesePdfFontPromise) {
-        japanesePdfFontPromise = fetch('./vendor/fonts/DroidSansJapanese.ttf')
-          .then(response => {
-            if (!response.ok) throw new Error('Japanese font file could not be loaded.');
-            return response.arrayBuffer();
-          })
-          .then(buffer => {
-            const bytes = new Uint8Array(buffer);
-            let binary = '';
-            const chunkSize = 0x8000;
-            for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-              binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
-            }
-            return binary;
-          });
+        if (!window.VFX_JAPANESE_PDF_FONT_BASE64) {
+          throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
+        }
+        japanesePdfFontPromise = Promise.resolve(atob(window.VFX_JAPANESE_PDF_FONT_BASE64));
       }
       const fontData = await japanesePdfFontPromise;
       if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
