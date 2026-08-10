@@ -744,6 +744,10 @@
         cameras: cameraListState
       };
 
+      const existingDefaults = await db.presets.get('user_defaults');
+      const action = existingDefaults?.values ? '上書き保存' : '新規保存';
+      if (!confirm(`${action}するデフォルト項目:\n${getDefaultSettingsChangeSummary(existingDefaults?.values, defaultValues, true)}\n\n現在のフォーム内容をデフォルトとして保存しますか？`)) return;
+
       await db.presets.put({ type: 'user_defaults', values: defaultValues });
       alert("Current settings saved as user default!");
     }
@@ -755,6 +759,14 @@
         return;
       }
       const v = defaultSettings.values;
+      const currentValues = getCurrentDefaultSettingsValues();
+      const changes = getDefaultSettingsChangeSummary(currentValues, v);
+      if (changes === '変更はありません') {
+        alert('現在のフォームは保存済みのデフォルト設定と同じです。');
+        return;
+      }
+      if (!confirm(`読み込みにより変更される項目:\n${changes}\n\n保存済みのデフォルト設定を読み込みますか？`)) return;
+
       document.getElementById('operator').value = v.operator || '';
       document.getElementById('show_title').value = v.show_title || '';
       document.getElementById('location').value = v.location || '';
@@ -769,6 +781,35 @@
       activeCamIndex = 0;
       renderCameraTabs();
       alert("Default settings loaded!");
+    }
+
+    function getCurrentDefaultSettingsValues() {
+      saveActiveTabState();
+      return {
+        operator: document.getElementById('operator').value,
+        show_title: document.getElementById('show_title').value,
+        location: document.getElementById('location').value,
+        hdri_captured: document.getElementById('hdri_captured').checked,
+        hdri_weather: getWeatherValues(),
+        hdri_notes: document.getElementById('hdri_notes').value,
+        cameras: cameraListState
+      };
+    }
+
+    function getDefaultSettingsChangeSummary(currentValues, newValues, includeUnchanged = false) {
+      const fields = [
+        ['operator', 'Operator'],
+        ['show_title', 'Show / Title'],
+        ['location', 'Location'],
+        ['hdri_captured', 'HDRI Captured'],
+        ['hdri_weather', 'HDRI Weather'],
+        ['hdri_notes', 'HDRI Notes'],
+        ['cameras', 'Camera / Reel Settings']
+      ];
+      const changedFields = fields
+        .filter(([key]) => includeUnchanged || JSON.stringify(currentValues?.[key] ?? null) !== JSON.stringify(newValues?.[key] ?? null))
+        .map(([, label]) => `• ${label}`);
+      return changedFields.length ? changedFields.join('\n') : '変更はありません';
     }
 
     async function exportFullPresetsJSON() {
