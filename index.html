@@ -596,9 +596,19 @@
         const image = document.createElement('img'); image.src = URL.createObjectURL(file); image.alt = `Shot thumbnail ${index + 1}`; image.className = 'h-16 w-24 rounded border border-slate-700 object-cover';
         image.onload = () => URL.revokeObjectURL(image.src);
         const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.className = 'absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-700 text-xs text-white'; remove.onclick = () => { pendingShotThumbnails.splice(index, 1); renderShotThumbnailPreviews(); };
-        wrapper.append(image, remove); preview.append(wrapper);
+        const order = document.createElement('div'); order.className = 'absolute inset-x-0 bottom-0 flex justify-between bg-slate-950/80 px-0.5';
+        const moveLeft = document.createElement('button'); moveLeft.type = 'button'; moveLeft.textContent = '←'; moveLeft.title = 'Move left'; moveLeft.disabled = index === 0; moveLeft.className = 'px-1 text-xs text-amber-300 disabled:opacity-30'; moveLeft.onclick = () => moveShotThumbnail(index, -1);
+        const moveRight = document.createElement('button'); moveRight.type = 'button'; moveRight.textContent = '→'; moveRight.title = 'Move right'; moveRight.disabled = index === pendingShotThumbnails.length - 1; moveRight.className = 'px-1 text-xs text-amber-300 disabled:opacity-30'; moveRight.onclick = () => moveShotThumbnail(index, 1);
+        order.append(moveLeft, moveRight); wrapper.append(image, order, remove); preview.append(wrapper);
       });
       preview.classList.toggle('hidden', !pendingShotThumbnails.length);
+    }
+
+    function moveShotThumbnail(index, direction) {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= pendingShotThumbnails.length) return;
+      [pendingShotThumbnails[index], pendingShotThumbnails[nextIndex]] = [pendingShotThumbnails[nextIndex], pendingShotThumbnails[index]];
+      renderShotThumbnailPreviews();
     }
 
     function clearShotThumbnail() {
@@ -1861,8 +1871,8 @@
         printWindow.onload = () => printWindow.print();
         printWindow.document.open();
         printWindow.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>VFX Sheet Report</title><style>
-          @page { size: A3 landscape; margin: 10mm; }
-          * { box-sizing: border-box; } body { color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif; font-size:10px; line-height:1.4; } .page { break-after:page; page-break-after:always; break-inside:avoid-page; page-break-inside:avoid; } .page:last-child { break-after:auto; page-break-after:auto; } .report-header { position:relative; min-height:48px; } h1 { font-size:20px; margin:0; color:#0f172a; text-align:center; } .meta { margin:2px 0 10px; color:#475569; text-align:center; } .header-meta { position:absolute; top:0; right:0; max-width:42%; color:#475569; font-size:9px; line-height:1.55; text-align:right; } .header-meta div { white-space:nowrap; } .header-meta strong { color:#334155; } h2 { font-size:12px; color:#92400e; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin:12px 0 5px; } table { border-collapse:collapse; width:100%; margin-bottom:6px; break-inside:avoid; page-break-inside:avoid; } th,td { border:1px solid #cbd5e1; padding:4px; text-align:left; vertical-align:top; word-break:break-word; } th { background:#e2e8f0; font-weight:700; white-space:nowrap; } .images { display:flex; flex-wrap:wrap; gap:6px; break-inside:avoid; page-break-inside:avoid; } .thumb { width:31%; max-height:120px; object-fit:contain; border:1px solid #cbd5e1; } .sketch { display:block; width:100%; height:auto; max-height:480px; object-fit:contain; border:1px solid #cbd5e1; break-inside:avoid; page-break-inside:avoid; } pre { margin:0; white-space:pre-wrap; font-family:inherit; }</style></head><body>${pages.join('')}</body></html>`);
+          @page { size: A3 portrait; margin: 10mm; }
+          * { box-sizing: border-box; } body { color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif; font-size:10px; line-height:1.4; } .page { break-after:page; page-break-after:always; break-inside:avoid-page; page-break-inside:avoid; } .page:last-child { break-after:auto; page-break-after:auto; } .report-header { position:relative; min-height:48px; } h1 { font-size:20px; margin:0; color:#0f172a; text-align:center; } .meta { margin:2px 0 10px; color:#475569; text-align:center; } .header-meta { position:absolute; top:0; right:0; max-width:42%; color:#475569; font-size:9px; line-height:1.55; text-align:right; } .header-meta div { white-space:nowrap; } .header-meta strong { color:#334155; } h2 { font-size:12px; color:#92400e; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin:12px 0 5px; } table { border-collapse:collapse; width:100%; margin-bottom:6px; break-inside:avoid; page-break-inside:avoid; } th,td { border:1px solid #cbd5e1; padding:4px; text-align:left; vertical-align:top; word-break:break-word; } th { background:#e2e8f0; font-weight:700; white-space:nowrap; } .images { display:flex; flex-wrap:wrap; gap:6px; break-inside:avoid; page-break-inside:avoid; } .thumb { width:31%; max-height:120px; object-fit:contain; border:1px solid #cbd5e1; } .sketch { display:block; width:100%; height:auto; max-height:520px; object-fit:contain; border:1px solid #cbd5e1; break-inside:avoid; page-break-inside:avoid; } pre { margin:0; white-space:pre-wrap; font-family:inherit; }</style></head><body>${pages.join('')}</body></html>`);
         printWindow.document.close();
         printWindow.focus();
       } catch (error) {
