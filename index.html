@@ -1913,25 +1913,33 @@
         const records = await getRecordsForHistoryAction();
         if (!records || records.length === 0) return alert("No records to export.");
 
-        const headers = ["ID", "Project", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
-        const rows = records.map(r => {
-        const camStr = (r.cameras || []).map(c => `${c.label}:${c.camera||''}(${c.lens||''}) Work:${c.cramerawork||''} H:${c.height_value||''} D:${c.distance_value||''} Tilt:${c.tilt_value||''} Ref:[Chart:${c.flag_chart} Clean:${c.flag_cleanplate} Ref:${c.flag_reference}]`).join('; ');
-        return [
-          r.uuid || r.id,
-          `"${(r.show_title || '').replace(/"/g, '""')}"`,
-          `"${(r.episode || '').replace(/"/g, '""')}"`,
-          `"${(r.scene || '').replace(/"/g, '""')}"`,
-          `"${(r.shot || '').replace(/"/g, '""')}"`,
-          `"${(r.shoot_datetime || '').replace(/"/g, '""')}"`,
-          `"${(r.operator || '').replace(/"/g, '""')}"`,
-          `"${(r.location || '').replace(/"/g, '""')}"`,
-          `"${(r.gps_location || '').replace(/"/g, '""')}"`,
-          `"${r.hdri_captured || 'NO'}"`,
-          `"${(Array.isArray(r.hdri_weather) ? r.hdri_weather.join(' / ') : r.hdri_weather || '').replace(/"/g, '""')}"`,
-          `"${(r.hdri_notes || '').replace(/"/g, '""')}"`,
-          `"${camStr.replace(/"/g, '""')}"`,
-          `"${(r.notes || '').replace(/"/g, '""')}"`
-        ].join(",");
+        const headers = ["ID", "Project", "Shooting Data Name", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "Camerawork", "Height", "Distance", "Angle"];
+        const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+        const formatShootDate = value => {
+          const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+          return match ? { day: `${match[1]}${match[2]}${match[3]}`, time: `${match[2]}/${match[3]} ${match[4]}:${match[5]}` } : { day: '', time: '' };
+        };
+        const rows = records.flatMap(record => {
+          const dateTime = formatShootDate(record.shoot_datetime);
+          const shootingDataName = [record.episode, record.scene, record.shot].filter(Boolean).join('_');
+          const cameras = record.cameras?.length ? record.cameras : [{}];
+          return cameras.map(camera => [
+            record.uuid || record.id,
+            record.show_title,
+            shootingDataName,
+            dateTime.day,
+            record.location,
+            dateTime.time,
+            record.notes,
+            camera.camera,
+            camera.lens,
+            camera.focal_length,
+            camera.t_stop,
+            camera.cramerawork,
+            camera.height_value,
+            camera.distance_value,
+            camera.tilt_value
+          ].map(csvEscape).join(','));
         });
 
         const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
