@@ -271,6 +271,12 @@
       <div class="flex flex-wrap justify-between items-center gap-2">
         <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Records History (<span id="totalCount">0</span>)</h2>
         <div class="flex flex-wrap gap-2 justify-end">
+          <button id="selectAllRecordsBtn" type="button" onclick="toggleSelectAllRecords()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
+            Select All
+          </button>
+          <button id="deleteSelectedBtn" type="button" onclick="deleteSelectedRecords()" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
+            Delete Selected (0)
+          </button>
           <button id="exportCsvBtn" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📊 Export CSV
           </button>
@@ -402,6 +408,7 @@
 
     let currentEditingId = null;
     let isEditingInModal = false;
+    const selectedRecordIds = new Set();
     let cameraListState = [];
     let activeCamIndex = 0;
     let currentDrawingColor = '#00ffff';
@@ -1671,8 +1678,11 @@
 
     async function renderList() {
       const records = await db.sheets.reverse().toArray();
+      const availableIds = new Set(records.map(record => record.id));
+      [...selectedRecordIds].forEach(id => { if (!availableIds.has(id)) selectedRecordIds.delete(id); });
       document.getElementById('totalCount').innerText = records.length;
       document.getElementById('historyNavCount').innerText = `(${records.length})`;
+      updateHistorySelectionControls(records);
       
       const listEl = document.getElementById('recordList');
       if (records.length === 0) {
@@ -1710,9 +1720,13 @@
         ).join('');
 
         return `
-          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
+          <div class="bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(r.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs">
             <div class="flex justify-between items-center">
-              <span class="font-mono text-amber-400 font-bold text-sm">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')} ${safe(r.scene)}_${safe(r.shot)}</span>
+              <div class="flex min-w-0 items-center gap-2">
+                <input type="checkbox" aria-label="Select record ${r.id}" ${selectedRecordIds.has(r.id) ? 'checked' : ''} onchange="toggleRecordSelection(${r.id}, this.checked)" class="h-4 w-4 shrink-0 accent-amber-400">
+                <span class="font-mono text-amber-400 font-bold text-sm truncate">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')}_${safe(r.scene)}_${safe(r.shot)}</span>
+                <span class="shrink-0 text-[10px] text-slate-500">${safe(r.shoot_datetime || '-')}</span>
+              </div>
               <div class="flex gap-2 items-center">
                 ${syncBadge}
                 <button type="button" onclick="loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
@@ -1741,6 +1755,43 @@
       listEl.innerHTML = cards.join('');
     }
 
+    function updateHistorySelectionControls(records = []) {
+      const selectedCount = selectedRecordIds.size;
+      const deleteButton = document.getElementById('deleteSelectedBtn');
+      const selectAllButton = document.getElementById('selectAllRecordsBtn');
+      deleteButton.disabled = selectedCount === 0;
+      deleteButton.innerText = `Delete Selected (${selectedCount})`;
+      selectAllButton.innerText = records.length > 0 && selectedCount === records.length ? 'Clear Selection' : 'Select All';
+    }
+
+    function toggleRecordSelection(id, isSelected) {
+      if (isSelected) selectedRecordIds.add(id);
+      else selectedRecordIds.delete(id);
+      renderList();
+    }
+
+    async function toggleSelectAllRecords() {
+      const records = await db.sheets.toArray();
+      if (records.length && selectedRecordIds.size === records.length) selectedRecordIds.clear();
+      else records.forEach(record => selectedRecordIds.add(record.id));
+      renderList();
+    }
+
+    async function getRecordsForHistoryAction() {
+      const records = await db.sheets.reverse().toArray();
+      return selectedRecordIds.size ? records.filter(record => selectedRecordIds.has(record.id)) : records;
+    }
+
+    async function deleteSelectedRecords() {
+      const ids = [...selectedRecordIds];
+      if (!ids.length) return;
+      if (!confirm(`選択した${ids.length}件のレコードを削除しますか？この操作は元に戻せません。`)) return;
+      await db.sheets.bulkDelete(ids);
+      if (currentEditingId && ids.includes(currentEditingId)) closeEditRecordModal();
+      selectedRecordIds.clear();
+      renderList();
+    }
+
     async function deleteRecord(id) {
       if (confirm(`Delete Record ID: ${id}?`)) {
         await db.sheets.delete(id);
@@ -1750,7 +1801,7 @@
     }
 
     async function exportToCSV() {
-      const records = await db.sheets.reverse().toArray();
+      const records = await getRecordsForHistoryAction();
       if (!records || records.length === 0) return alert("No records to export.");
 
       const headers = ["ID", "Show Title", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
@@ -1789,7 +1840,7 @@
     async function exportToPDF() {
       if (!window.jspdf) return alert("PDF library is loading. Please try again.");
       const { jsPDF } = window.jspdf;
-      const records = await db.sheets.reverse().toArray();
+      const records = await getRecordsForHistoryAction();
       if (!records || records.length === 0) return alert("No records to export.");
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       for (let index = 0; index < records.length; index++) {
@@ -1993,7 +2044,7 @@
     }
 
     async function exportBackupJSON() {
-      const records = await db.sheets.toArray();
+      const records = await getRecordsForHistoryAction();
       if (!records.length) return alert('No records to back up.');
       const portableRecords = await Promise.all(records.map(async ({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({
         ...record,
