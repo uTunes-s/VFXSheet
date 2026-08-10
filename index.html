@@ -1657,62 +1657,62 @@
     async function renderRecordPdfPage(record) {
       const canvas = document.createElement('canvas'); canvas.width = 1240; canvas.height = 1754;
       const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 36px sans-serif'; ctx.fillText('VFX Sheet', 60, 72);
-      ctx.fillStyle = '#64748b'; ctx.font = '20px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 60, 106);
-      let y = 155;
+      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('VFX Sheet', 40, 55);
+      ctx.fillStyle = '#64748b'; ctx.font = '16px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 40, 81);
+      let y = 112;
       y = drawPdfSectionTitle(ctx, '1. General Information', y);
       y = drawPdfTable(ctx, y, [
         [{ label: 'Operator', value: record.operator }, { label: 'Show Title', value: record.show_title }, { label: 'Date & Time', value: record.shoot_datetime }, { label: 'Location', value: record.location }],
         [{ label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }, { label: 'GPS', value: record.gps_location }]
       ], 4);
 
-      y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 18);
+      y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 12);
       const cameras = record.cameras?.length ? record.cameras : [{ label: 'Cam A' }];
       cameras.forEach((camera, index) => {
         y = drawPdfCameraTable(ctx, y, camera, index + 1);
-        y += 16;
+        y += 10;
       });
 
-      y = drawPdfSectionTitle(ctx, '3. HDRI Setup', y);
+      y = drawPdfSectionTitle(ctx, '3. HDRI Setup', y + 4);
       y = drawPdfTable(ctx, y, [[
         { label: 'HDRI Captured', value: record.hdri_captured || 'NO' },
         { label: 'Weather', value: Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather },
         { label: 'HDRI Notes / EV', value: record.hdri_notes }
       ]], 3);
 
-      y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 18);
+      y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 12);
       y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
       const thumbnails = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(imageFromBlob));
       const sketch = await imageFromBlob(record.images?.[0]);
-      let imageY = Math.max(y + 24, 960);
+      let imageY = Math.max(y + 14, 760);
       if (thumbnails.length) {
         ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnails', 60, imageY);
-        const gap = 16; const thumbnailWidth = Math.min(260, (1120 - gap * (thumbnails.length - 1)) / thumbnails.length); const thumbnailHeight = 150;
-        thumbnails.forEach((thumbnail, index) => { const x = 60 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 15, thumbnailWidth, thumbnailHeight); if (thumbnail) drawImageContain(ctx, thumbnail, x, imageY + 15, thumbnailWidth, thumbnailHeight); });
-        imageY += 200;
+        const gap = 12; const thumbnailWidth = Math.min(220, (1160 - gap * (thumbnails.length - 1)) / thumbnails.length); const thumbnailHeight = 100;
+        thumbnails.forEach((thumbnail, index) => { const x = 40 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 12, thumbnailWidth, thumbnailHeight); if (thumbnail) drawImageContain(ctx, thumbnail, x, imageY + 12, thumbnailWidth, thumbnailHeight); });
+        imageY += 142;
       }
-      ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Field Sketch', 60, imageY);
-      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(60, imageY + 15, 1120, 360);
-      if (sketch) drawImageContain(ctx, sketch, 60, imageY + 15, 1120, 360);
+      ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText('Field Sketch', 40, imageY);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(40, imageY + 12, 1160, 760);
+      if (sketch) drawImageContain(ctx, sketch, 40, imageY + 12, 1160, 760);
       return canvas.toDataURL('image/png');
     }
 
     function drawPdfSectionTitle(ctx, title, y) {
-      ctx.fillStyle = '#b45309'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(title, 60, y);
-      return y + 18;
+      ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(title, 40, y);
+      return y + 14;
     }
 
     function drawPdfTable(ctx, y, rows, columns) {
-      const x = 60; const width = 1120; const cellWidth = width / columns; const cellHeight = 72;
+      const x = 40; const width = 1160; const cellWidth = width / columns; const cellHeight = 54;
       rows.forEach(row => {
         row.forEach((cell, index) => {
           const cellX = x + index * cellWidth;
           ctx.fillStyle = '#f8fafc'; ctx.fillRect(cellX, y, cellWidth, cellHeight);
           ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.strokeRect(cellX, y, cellWidth, cellHeight);
-          ctx.fillStyle = '#64748b'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(cell.label, cellX + 12, y + 21);
-          ctx.fillStyle = '#0f172a'; ctx.font = '19px sans-serif';
-          const lines = wrapPdfText(ctx, String(cell.value || '-'), cellWidth - 24).slice(0, 2);
-          lines.forEach((line, lineIndex) => ctx.fillText(line, cellX + 12, y + 47 + lineIndex * 19));
+          ctx.fillStyle = '#64748b'; ctx.font = 'bold 12px sans-serif'; ctx.fillText(cell.label, cellX + 8, y + 16);
+          ctx.fillStyle = '#0f172a'; ctx.font = '15px sans-serif';
+          const lines = wrapPdfText(ctx, String(cell.value || '-'), cellWidth - 16).slice(0, 2);
+          lines.forEach((line, lineIndex) => ctx.fillText(line, cellX + 8, y + 35 + lineIndex * 15));
         });
         y += cellHeight;
       });
@@ -1720,9 +1720,9 @@
     }
 
     function drawPdfCameraTable(ctx, y, camera, number) {
-      ctx.fillStyle = '#334155'; ctx.fillRect(60, y, 1120, 34);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 72, y + 23);
-      y += 34;
+      ctx.fillStyle = '#334155'; ctx.fillRect(40, y, 1160, 28);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 50, y + 19);
+      y += 28;
       y = drawPdfTable(ctx, y, [[
         { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }
       ]], 2);
@@ -1733,9 +1733,11 @@
         { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }
       ]], 3);
       return drawPdfTable(ctx, y, [[
-        { label: 'CHECKLIST', value: `Color Chart & Sphere: ${camera.flag_chart || 'NO'}  /  Clean Plate: ${camera.flag_cleanplate || 'NO'}  /  VFX Reference: ${camera.flag_reference || 'NO'}  /  Tilt: ${camera.tilt_value || '-'}`
-        }
-      ]], 1);
+        { label: 'Color Chart & Sphere', value: camera.flag_chart || 'NO' },
+        { label: 'Clean Plate', value: camera.flag_cleanplate || 'NO' },
+        { label: 'VFX Reference', value: camera.flag_reference || 'NO' },
+        { label: 'Tilt', value: camera.tilt_value || '-' }
+      ]], 4);
     }
 
     function wrapPdfText(ctx, text, maxWidth) {
