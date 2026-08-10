@@ -1927,7 +1927,7 @@
           `"${(r.location || '').replace(/"/g, '""')}"`,
           `"${(r.gps_location || '').replace(/"/g, '""')}"`,
           `"${r.hdri_captured || 'NO'}"`,
-          `"${(r.hdri_weather || '').replace(/"/g, '""')}"`,
+          `"${(Array.isArray(r.hdri_weather) ? r.hdri_weather.join(' / ') : r.hdri_weather || '').replace(/"/g, '""')}"`,
           `"${(r.hdri_notes || '').replace(/"/g, '""')}"`,
           `"${camStr.replace(/"/g, '""')}"`,
           `"${(r.notes || '').replace(/"/g, '""')}"`
