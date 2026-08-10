@@ -1913,11 +1913,11 @@
         const records = await getRecordsForHistoryAction();
         if (!records || records.length === 0) return alert("No records to export.");
 
-        const headers = ["ID", "Show Title", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
+        const headers = ["ID", "Project", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
         const rows = records.map(r => {
         const camStr = (r.cameras || []).map(c => `${c.label}:${c.camera||''}(${c.lens||''}) Work:${c.cramerawork||''} H:${c.height_value||''} D:${c.distance_value||''} Tilt:${c.tilt_value||''} Ref:[Chart:${c.flag_chart} Clean:${c.flag_cleanplate} Ref:${c.flag_reference}]`).join('; ');
         return [
-          r.id,
+          r.uuid || r.id,
           `"${(r.show_title || '').replace(/"/g, '""')}"`,
           `"${(r.episode || '').replace(/"/g, '""')}"`,
           `"${(r.scene || '').replace(/"/g, '""')}"`,
