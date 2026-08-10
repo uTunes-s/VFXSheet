@@ -277,10 +277,10 @@
           <button id="deleteSelectedBtn" type="button" onclick="deleteSelectedRecords()" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
             Delete Selected (0)
           </button>
-          <button id="exportCsvBtn" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+          <button id="exportCsvBtn" type="button" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📊 Export CSV
           </button>
-          <button id="exportPdfBtn" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+          <button id="exportPdfBtn" type="button" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📄 Export PDF
           </button>
           <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
@@ -1802,11 +1802,16 @@
     }
 
     async function exportToCSV() {
-      const records = await getRecordsForHistoryAction();
-      if (!records || records.length === 0) return alert("No records to export.");
+      const button = document.getElementById('exportCsvBtn');
+      const originalLabel = button.innerHTML;
+      button.disabled = true;
+      button.innerText = 'Preparing CSV…';
+      try {
+        const records = await getRecordsForHistoryAction();
+        if (!records || records.length === 0) return alert("No records to export.");
 
-      const headers = ["ID", "Show Title", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
-      const rows = records.map(r => {
+        const headers = ["ID", "Show Title", "Episode", "Scene", "Shot", "Date Time", "Operator", "Location", "GPS", "HDRI Captured", "HDRI Weather", "HDRI Notes", "Cameras Setup", "Notes"];
+        const rows = records.map(r => {
         const camStr = (r.cameras || []).map(c => `${c.label}:${c.camera||''}(${c.lens||''}) Work:${c.cramerawork||''} H:${c.height_value||''} D:${c.distance_value||''} Tilt:${c.tilt_value||''} Ref:[Chart:${c.flag_chart} Clean:${c.flag_cleanplate} Ref:${c.flag_reference}]`).join('; ');
         return [
           r.id,
@@ -1824,31 +1829,55 @@
           `"${camStr.replace(/"/g, '""')}"`,
           `"${(r.notes || '').replace(/"/g, '""')}"`
         ].join(",");
-      });
+        });
 
-      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `VFX_Sheet_${new Date().toISOString().slice(0,10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+        downloadExportBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `VFX_Sheet_${new Date().toISOString().slice(0,10)}.csv`);
+      } catch (error) {
+        console.error('CSV export error:', error);
+        alert(`CSV Export Error: ${error.message || error}`);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = originalLabel;
+      }
     }
 
     async function exportToPDF() {
-      if (!window.jspdf) return alert("PDF library is loading. Please try again.");
-      const { jsPDF } = window.jspdf;
-      const records = await getRecordsForHistoryAction();
-      if (!records || records.length === 0) return alert("No records to export.");
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      for (let index = 0; index < records.length; index++) {
-        if (index) doc.addPage();
-        await renderTextPdfRecord(doc, records[index]);
+      const button = document.getElementById('exportPdfBtn');
+      const originalLabel = button.innerHTML;
+      button.disabled = true;
+      button.innerText = 'Preparing PDF…';
+      try {
+        if (!window.jspdf) throw new Error('PDF library is still loading.');
+        const { jsPDF } = window.jspdf;
+        const records = await getRecordsForHistoryAction();
+        if (!records || records.length === 0) return alert("No records to export.");
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        for (let index = 0; index < records.length; index++) {
+          if (index) doc.addPage();
+          await renderTextPdfRecord(doc, records[index]);
+        }
+        downloadExportBlob(doc.output('blob'), `VFX_Sheet_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      } catch (error) {
+        console.error('PDF export error:', error);
+        alert(`PDF Export Error: ${error.message || error}`);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = originalLabel;
       }
-      doc.save(`VFX_Sheet_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    function downloadExportBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      // Safari can cancel downloads if the Object URL is revoked in the same task.
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
 
     async function loadJapanesePdfFont(doc) {
