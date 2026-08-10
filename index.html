@@ -627,7 +627,8 @@
       if (direction === 'back') fCanvas.sendBackwards(active);
       if (direction === 'top') fCanvas.bringToFront(active);
       if (direction === 'bottom') fCanvas.sendToBack(active);
-      fCanvas.requestRenderAll(); saveCanvasState();
+      fCanvas.renderAll();
+      saveCanvasState();
     }
 
     function incrementTrailingNumber(value) {
@@ -1295,7 +1296,10 @@
     function initFabricCanvas() {
       fCanvas = new fabric.Canvas('noteCanvas', {
         isDrawingMode: true,
-        backgroundColor: '#090d16'
+        backgroundColor: '#090d16',
+        // Keep the selected object's real stack position visible. Without this,
+        // Fabric temporarily renders every selected object on top until deselect.
+        preserveObjectStacking: true
       });
       fCanvas.freeDrawingBrush.color = currentDrawingColor;
       fCanvas.freeDrawingBrush.width = 3;
