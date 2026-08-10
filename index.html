@@ -1856,7 +1856,12 @@
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         for (let index = 0; index < records.length; index++) {
           if (index) doc.addPage();
-          await renderTextPdfRecord(doc, records[index]);
+          // Preserve the established production layout, including its precise
+          // tables and image placement, while adding a selectable Japanese
+          // text layer for search/copy in PDF viewers.
+          const page = await renderRecordPdfPage(records[index]);
+          doc.addImage(page, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+          await addInvisiblePdfTextLayer(doc, records[index]);
         }
         downloadExportBlob(doc.output('blob'), `VFX_Sheet_Report_${new Date().toISOString().slice(0,10)}.pdf`);
       } catch (error) {
@@ -1866,6 +1871,32 @@
         button.disabled = false;
         button.innerHTML = originalLabel;
       }
+    }
+
+    async function addInvisiblePdfTextLayer(doc, record) {
+      await loadJapanesePdfFont(doc);
+      const cameraText = (record.cameras || []).map(camera => [
+        getCameraFieldLabel(camera), camera.camera, camera.lens, camera.focal_length,
+        camera.t_stop, camera.clip_name, camera.cramerawork, camera.lut_info,
+        camera.height_value, camera.distance_value, camera.tilt_value
+      ].filter(Boolean).join(' / ')).join('\n');
+      const allText = [
+        'VFX Sheet', `Record #${record.id || ''}`, record.show_title, record.operator,
+        record.shoot_datetime, record.location, record.gps_location, record.episode,
+        record.scene, record.shot, record.hdri_captured,
+        Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather,
+        record.hdri_notes, cameraText, record.notes
+      ].filter(Boolean).join('\n');
+      doc.setFont('DroidSansJapanese', 'normal');
+      doc.setFontSize(1);
+      [...allText].reduce((lines, character) => {
+        const lastLine = lines[lines.length - 1];
+        if (character === '\n' || [...lastLine].length >= 48) lines.push(character === '\n' ? '' : character);
+        else lines[lines.length - 1] += character;
+        return lines;
+      }, ['']).filter(Boolean).forEach((line, index) => {
+        doc.text(line, 2, 2 + Math.min(index, 250) * 0.01, { renderingMode: 'invisible' });
+      });
     }
 
     function downloadExportBlob(blob, filename) {
