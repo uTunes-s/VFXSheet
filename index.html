@@ -1886,7 +1886,9 @@
         if (!window.VFX_JAPANESE_PDF_FONT_BASE64) {
           throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
         }
-        japanesePdfFontPromise = Promise.resolve(atob(window.VFX_JAPANESE_PDF_FONT_BASE64));
+        // jsPDF's VFS expects the original Base64 payload. Converting it with atob()
+        // corrupts the font metadata and causes missing Unicode width tables.
+        japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
       }
       const fontData = await japanesePdfFontPromise;
       if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
