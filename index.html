@@ -200,12 +200,12 @@
             <label class="form-label">Shot Data Thumbnail</label>
             <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
           </div>
-          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" class="hidden" onchange="setShotThumbnail(event)">
-          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" onchange="setShotThumbnail(event)">
+          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" onchange="addShotThumbnails(event)">
+          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addShotThumbnails(event)">
           <button type="button" onclick="document.getElementById('shotThumbnailLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
           <button type="button" onclick="document.getElementById('shotThumbnailCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
           <button type="button" onclick="clearShotThumbnail()" class="text-xs text-rose-300 px-2 py-2">Clear</button>
-          <img id="shotThumbnailPreview" alt="Shot thumbnail preview" class="hidden h-16 w-24 rounded border border-slate-700 object-cover">
+          <div id="shotThumbnailPreview" class="hidden flex flex-wrap gap-2" aria-label="Shot thumbnail previews"></div>
         </div>
 
         <div class="space-y-2 pt-1">
@@ -369,6 +369,7 @@
     let cameraListState = [];
     let activeCamIndex = 0;
     let currentDrawingColor = '#00ffff';
+    let pendingShotThumbnails = [];
 
     function newUuid() {
       return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
@@ -517,20 +518,32 @@
       [...document.getElementById('hdri_weather').options].forEach(option => { option.selected = selected.has(option.value); });
     }
 
-    function setShotThumbnail(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      if (!file.type.startsWith('image/')) return alert('Please select an image file.');
+    function addShotThumbnails(event) {
+      const files = [...event.target.files];
+      if (!files.length) return;
+      if (files.some(file => !file.type.startsWith('image/'))) return alert('Please select image files only.');
+      pendingShotThumbnails.push(...files);
+      renderShotThumbnailPreviews();
+      event.target.value = '';
+    }
+
+    function renderShotThumbnailPreviews() {
       const preview = document.getElementById('shotThumbnailPreview');
-      preview.src = URL.createObjectURL(file);
-      preview.classList.remove('hidden');
-      preview.dataset.hasNewFile = 'true';
+      preview.replaceChildren();
+      pendingShotThumbnails.forEach((file, index) => {
+        const wrapper = document.createElement('div'); wrapper.className = 'relative';
+        const image = document.createElement('img'); image.src = URL.createObjectURL(file); image.alt = `Shot thumbnail ${index + 1}`; image.className = 'h-16 w-24 rounded border border-slate-700 object-cover';
+        image.onload = () => URL.revokeObjectURL(image.src);
+        const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.className = 'absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-700 text-xs text-white'; remove.onclick = () => { pendingShotThumbnails.splice(index, 1); renderShotThumbnailPreviews(); };
+        wrapper.append(image, remove); preview.append(wrapper);
+      });
+      preview.classList.toggle('hidden', !pendingShotThumbnails.length);
     }
 
     function clearShotThumbnail() {
       const preview = document.getElementById('shotThumbnailPreview');
-      if (preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
-      preview.removeAttribute('src'); preview.classList.add('hidden'); preview.dataset.hasNewFile = '';
+      pendingShotThumbnails = [];
+      preview.replaceChildren(); preview.classList.add('hidden');
       document.getElementById('shotThumbnailLibraryInput').value = '';
       document.getElementById('shotThumbnailCameraInput').value = '';
     }
@@ -1333,12 +1346,8 @@
 
       document.getElementById('notes').value = record.notes || '';
       clearShotThumbnail();
-      if (record.shot_thumbnail) {
-        const preview = document.getElementById('shotThumbnailPreview');
-        preview.src = URL.createObjectURL(record.shot_thumbnail);
-        preview.classList.remove('hidden');
-        preview.dataset.hasNewFile = '';
-      }
+      pendingShotThumbnails = record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
+      renderShotThumbnailPreviews();
 
       isUndoRedo = true;
       fCanvas.clear();
@@ -1435,9 +1444,8 @@
 
       const isHdri = document.getElementById('hdri_captured').checked;
       const noteCanvasBlob = await exportCanvasToBlob();
-      const thumbnailFile = document.getElementById('shotThumbnailLibraryInput').files[0] || document.getElementById('shotThumbnailCameraInput').files[0];
       const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
-      const shotThumbnail = thumbnailFile || existingRecord?.shot_thumbnail || null;
+      const shotThumbnails = pendingShotThumbnails.length ? pendingShotThumbnails : (existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []));
       const canvasJson = JSON.stringify(fCanvas.toJSON());
 
       const payload = {
@@ -1456,7 +1464,7 @@
         notes: document.getElementById('notes').value,
         // Canvas PNG is kept locally for editing; it is intentionally excluded from API sync.
         images: [noteCanvasBlob],
-        shot_thumbnail: shotThumbnail,
+        shot_thumbnails: shotThumbnails,
         canvas_json: canvasJson,
         canvas_version: 5,
         uuid: mode === 'update' && currentEditingId ? (await db.sheets.get(currentEditingId)).uuid : newUuid(),
@@ -1502,7 +1510,7 @@
 
       const cards = await Promise.all(records.map(async r => {
         const safe = escapeHtml;
-        const thumbnailUrl = r.shot_thumbnail ? await blobToBase64(r.shot_thumbnail) : '';
+        const thumbnailUrls = await Promise.all((r.shot_thumbnails || (r.shot_thumbnail ? [r.shot_thumbnail] : [])).map(blobToBase64));
         const syncBadge = r.synced 
           ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Synced</span>`
           : `<span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded">Unsynced</span>`;
@@ -1539,7 +1547,7 @@
                 </button>
               </div>
             </div>
-            ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="Shot thumbnail" class="h-28 w-full rounded-lg border border-slate-800 object-cover">` : ''}
+            ${thumbnailUrls.length ? `<div class="flex gap-2 overflow-x-auto">${thumbnailUrls.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="h-28 min-w-36 rounded-lg border border-slate-800 object-cover">`).join('')}</div>` : ''}
             <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">
               ${hdriDisp}
               <span class="text-slate-400">${safe(r.hdri_notes || '')}</span>
@@ -1651,12 +1659,18 @@
 
       y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 18);
       y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
-      const thumb = await imageFromBlob(record.shot_thumbnail); const sketch = await imageFromBlob(record.images?.[0]);
-      const imageY = Math.max(y + 24, 960); const imageHeight = 310; const imageWidth = 530;
-      ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnail', 60, imageY); ctx.fillText('Field Sketch', 650, imageY);
-      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(60, imageY + 15, imageWidth, imageHeight); ctx.fillRect(650, imageY + 15, imageWidth, imageHeight);
-      if (thumb) drawImageContain(ctx, thumb, 60, imageY + 15, imageWidth, imageHeight);
-      if (sketch) drawImageContain(ctx, sketch, 650, imageY + 15, imageWidth, imageHeight);
+      const thumbnails = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(imageFromBlob));
+      const sketch = await imageFromBlob(record.images?.[0]);
+      let imageY = Math.max(y + 24, 960);
+      if (thumbnails.length) {
+        ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnails', 60, imageY);
+        const gap = 16; const thumbnailWidth = Math.min(260, (1120 - gap * (thumbnails.length - 1)) / thumbnails.length); const thumbnailHeight = 150;
+        thumbnails.forEach((thumbnail, index) => { const x = 60 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 15, thumbnailWidth, thumbnailHeight); if (thumbnail) drawImageContain(ctx, thumbnail, x, imageY + 15, thumbnailWidth, thumbnailHeight); });
+        imageY += 200;
+      }
+      ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Field Sketch', 60, imageY);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(60, imageY + 15, 1120, 360);
+      if (sketch) drawImageContain(ctx, sketch, 60, imageY + 15, 1120, 360);
       return canvas.toDataURL('image/png');
     }
 
@@ -1759,7 +1773,7 @@
       const records = await db.sheets.toArray();
       if (!records.length) return alert('No records to back up.');
       // Blobs cannot be represented in JSON. The editable Fabric canvas JSON is retained.
-      const portableRecords = records.map(({ images, shot_thumbnail, ...record }) => ({ ...record, asset_status: images?.length || shot_thumbnail ? 'local_image_assets_not_included' : 'none' }));
+      const portableRecords = records.map(({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({ ...record, asset_status: images?.length || shot_thumbnail || shot_thumbnails?.length ? 'local_image_assets_not_included' : 'none' }));
       const backup = { app: 'VFX_Sheet', format: 'vfx-sheet-record-backup', version: 1, exported_at: new Date().toISOString(), records: portableRecords };
       const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
       const a = document.createElement('a');
