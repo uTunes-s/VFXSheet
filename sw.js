@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v34';
+const CACHE_NAME = 'vfx-sheet-v35';
 const APP_SHELL = [
   './index.html',
   './manifest.webmanifest',
@@ -9,7 +9,8 @@ const APP_SHELL = [
   './vendor/dexie.js',
   './vendor/fabric.min.js',
   './vendor/jspdf.umd.min.js',
-  './vendor/jspdf.plugin.autotable.min.js'
+  './vendor/jspdf.plugin.autotable.min.js',
+  './vendor/fonts/DroidSansJapanese.ttf'
 ];
 
 self.addEventListener('install', event => {
