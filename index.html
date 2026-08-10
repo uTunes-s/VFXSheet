@@ -1629,18 +1629,76 @@
       ctx.fillStyle = '#0f172a'; ctx.font = 'bold 36px sans-serif'; ctx.fillText('VFX Sheet', 60, 72);
       ctx.fillStyle = '#64748b'; ctx.font = '20px sans-serif'; ctx.fillText(`Record #${record.id}  •  ${record.shoot_datetime || ''}`, 60, 106);
       let y = 155;
-      const drawText = (label, value) => { ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(label, 60, y); ctx.fillStyle = '#0f172a'; ctx.font = '22px sans-serif'; const lines = wrapPdfText(ctx, String(value || '-'), 1120); lines.forEach(line => { y += 30; ctx.fillText(line, 60, y); }); y += 26; };
-      drawText('1. General Information', `Operator: ${record.operator || '-'}\nShow Title: ${record.show_title || '-'}\nDate & Time: ${record.shoot_datetime || '-'}\nLocation: ${record.location || '-'}\nEpisode: ${record.episode || '-'}\nScene / Shot: ${record.scene || '-'} / ${record.shot || '-'}\nGPS: ${record.gps_location || '-'}`);
-      drawText('2. Multi-Camera Setup', (record.cameras || []).map(c => `${c.label}: ${c.camera || '-'} / ${c.lens || '-'} / ${c.focal_length || '-'} / ${c.t_stop || '-'}\nClip: ${c.clip_name || '-'}  LUT: ${c.lut_info || '-'}  Movement: ${c.cramerawork || '-'}\nHeight: ${c.height_value || '-'}  Distance: ${c.distance_value || '-'}  Tilt: ${c.tilt_value || '-'}  Chart: ${c.flag_chart || 'NO'}  Clean Plate: ${c.flag_cleanplate || 'NO'}  Reference: ${c.flag_reference || 'NO'}`).join('\n\n'));
-      drawText('3. HDRI Setup', record.hdri_captured === 'YES' ? `Captured: YES\nWeather: ${Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather || '-'}\nNotes / EV: ${record.hdri_notes || '-'}` : 'Captured: NO');
-      drawText('4. VFX Field Notes & Sketch', record.notes || '-');
+      y = drawPdfSectionTitle(ctx, '1. General Information', y);
+      y = drawPdfTable(ctx, y, [
+        [{ label: 'Operator', value: record.operator }, { label: 'Show Title', value: record.show_title }, { label: 'Date & Time', value: record.shoot_datetime }, { label: 'Location', value: record.location }],
+        [{ label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }, { label: 'GPS', value: record.gps_location }]
+      ], 4);
+
+      y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 18);
+      const cameras = record.cameras?.length ? record.cameras : [{ label: 'Cam A' }];
+      cameras.forEach((camera, index) => {
+        y = drawPdfCameraTable(ctx, y, camera, index + 1);
+        y += 16;
+      });
+
+      y = drawPdfSectionTitle(ctx, '3. HDRI Setup', y);
+      y = drawPdfTable(ctx, y, [[
+        { label: 'HDRI Captured', value: record.hdri_captured || 'NO' },
+        { label: 'Weather', value: Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather },
+        { label: 'HDRI Notes / EV', value: record.hdri_notes }
+      ]], 3);
+
+      y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 18);
+      y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
       const thumb = await imageFromBlob(record.shot_thumbnail); const sketch = await imageFromBlob(record.images?.[0]);
-      const imageY = Math.max(y, 780); const imageHeight = 310; const imageWidth = 530;
+      const imageY = Math.max(y + 24, 960); const imageHeight = 310; const imageWidth = 530;
       ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnail', 60, imageY); ctx.fillText('Field Sketch', 650, imageY);
       ctx.fillStyle = '#e2e8f0'; ctx.fillRect(60, imageY + 15, imageWidth, imageHeight); ctx.fillRect(650, imageY + 15, imageWidth, imageHeight);
       if (thumb) drawImageContain(ctx, thumb, 60, imageY + 15, imageWidth, imageHeight);
       if (sketch) drawImageContain(ctx, sketch, 650, imageY + 15, imageWidth, imageHeight);
       return canvas.toDataURL('image/png');
+    }
+
+    function drawPdfSectionTitle(ctx, title, y) {
+      ctx.fillStyle = '#b45309'; ctx.font = 'bold 22px sans-serif'; ctx.fillText(title, 60, y);
+      return y + 18;
+    }
+
+    function drawPdfTable(ctx, y, rows, columns) {
+      const x = 60; const width = 1120; const cellWidth = width / columns; const cellHeight = 72;
+      rows.forEach(row => {
+        row.forEach((cell, index) => {
+          const cellX = x + index * cellWidth;
+          ctx.fillStyle = '#f8fafc'; ctx.fillRect(cellX, y, cellWidth, cellHeight);
+          ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.strokeRect(cellX, y, cellWidth, cellHeight);
+          ctx.fillStyle = '#64748b'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(cell.label, cellX + 12, y + 21);
+          ctx.fillStyle = '#0f172a'; ctx.font = '19px sans-serif';
+          const lines = wrapPdfText(ctx, String(cell.value || '-'), cellWidth - 24).slice(0, 2);
+          lines.forEach((line, lineIndex) => ctx.fillText(line, cellX + 12, y + 47 + lineIndex * 19));
+        });
+        y += cellHeight;
+      });
+      return y;
+    }
+
+    function drawPdfCameraTable(ctx, y, camera, number) {
+      ctx.fillStyle = '#334155'; ctx.fillRect(60, y, 1120, 34);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 72, y + 23);
+      y += 34;
+      y = drawPdfTable(ctx, y, [[
+        { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }
+      ]], 2);
+      y = drawPdfTable(ctx, y, [[
+        { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }
+      ]], 4);
+      y = drawPdfTable(ctx, y, [[
+        { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }
+      ]], 3);
+      return drawPdfTable(ctx, y, [[
+        { label: 'CHECKLIST', value: `Color Chart & Sphere: ${camera.flag_chart || 'NO'}  /  Clean Plate: ${camera.flag_cleanplate || 'NO'}  /  VFX Reference: ${camera.flag_reference || 'NO'}  /  Tilt: ${camera.tilt_value || '-'}`
+        }
+      ]], 1);
     }
 
     function wrapPdfText(ctx, text, maxWidth) {
