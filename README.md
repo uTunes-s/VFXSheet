@@ -2,6 +2,12 @@
 
 iPhone/iOSの撮影現場で使うオフライン優先のVFX記録PWAです。記録は端末のIndexedDBへ保存され、未同期データはJSONでバックアップ・復元できます。
 
+## GitHub Pagesへの公開
+
+`main`ブランチへのpushでGitHub Actionsが静的サイトをGitHub Pagesへデプロイします。初回のみGitHubのリポジトリ設定で**Settings → Pages → Build and deployment → Source**を**GitHub Actions**に設定してください。公開先は通常、`https://utunes-s.github.io/VFXSheet/`です。
+
+GitHub Pagesは静的ホスティングのため、`/api/sync`のNetlify Functionは動作しません。FlowPT同期を利用する本番運用はNetlify公開を使用してください。
+
 ## Netlifyへの公開
 
 1. このフォルダをGitリポジトリにコミットしてGitHub/GitLab/Bitbucketへpushします。
