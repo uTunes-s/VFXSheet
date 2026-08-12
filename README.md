@@ -31,6 +31,8 @@ FlowPT側は`Idempotency-Key`またはJSONの`uuid`を一意キーとして保�
 ## 現場運用
 
 - IndexedDBは端末ストレージなので、同期前もJSONバックアップをFiles/iCloud Drive等の別領域へ保存します。
+- カメラプリセットはメーカー名順に表示され、Sony Venice／Venice IIのセンサー・解像度別モデルだけはSony内で仕様順に表示されます。Sony Alpha 1、Panasonic GH5／GH5S／GH6、iPhone 17 Proに対応しています。新規インストール時はSony Venice II FF 8.6K 3:2、FF 7.6K 16:9、S35 5.4K 16:9、Sony FX3、Sony Alpha 1、DJI Inspire 3が有効です。
+- レンズプリセットはカメラと同じCine／Photo／Phone／Drone区分の中でシリーズ単位に折りたたみ表示され、各シリーズ内は焦点距離の短い順に並びます。LAOWA Cine、DJI DL-S、ARRI Master Macroを含むシリーズ見出しのチェックボックスで一括ON／OFF、各レンズのチェックボックスで個別ON／OFFを設定でき、個別変更後も開いているシリーズは閉じません。新規インストール時はZEISS CP.3、Sony FE 24-70mm F2.8 GM II、DJI Inspire 3 DL、DJI DL-Sが有効です。
 - **Export FlowPT ZIP**は、CSV、`thumbnails`、`pdfs`フォルダを含むZIPファイルを1つダウンロードします。CSVには5桁ゼロ埋めのローカル`ID`（例: `00001`）と一意識別子の`UUID`を別列で出力します。`Shooting Data Name`は`Episode_Scene_Shot_Reel`形式です。添付したShot Data Thumbnailは`thumbnails/[ID5桁]_[Shooting Data Name]_[撮影日YYYYMMDD].jpg`として格納され、CSVの`ThumbText`列にはその相対パスが入ります。複数画像は登録順を維持し、各画像のアスペクト比を保ったままトリミングせず、全体が可能な限り16:9に近くなる行レイアウトのコラージュJPEGになります。各Shooting Dataには、通常のPDF出力と同じVFX Sheetデザインの個別PDFが`pdfs/[ID5桁]_[Shooting Data Name]_[撮影日YYYYMMDD].pdf`として1ファイルずつ生成され、CSVの`PDF`列にはその相対パスが入ります。PDFのレポート背景は180 dpi相当で圧縮し、サムネイルとスケッチのみを最大2000 pxの高品質JPEGとして個別に保持するため、通常は1ファイル約10 MB以内を目標にします。クリップ名の列名は`ClipName`です。
 - PDFをShooting DataのElementとして自動紐付けするには、FlowPTのインポート機能がCSVの`PDF`列にある相対パスをElement添付として解釈する必要があります。対応していない場合は、Shooting DataをCSVで作成後に、同名の`pdfs/[Shooting Data Name].pdf`をElementとして手動登録してください。
 - SafariのPWAではダウンロードしたZIPを「ファイル」アプリに保存してから展開し、CSV、`thumbnails`、`pdfs`フォルダをまとめてFlowPTへ登録してください。
