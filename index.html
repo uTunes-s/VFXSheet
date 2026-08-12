@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>VFX Sheet</title>
@@ -45,6 +45,7 @@
       background-color: #020617;
       color: #f1f5f9;
     }
+    #noteCanvas, .canvas-container { touch-action: pan-y pinch-zoom !important; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-28 md:p-6 md:pb-28 font-sans antialiased">
@@ -72,7 +73,7 @@
 
     <!-- Record Sheet Page -->
     <section id="recordPage">
-    <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+    <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" onkeydown="preventFormEnterSubmit(event)" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
       
       <!-- Edit Mode Banner -->
       <div id="editModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center">
@@ -213,6 +214,7 @@
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
             <button type="button" onclick="setCanvasMode('draw')" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
+            <button type="button" onclick="setCanvasMode('erase')" id="btnErase" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">🧽 Eraser</button>
             <button type="button" onclick="setCanvasMode('select')" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
             <button type="button" onclick="addTextToNote()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
 
@@ -279,7 +281,7 @@
             Delete Selected (0)
           </button>
           <button id="exportCsvBtn" type="button" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
-            📊 Export CSV
+            📦 Export FlowPT ZIP
           </button>
           <button id="exportPdfBtn" type="button" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📄 Export PDF
@@ -335,7 +337,7 @@
 
   <!-- Presets & Settings Modal -->
   <div id="presetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="font-bold text-amber-400 text-sm">Presets & Global Config Management</h3>
         <button type="button" onclick="closePresetModal()" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
@@ -363,7 +365,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto pr-1 flex-1">
+      <div class="space-y-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
           <label class="form-label text-amber-300 font-bold">Camera Models</label>
           <div class="flex gap-2">
@@ -1329,6 +1331,7 @@
     let canvasHistory = [];
     let historyIndex = -1;
     let isUndoRedo = false;
+    let canvasMode = 'draw';
 
     function initFabricCanvas() {
       fCanvas = new fabric.Canvas('noteCanvas', {
@@ -1340,6 +1343,15 @@
       });
       fCanvas.freeDrawingBrush.color = currentDrawingColor;
       fCanvas.freeDrawingBrush.width = 3;
+      fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
+
+      // On iPad, reserve fingers for native page scrolling and pinch zoom.
+      // Only Apple Pencil (pointerType "pen") reaches Fabric's canvas tools.
+      fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
+        if (event.pointerType !== 'touch') return;
+        event.stopImmediatePropagation();
+        fCanvas.isDrawingMode = false;
+      }, true);
 
       // 初期の空状態を保存
       saveCanvasState();
@@ -1348,6 +1360,15 @@
       fCanvas.on('object:added', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
+      fCanvas.on('path:created', event => {
+        if (canvasMode === 'erase') {
+          event.path.globalCompositeOperation = 'destination-out';
+          fCanvas.requestRenderAll();
+          // `object:added` is emitted before this composition is assigned.
+          // Replace that history entry so Undo restores an actual eraser path.
+          canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON());
+        }
+      });
     }
 
     function saveCanvasState() {
@@ -1411,16 +1432,32 @@
     function setCanvasMode(mode) {
       const btnDraw = document.getElementById('btnDraw');
       const btnSelect = document.getElementById('btnSelect');
+      const btnErase = document.getElementById('btnErase');
+      canvasMode = mode;
 
       if (mode === 'draw') {
         fCanvas.isDrawingMode = true;
+        fCanvas.freeDrawingBrush.color = currentDrawingColor;
         btnDraw.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
+        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
+        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
+      } else if (mode === 'erase') {
+        fCanvas.isDrawingMode = true;
+        // Fabric renders eraser strokes with destination-out on creation.
+        fCanvas.freeDrawingBrush.color = '#000000';
+        btnErase.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
+        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
         btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
       } else {
         fCanvas.isDrawingMode = false;
         btnSelect.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
         btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
+        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
       }
+    }
+
+    function preventFormEnterSubmit(event) {
+      if (event.key === 'Enter') event.preventDefault();
     }
 
     function addFreeImageToCanvas(e) {
@@ -1904,29 +1941,217 @@
       }
     }
 
+    function getRecordShotThumbnails(record) {
+      return record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
+    }
+
+    function getShootingDataName(record, camera = {}) {
+      return [record.episode, record.scene, record.shot, getCameraReelName(camera)].filter(Boolean).join('_');
+    }
+
+    function formatFlowPtId(id) {
+      return String(id ?? '').padStart(5, '0');
+    }
+
+    function getShootingDataExportFilename(record, camera, extension) {
+      const shootingDate = String(record.shoot_datetime || '').match(/^\d{4}-\d{2}-\d{2}/)?.[0].replaceAll('-', '') || 'undated';
+      return `${formatFlowPtId(record.id)}_${getShootingDataName(record, camera)}_${shootingDate}.${extension}`;
+    }
+
+    async function createThumbnailCollage(thumbnailBlobs) {
+      const images = (await Promise.all(thumbnailBlobs.map(imageFromBlob))).filter(Boolean);
+      if (!images.length) return null;
+
+      const targetAspectRatio = 16 / 9;
+      const collageWidth = 1600;
+      const imageAspects = images.map(image => image.width / image.height);
+      // Keep the saved order and group adjacent images into rows with similar
+      // total aspect ratios. This produces an overall collage close to 16:9
+      // while every source image remains fully visible and uncropped.
+      const totalAspect = imageAspects.reduce((total, aspect) => total + aspect, 0);
+      const idealRowCount = Math.sqrt(totalAspect / targetAspectRatio);
+      const rowCountCandidates = [...new Set([Math.floor(idealRowCount), Math.ceil(idealRowCount)].map(count => Math.min(images.length, Math.max(1, count))))];
+      const rowCount = rowCountCandidates.reduce((best, candidate) =>
+        Math.abs(totalAspect / (candidate * candidate) - targetAspectRatio) < Math.abs(totalAspect / (best * best) - targetAspectRatio) ? candidate : best
+      );
+      const targetRowAspect = totalAspect / rowCount;
+      const rows = [];
+      let currentRow = [];
+      let currentAspect = 0;
+      imageAspects.forEach((aspect, index) => {
+        const rowsRemaining = rowCount - rows.length;
+        const imagesRemaining = images.length - index;
+        const shouldStartNextRow = currentRow.length > 0
+          && rowsRemaining > 1
+          && imagesRemaining > rowsRemaining - 1
+          && Math.abs(currentAspect - targetRowAspect) < Math.abs(currentAspect + aspect - targetRowAspect);
+        if (shouldStartNextRow) {
+          rows.push(currentRow);
+          currentRow = [];
+          currentAspect = 0;
+        }
+        currentRow.push({ image: images[index], aspect });
+        currentAspect += aspect;
+      });
+      if (currentRow.length) rows.push(currentRow);
+
+      const rowLayouts = rows.map(row => {
+        const aspect = row.reduce((total, item) => total + item.aspect, 0);
+        return { items: row, height: Math.max(1, Math.round(collageWidth / aspect)) };
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = collageWidth;
+      canvas.height = rowLayouts.reduce((height, row) => height + row.height, 0);
+      const context = canvas.getContext('2d');
+
+      let y = 0;
+      rowLayouts.forEach(({ items, height }) => {
+        let x = 0;
+        items.forEach(({ image, aspect }, index) => {
+          // Rounding is assigned to the final image so every row reaches the
+          // canvas edge without altering source aspect ratios or cropping.
+          const width = index === items.length - 1 ? collageWidth - x : Math.round(height * aspect);
+          context.drawImage(image, x, y, width, height);
+          x += width;
+        });
+        y += height;
+      });
+
+      return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    }
+
+    function crc32(bytes) {
+      let crc = 0xffffffff;
+      for (const byte of bytes) {
+        crc ^= byte;
+        for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    function createZip(files) {
+      const encoder = new TextEncoder();
+      const now = new Date();
+      const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
+      const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+      const localParts = [];
+      const centralParts = [];
+      let offset = 0;
+
+      files.forEach(({ path, bytes }) => {
+        const filename = encoder.encode(path);
+        const checksum = crc32(bytes);
+        const localHeader = new Uint8Array(30 + filename.length);
+        const localView = new DataView(localHeader.buffer);
+        localView.setUint32(0, 0x04034b50, true);
+        localView.setUint16(4, 20, true);
+        localView.setUint16(6, 0x0800, true);
+        localView.setUint16(8, 0, true);
+        localView.setUint16(10, dosTime, true);
+        localView.setUint16(12, dosDate, true);
+        localView.setUint32(14, checksum, true);
+        localView.setUint32(18, bytes.length, true);
+        localView.setUint32(22, bytes.length, true);
+        localView.setUint16(26, filename.length, true);
+        localHeader.set(filename, 30);
+        localParts.push(localHeader, bytes);
+
+        const centralHeader = new Uint8Array(46 + filename.length);
+        const centralView = new DataView(centralHeader.buffer);
+        centralView.setUint32(0, 0x02014b50, true);
+        centralView.setUint16(4, 20, true);
+        centralView.setUint16(6, 20, true);
+        centralView.setUint16(8, 0x0800, true);
+        centralView.setUint16(10, 0, true);
+        centralView.setUint16(12, dosTime, true);
+        centralView.setUint16(14, dosDate, true);
+        centralView.setUint32(16, checksum, true);
+        centralView.setUint32(20, bytes.length, true);
+        centralView.setUint32(24, bytes.length, true);
+        centralView.setUint16(28, filename.length, true);
+        centralView.setUint32(42, offset, true);
+        centralHeader.set(filename, 46);
+        centralParts.push(centralHeader);
+        offset += localHeader.length + bytes.length;
+      });
+
+      const centralSize = centralParts.reduce((size, part) => size + part.length, 0);
+      const end = new Uint8Array(22);
+      const endView = new DataView(end.buffer);
+      endView.setUint32(0, 0x06054b50, true);
+      endView.setUint16(8, files.length, true);
+      endView.setUint16(10, files.length, true);
+      endView.setUint32(12, centralSize, true);
+      endView.setUint32(16, offset, true);
+      return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
+    }
+
+    async function createShootingDataPdf(record, camera) {
+      if (!window.jspdf?.jsPDF) throw new Error('PDF export library is unavailable. Please reload the app once while online.');
+      const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      // One FlowPT Shooting Data item corresponds to one camera/reel. Render the
+      // same visual VFX Sheet report layout as PDF export, as one PDF per item.
+      // The report background is compressed, then source images are embedded
+      // separately at high quality to keep file size low without soft photos.
+      const shootingDataRecord = { ...record, cameras: [camera] };
+      const reportPage = await renderRecordPdfPage(shootingDataRecord);
+      doc.addImage(reportPage.background, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+      reportPage.thumbnailBoxes.forEach(box => addHighResolutionPdfImage(doc, box));
+      if (reportPage.sketchBox) addHighResolutionPdfImage(doc, reportPage.sketchBox);
+      await addInvisiblePdfTextLayer(doc, shootingDataRecord);
+      return new Uint8Array(doc.output('arraybuffer'));
+    }
+
+    function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
+      if (!image) return;
+      const ratio = Math.min(width / image.width, height / image.height);
+      const imageWidth = image.width * ratio;
+      const imageHeight = image.height * ratio;
+      const source = document.createElement('canvas');
+      const maxDimension = 2000;
+      const sourceRatio = Math.min(1, maxDimension / Math.max(image.width, image.height));
+      source.width = Math.max(1, Math.round(image.width * sourceRatio));
+      source.height = Math.max(1, Math.round(image.height * sourceRatio));
+      source.getContext('2d').drawImage(image, 0, 0, source.width, source.height);
+      // renderRecordPdfPage uses a 1240 × 1754 logical A4 layout.
+      doc.addImage(source.toDataURL('image/jpeg', 0.88), 'JPEG', (x + (width - imageWidth) / 2) / 1240 * 210, (y + (height - imageHeight) / 2) / 1754 * 297, imageWidth / 1240 * 210, imageHeight / 1754 * 297, undefined, 'FAST');
+    }
+
     async function exportToCSV() {
       const button = document.getElementById('exportCsvBtn');
       const originalLabel = button.innerHTML;
       button.disabled = true;
-      button.innerText = 'Preparing CSV…';
+      button.innerText = 'Creating FlowPT ZIP…';
       try {
         const records = await getRecordsForHistoryAction();
         if (!records || records.length === 0) return alert("No records to export.");
 
-        const headers = ["ID", "Project", "Shooting Data Name", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "Clip Name", "LUT", "Camerawork", "Height", "Distance", "Angle"];
+        const headers = ["ID", "UUID", "Project", "Shooting Data Name", "ThumbText", "PDF", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "ClipName", "LUT", "Camerawork", "Height", "Distance", "Angle"];
         const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
         const formatShootDate = value => {
           const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
           return match ? { day: `${match[1]}${match[2]}${match[3]}`, time: `${match[2]}/${match[3]} ${match[4]}:${match[5]}` } : { day: '', time: '' };
         };
+        const thumbnails = new Map();
+        const shootingDataItems = new Map();
         const rows = records.flatMap(record => {
           const dateTime = formatShootDate(record.shoot_datetime);
-          const shootingDataName = [record.episode, record.scene, record.shot].filter(Boolean).join('_');
           const cameras = record.cameras?.length ? record.cameras : [{}];
-          return cameras.map(camera => [
-            record.uuid || record.id,
+          const shotThumbnails = getRecordShotThumbnails(record);
+          return cameras.map(camera => {
+            const shootingDataName = getShootingDataName(record, camera);
+            const thumbnailFilename = getShootingDataExportFilename(record, camera, 'jpg');
+            const pdfFilename = getShootingDataExportFilename(record, camera, 'pdf');
+            const exportKey = pdfFilename;
+            if (shotThumbnails.length && !thumbnails.has(exportKey)) thumbnails.set(exportKey, shotThumbnails);
+            if (!shootingDataItems.has(exportKey)) shootingDataItems.set(exportKey, { record, camera, thumbnailFilename, pdfFilename });
+            return [
+            formatFlowPtId(record.id),
+            record.uuid || '',
             record.show_title,
             shootingDataName,
+            shotThumbnails.length ? `thumbnails/${thumbnailFilename}` : '',
+            `pdfs/${pdfFilename}`,
             dateTime.day,
             record.location,
             dateTime.time,
@@ -1941,11 +2166,29 @@
             camera.height_value,
             camera.distance_value,
             camera.tilt_value
-          ].map(csvEscape).join(','));
+            ].map(csvEscape).join(',');
+          });
         });
 
         const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
-        downloadExportBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `VFX_Sheet_${new Date().toISOString().slice(0,10)}.csv`);
+        const thumbnailFiles = (await Promise.all([...thumbnails].map(async ([exportKey, shotThumbnails]) => {
+          const collage = await createThumbnailCollage(shotThumbnails);
+          const { thumbnailFilename } = shootingDataItems.get(exportKey);
+          return collage ? { path: `thumbnails/${thumbnailFilename}`, bytes: new Uint8Array(await collage.arrayBuffer()) } : null;
+        }))).filter(Boolean);
+        const pdfFiles = [];
+        for (const [, { record, camera, pdfFilename }] of shootingDataItems) {
+          button.innerText = `Creating PDF ${pdfFiles.length + 1}/${shootingDataItems.size}…`;
+          pdfFiles.push({ path: `pdfs/${pdfFilename}`, bytes: await createShootingDataPdf(record, camera) });
+        }
+        const date = new Date().toISOString().slice(0, 10);
+        const zip = createZip([
+          { path: `VFX_Sheet_${date}.csv`, bytes: new TextEncoder().encode(csvContent) },
+          ...thumbnailFiles,
+          ...pdfFiles
+        ]);
+        downloadExportBlob(zip, `VFX_Sheet_${date}.zip`);
+        alert(`FlowPT ZIP exported with ${thumbnailFiles.length} thumbnail file(s) and ${pdfFiles.length} PDF file(s).`);
       } catch (error) {
         console.error('CSV export error:', error);
         alert(`CSV Export Error: ${error.message || error}`);
@@ -1970,11 +2213,10 @@
           return alert("No records to export.");
         }
         const pages = await Promise.all(records.map(renderPrintableTextPdfRecord));
-        printWindow.onload = () => printWindow.print();
         printWindow.document.open();
         printWindow.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>VFX Sheet Report</title><style>
           @page { size: A3 portrait; margin: 10mm; }
-          * { box-sizing: border-box; } body { color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif; font-size:10px; line-height:1.4; } .page { break-after:page; page-break-after:always; break-inside:avoid-page; page-break-inside:avoid; } .page:last-child { break-after:auto; page-break-after:auto; } .report-header { position:relative; min-height:48px; } h1 { font-size:20px; margin:0; color:#0f172a; text-align:center; } .meta { margin:2px 0 10px; color:#475569; text-align:center; } .header-meta { position:absolute; top:0; right:0; max-width:42%; color:#475569; font-size:9px; line-height:1.55; text-align:right; } .header-meta div { white-space:nowrap; } .header-meta strong { color:#334155; } h2 { font-size:12px; color:#92400e; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin:12px 0 5px; } table { border-collapse:collapse; width:100%; margin-bottom:6px; break-inside:avoid; page-break-inside:avoid; } th,td { border:1px solid #cbd5e1; padding:4px; text-align:left; vertical-align:top; word-break:break-word; } th { background:#e2e8f0; font-weight:700; white-space:nowrap; } .images { display:flex; flex-wrap:wrap; gap:6px; break-inside:avoid; page-break-inside:avoid; } .thumb { width:31%; max-height:120px; object-fit:contain; border:1px solid #cbd5e1; } .sketch { display:block; width:100%; height:auto; max-height:520px; object-fit:contain; border:1px solid #cbd5e1; break-inside:avoid; page-break-inside:avoid; } pre { margin:0; white-space:pre-wrap; font-family:inherit; }</style></head><body>${pages.join('')}</body></html>`);
+          * { box-sizing: border-box; } body { color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif; font-size:10px; line-height:1.4; } .return-bar { position:sticky; top:0; z-index:1; display:flex; justify-content:flex-end; gap:8px; padding:8px; background:#0f172a; } .return-bar button { border:0; border-radius:6px; padding:8px 12px; color:#0f172a; background:#fbbf24; font-weight:700; } .return-bar .close { color:#e2e8f0; background:#334155; } .page { break-after:page; page-break-after:always; break-inside:avoid-page; page-break-inside:avoid; } .page:last-child { break-after:auto; page-break-after:auto; } .report-header { position:relative; min-height:48px; } h1 { font-size:20px; margin:0; color:#0f172a; text-align:center; } .meta { margin:2px 0 10px; color:#475569; text-align:center; } .header-meta { position:absolute; top:0; right:0; max-width:42%; color:#475569; font-size:9px; line-height:1.55; text-align:right; } .header-meta div { white-space:nowrap; } .header-meta strong { color:#334155; } h2 { font-size:12px; color:#92400e; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin:12px 0 5px; } table { border-collapse:collapse; width:100%; margin-bottom:6px; break-inside:avoid; page-break-inside:avoid; } th,td { border:1px solid #cbd5e1; padding:4px; text-align:left; vertical-align:top; word-break:break-word; } th { background:#e2e8f0; font-weight:700; white-space:nowrap; } .images { display:flex; flex-wrap:wrap; gap:6px; break-inside:avoid; page-break-inside:avoid; } .thumb { width:31%; max-height:120px; object-fit:contain; border:1px solid #cbd5e1; } .sketch { display:block; width:100%; height:auto; max-height:520px; object-fit:contain; border:1px solid #cbd5e1; break-inside:avoid; page-break-inside:avoid; } pre { margin:0; white-space:pre-wrap; font-family:inherit; } @media print { .return-bar { display:none; } }</style></head><body><div class="return-bar"><button onclick="window.print()">Export PDF</button><button class="close" onclick="window.close()">Close &amp; Return to VFX Sheet</button></div>${pages.join('')}<script>window.onafterprint=()=>window.close();<\/script></body></html>`);
         printWindow.document.close();
         printWindow.focus();
       } catch (error) {
@@ -2174,17 +2416,27 @@
       y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
       const thumbnails = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(imageFromBlob));
       const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
+      const thumbnailBoxes = [];
       let imageY = Math.max(y + 14, 760);
       if (thumbnails.length) {
         ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnails', 60, imageY);
         const gap = 12; const thumbnailWidth = Math.min(220, (1160 - gap * (thumbnails.length - 1)) / thumbnails.length); const thumbnailHeight = 100;
-        thumbnails.forEach((thumbnail, index) => { const x = 40 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 12, thumbnailWidth, thumbnailHeight); if (thumbnail) drawImageContain(ctx, thumbnail, x, imageY + 12, thumbnailWidth, thumbnailHeight); });
+        thumbnails.forEach((thumbnail, index) => { const x = 40 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 12, thumbnailWidth, thumbnailHeight); if (thumbnail) { drawImageContain(ctx, thumbnail, x, imageY + 12, thumbnailWidth, thumbnailHeight); thumbnailBoxes.push({ image: thumbnail, x, y: imageY + 12, width: thumbnailWidth, height: thumbnailHeight }); } });
         imageY += 142;
       }
       ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText('Field Sketch', 40, imageY);
       ctx.fillStyle = '#e2e8f0'; ctx.fillRect(40, imageY + 12, 1160, 760);
       if (sketch) drawImageContain(ctx, sketch, 40, imageY + 12, 1160, 760);
-      return canvas.toDataURL('image/png');
+      // Keep the report layout compact at 180 dpi. The higher-quality source
+      // thumbnails and sketch are subsequently overlaid in the PDF.
+      const compressedCanvas = document.createElement('canvas');
+      compressedCanvas.width = 1488; compressedCanvas.height = 2105;
+      compressedCanvas.getContext('2d').drawImage(canvas, 0, 0, compressedCanvas.width, compressedCanvas.height);
+      return {
+        background: compressedCanvas.toDataURL('image/jpeg', 0.66),
+        thumbnailBoxes,
+        sketchBox: sketch ? { image: sketch, x: 40, y: imageY + 12, width: 1160, height: 760 } : null
+      };
     }
 
     async function renderHighResolutionSketch(record) {

@@ -25,5 +25,9 @@ FlowPT側は`Idempotency-Key`またはJSONの`uuid`を一意キーとして保�
 ## 現場運用
 
 - IndexedDBは端末ストレージなので、同期前もJSONバックアップをFiles/iCloud Drive等の別領域へ保存します。
+- **Export FlowPT ZIP**は、CSV、`thumbnails`、`pdfs`フォルダを含むZIPファイルを1つダウンロードします。CSVには5桁ゼロ埋めのローカル`ID`（例: `00001`）と一意識別子の`UUID`を別列で出力します。`Shooting Data Name`は`Episode_Scene_Shot_Reel`形式です。添付したShot Data Thumbnailは`thumbnails/[ID5桁]_[Shooting Data Name]_[撮影日YYYYMMDD].jpg`として格納され、CSVの`ThumbText`列にはその相対パスが入ります。複数画像は登録順を維持し、各画像のアスペクト比を保ったままトリミングせず、全体が可能な限り16:9に近くなる行レイアウトのコラージュJPEGになります。各Shooting Dataには、通常のPDF出力と同じVFX Sheetデザインの個別PDFが`pdfs/[ID5桁]_[Shooting Data Name]_[撮影日YYYYMMDD].pdf`として1ファイルずつ生成され、CSVの`PDF`列にはその相対パスが入ります。PDFのレポート背景は180 dpi相当で圧縮し、サムネイルとスケッチのみを最大2000 pxの高品質JPEGとして個別に保持するため、通常は1ファイル約10 MB以内を目標にします。クリップ名の列名は`ClipName`です。
+- PDFをShooting DataのElementとして自動紐付けするには、FlowPTのインポート機能がCSVの`PDF`列にある相対パスをElement添付として解釈する必要があります。対応していない場合は、Shooting DataをCSVで作成後に、同名の`pdfs/[Shooting Data Name].pdf`をElementとして手動登録してください。
+- SafariのPWAではダウンロードしたZIPを「ファイル」アプリに保存してから展開し、CSV、`thumbnails`、`pdfs`フォルダをまとめてFlowPTへ登録してください。
+- iPadのPWAで**Export PDF**を実行した場合、PDF画面上部の**Export PDF**から保存／印刷を実行できます。完了後は自動でVFX Sheetへ復帰し、復帰しない場合は**Close & Return to VFX Sheet**を押してください。
 - `sw.js`、`index.html`、`manifest.webmanifest`はキャッシュしない設定です。アプリ更新時には`sw.js`の`CACHE_NAME`を増やしてください。
 - Service WorkerはHTTPSでのみ動作します。`file://`で直接開く運用はPWAのオフライン起動を保証しません。
