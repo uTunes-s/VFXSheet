@@ -218,6 +218,17 @@
             <button type="button" onclick="setCanvasMode('select')" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
             <button type="button" onclick="addTextToNote()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
 
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+              <label for="drawBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Draw</label>
+              <input type="range" id="drawBrushSize" min="1" max="30" value="3" oninput="setCanvasBrushSize('draw', this.value)" class="w-16 accent-amber-400" aria-label="Draw brush size">
+              <span id="drawBrushSizeValue" class="w-4 text-[10px] font-mono text-slate-300">3</span>
+            </div>
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+              <label for="eraserBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Erase</label>
+              <input type="range" id="eraserBrushSize" min="4" max="100" value="24" oninput="setCanvasBrushSize('erase', this.value)" class="w-16 accent-amber-400" aria-label="Eraser size">
+              <span id="eraserBrushSizeValue" class="w-5 text-[10px] font-mono text-slate-300">24</span>
+            </div>
+
             <!-- Undo / Redo Buttons -->
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <button type="button" id="btnUndo" onclick="undoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
@@ -406,7 +417,7 @@
 
   <script>
     // Dexie DB
-    const db = new Dexie("NK_VfxSheetDB");
+    const db = new Dexie("VfxSheetDB");
     db.version(11).stores({
       sheets: '++id, uuid, operator, show_title, scene, shot, synced, created_at',
       presets: 'type'
@@ -1026,7 +1037,7 @@
       reader.onload = async (event) => {
         try {
           const data = JSON.parse(event.target.result);
-          if (!['VFX_Sheet', 'NK_VFX_Sheet'].includes(data.app) || !data.presets) {
+          if (data.app !== 'VFX_Sheet' || !data.presets) {
             throw new Error("Invalid preset JSON file format.");
           }
 
@@ -1253,9 +1264,9 @@
         height_value: document.getElementById('tab_height_value')?.value || '',
         distance_value: document.getElementById('tab_distance_value')?.value || '',
         tilt_value: document.getElementById('tab_tilt_value')?.value || '',
-        flag_chart: document.getElementById('tab_flag_chart')?.value || 'NO',
-        flag_cleanplate: document.getElementById('tab_flag_cleanplate')?.value || 'NO',
-        flag_reference: document.getElementById('tab_flag_reference')?.value || 'NO'
+        flag_chart: document.getElementById('tab_flag_chart')?.checked ? 'YES' : 'NO',
+        flag_cleanplate: document.getElementById('tab_flag_cleanplate')?.checked ? 'YES' : 'NO',
+        flag_reference: document.getElementById('tab_flag_reference')?.checked ? 'YES' : 'NO'
       };
     }
 
@@ -1377,24 +1388,24 @@
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
               <span class="text-xs text-slate-300">Color Chart & Sphere</span>
-              <select id="tab_flag_chart" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
-                <option value="NO" ${cam.flag_chart === 'NO' ? 'selected' : ''}>NO</option>
-                <option value="YES" ${cam.flag_chart === 'YES' ? 'selected' : ''}>YES</option>
-              </select>
+              <label class="relative inline-flex items-center cursor-pointer" title="Color Chart & Sphere">
+                <input type="checkbox" id="tab_flag_chart" ${cam.flag_chart === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="Color Chart & Sphere captured">
+                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
             </div>
             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
               <span class="text-xs text-slate-300">Clean Plate</span>
-              <select id="tab_flag_cleanplate" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
-                <option value="NO" ${cam.flag_cleanplate === 'NO' ? 'selected' : ''}>NO</option>
-                <option value="YES" ${cam.flag_cleanplate === 'YES' ? 'selected' : ''}>YES</option>
-              </select>
+              <label class="relative inline-flex items-center cursor-pointer" title="Clean Plate">
+                <input type="checkbox" id="tab_flag_cleanplate" ${cam.flag_cleanplate === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="Clean Plate captured">
+                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
             </div>
             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
               <span class="text-xs text-slate-300">VFX Reference</span>
-              <select id="tab_flag_reference" class="form-select !w-auto !p-1 !text-xs !bg-slate-950 text-amber-400">
-                <option value="NO" ${cam.flag_reference === 'NO' ? 'selected' : ''}>NO</option>
-                <option value="YES" ${cam.flag_reference === 'YES' ? 'selected' : ''}>YES</option>
-              </select>
+              <label class="relative inline-flex items-center cursor-pointer" title="VFX Reference">
+                <input type="checkbox" id="tab_flag_reference" ${cam.flag_reference === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="VFX Reference captured">
+                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
             </div>
           </div>
         </div>
@@ -1439,6 +1450,8 @@
     let historyIndex = -1;
     let isUndoRedo = false;
     let canvasMode = 'draw';
+    let drawBrushWidth = 3;
+    let eraserBrushWidth = 24;
 
     function initFabricCanvas() {
       fCanvas = new fabric.Canvas('noteCanvas', {
@@ -1449,7 +1462,7 @@
         preserveObjectStacking: true
       });
       fCanvas.freeDrawingBrush.color = currentDrawingColor;
-      fCanvas.freeDrawingBrush.width = 3;
+      fCanvas.freeDrawingBrush.width = drawBrushWidth;
       fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
       // On iPad, reserve fingers for native page scrolling and pinch zoom.
@@ -1467,19 +1480,29 @@
       fCanvas.on('object:added', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
+      fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
+      fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
       fCanvas.on('path:created', event => {
+        event.path.isSketchStroke = canvasMode === 'draw';
+        // Drawn paths must remain selectable/movable in Select/Move mode.
+        // Only the temporary eraser path should be excluded from interaction.
+        event.path.selectable = canvasMode === 'draw';
+        event.path.evented = canvasMode === 'draw';
+        event.path.globalCompositeOperation = canvasMode === 'erase' ? 'destination-out' : 'source-over';
         if (canvasMode === 'erase') {
-          event.path.globalCompositeOperation = 'destination-out';
-          fCanvas.requestRenderAll();
-          // `object:added` is emitted before this composition is assigned.
-          // Replace that history entry so Undo restores an actual eraser path.
-          canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON());
+          eraseIntersectedSketchLayers(event.path);
+          return;
         }
+        // Preserve Fabric's natural stacking order: Draw, Text, and Library
+        // items created later are displayed above earlier items.
+        fCanvas.requestRenderAll();
+        // `object:added` runs before the path metadata is assigned.
+        canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
       });
     }
 
     function saveCanvasState() {
-      const json = JSON.stringify(fCanvas.toJSON());
+      const json = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
       
       // 新しい操作があった場合、現在のインデックス以降のRedo履歴を破棄
       if (historyIndex < canvasHistory.length - 1) {
@@ -1536,6 +1559,253 @@
       }
     }
 
+    function setCanvasBrushSize(type, value) {
+      const size = Number(value);
+      if (type === 'draw') {
+        drawBrushWidth = size;
+        document.getElementById('drawBrushSizeValue').textContent = size;
+      } else {
+        eraserBrushWidth = size;
+        document.getElementById('eraserBrushSizeValue').textContent = size;
+      }
+      if (fCanvas && canvasMode === type) fCanvas.freeDrawingBrush.width = size;
+    }
+
+    function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
+      context.save();
+      context.translate(left, top);
+      context.fillStyle = color;
+      context.beginPath(); context.arc(0, 0, 11, 0, Math.PI * 2); context.fill();
+      context.fillStyle = '#0f172a'; context.font = 'bold 13px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
+      context.fillText(text, 0, 1);
+      context.restore();
+    }
+
+function renderCropControlIcon(context, left, top) {
+  context.save();
+  context.translate(left, top);
+  context.strokeStyle = '#fbbf24'; context.lineWidth = 1.4; context.lineCap = 'round'; context.lineJoin = 'round';
+
+  // 外側に突き出た奇麗な「井」の字と、対角線を引くための正確な座標
+  context.beginPath();
+
+  // 1. 横方向の2本線（上・下）
+  context.moveTo(-8, -4); context.lineTo(8, -4); // 上の横線
+  context.moveTo(-8,  4); context.lineTo(8,  4); // 下の横線
+
+  // 2. 縦方向の2本線（左・右）
+  context.moveTo(-4, -8); context.lineTo(-4,  8); // 左の縦線
+  context.moveTo( 4, -8); context.lineTo( 4,  8); // 右の縦線
+
+  // 3. 左下から右上へ綺麗に繋がる対角線
+  context.moveTo(-4,  4); context.lineTo( 8, -8); // 左下の交点から、右上へ突き抜ける斜線
+
+  context.stroke();
+  context.restore();
+}
+
+    function getOwnCanvasControls(object) {
+      // Fabric's default `controls` map may be shared through the prototype.
+      // Always copy it before adding temporary crop-specific controls; otherwise
+      // the apply checkmark can be inherited by the original image.
+      if (!Object.prototype.hasOwnProperty.call(object, 'controls')) object.controls = { ...(object.controls || {}) };
+      return object.controls;
+    }
+
+    function configureCanvasImageCropControl(object) {
+      if (!object || object.type !== 'image' || object.isSketchRaster || object.isCropFrame || !window.fabric?.Control) return;
+      // Snap image rotation to clean 45° increments while retaining the normal
+      // Fabric rotation handle and a small angle tolerance for touch input.
+      object.set({ snapAngle: 45, snapThreshold: 8 });
+      const controls = getOwnCanvasControls(object);
+      // Remove an apply control that could have been inherited from crop frames
+      // created before controls were isolated per object.
+      delete controls.applyCrop;
+      if (controls.crop) return;
+      controls.crop = new fabric.Control({
+        x: 0.5, y: -0.5, offsetX: 16, offsetY: -16, cursorStyle: 'pointer',
+        mouseUpHandler: (_, transform) => { enterCanvasImageCropMode(transform.target); return true; },
+        render: (ctx, left, top) => renderCropControlIcon(ctx, left, top)
+      });
+      fCanvas.requestRenderAll();
+    }
+
+    function enterCanvasImageCropMode(image) {
+      if (!image || image.angle) return alert('Crop前に画像の回転を0°に戻してください。');
+      const bounds = image.getBoundingRect(true, true);
+      const sourceWidth = image._element?.naturalWidth || image._element?.width || image.width;
+      const sourceHeight = image._element?.naturalHeight || image._element?.height || image.height;
+      const sourceBounds = {
+        left: image.left - (image.cropX || 0) * image.scaleX,
+        top: image.top - (image.cropY || 0) * image.scaleY,
+        width: sourceWidth * image.scaleX,
+        height: sourceHeight * image.scaleY
+      };
+      const frame = new fabric.Rect({
+        left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height,
+        fill: 'rgba(251, 191, 36, 0.06)', stroke: '#fbbf24', strokeWidth: 2,
+        strokeDashArray: [6, 4], cornerColor: '#fbbf24', cornerSize: 12,
+        transparentCorners: false, isCropFrame: true, cropTarget: image, cropSourceBounds: sourceBounds,
+        lockRotation: true, originX: 'left', originY: 'top'
+      });
+      // During a second crop, show the original source behind the current crop.
+      // The source-bounded overlays darken previously trimmed areas while the
+      // active crop remains bright and editable.
+      const sourcePreview = new fabric.Image(image._element, {
+        left: sourceBounds.left, top: sourceBounds.top, width: sourceWidth, height: sourceHeight,
+        scaleX: image.scaleX, scaleY: image.scaleY, originX: 'left', originY: 'top',
+        selectable: false, evented: false, excludeFromExport: true, isCropSourcePreview: true
+      });
+      frame.cropSourcePreview = sourcePreview;
+      const frameControls = getOwnCanvasControls(frame);
+      delete frameControls.crop;
+      frameControls.applyCrop = new fabric.Control({
+        x: 0.5, y: -0.5, offsetX: 16, offsetY: -16, cursorStyle: 'pointer',
+        mouseUpHandler: (_, transform) => { applyCanvasImageCrop(transform.target); return true; },
+        render: (ctx, left, top, style, target) => renderCanvasControlIcon(ctx, left, top, style, target, '✓', '#84cc16')
+      });
+      image.selectable = false;
+      image.evented = false;
+      const overlays = Array.from({ length: 4 }, () => new fabric.Rect({ fill: 'rgba(2, 6, 23, 0.68)', selectable: false, evented: false, excludeFromExport: true, isCropOverlay: true }));
+      frame.cropOverlays = overlays;
+      const imageIndex = fCanvas.getObjects().indexOf(image);
+      fCanvas.add(sourcePreview);
+      fCanvas.moveTo(sourcePreview, imageIndex);
+      fCanvas.add(...overlays, frame);
+      const refreshOverlays = () => updateCanvasCropOverlays(frame);
+      frame.on('moving', refreshOverlays);
+      frame.on('scaling', refreshOverlays);
+      frame.on('modified', refreshOverlays);
+      updateCanvasCropOverlays(frame);
+      fCanvas.setActiveObject(frame);
+      fCanvas.requestRenderAll();
+    }
+
+    function updateCanvasCropOverlays(frame) {
+      const bounds = frame.getBoundingRect(true, true);
+      const source = frame.cropSourceBounds;
+      const sourceLeft = source.left;
+      const sourceTop = source.top;
+      const sourceRight = source.left + source.width;
+      const sourceBottom = source.top + source.height;
+      const left = Math.max(sourceLeft, bounds.left);
+      const top = Math.max(sourceTop, bounds.top);
+      const right = Math.min(sourceRight, bounds.left + bounds.width);
+      const bottom = Math.min(sourceBottom, bounds.top + bounds.height);
+      const rectangles = [
+        [sourceLeft, sourceTop, source.width, Math.max(0, top - sourceTop)],
+        [sourceLeft, bottom, source.width, Math.max(0, sourceBottom - bottom)],
+        [sourceLeft, top, Math.max(0, left - sourceLeft), Math.max(0, bottom - top)],
+        [right, top, Math.max(0, sourceRight - right), Math.max(0, bottom - top)]
+      ];
+      frame.cropOverlays.forEach((overlay, index) => overlay.set({ left: rectangles[index][0], top: rectangles[index][1], width: rectangles[index][2], height: rectangles[index][3] }));
+      frame.cropOverlays.forEach(overlay => fCanvas.moveTo(overlay, fCanvas.getObjects().indexOf(frame) - 1));
+      frame.setCoords();
+      fCanvas.requestRenderAll();
+    }
+
+    function applyCanvasImageCrop(frame) {
+      const image = frame?.cropTarget;
+      if (!image) return;
+      const imageBounds = frame.cropSourceBounds;
+      const cropBounds = frame.getBoundingRect(true, true);
+      const left = Math.max(imageBounds.left, cropBounds.left);
+      const top = Math.max(imageBounds.top, cropBounds.top);
+      const right = Math.min(imageBounds.left + imageBounds.width, cropBounds.left + cropBounds.width);
+      const bottom = Math.min(imageBounds.top + imageBounds.height, cropBounds.top + cropBounds.height);
+      if (right - left < 4 || bottom - top < 4) return alert('Crop範囲を画像内に作成してください。');
+      const scaleX = image.scaleX;
+      const scaleY = image.scaleY;
+      image.set({
+        cropX: (left - imageBounds.left) / scaleX,
+        cropY: (top - imageBounds.top) / scaleY,
+        width: (right - left) / scaleX,
+        height: (bottom - top) / scaleY,
+        left,
+        top,
+        selectable: true,
+        evented: true
+      });
+      image.setCoords();
+      // Fabric Canvas#remove accepts one object at a time. Remove every crop
+      // helper before selecting the original image, otherwise the ✓ control
+      // remains visible after applying a crop.
+      fCanvas.discardActiveObject();
+      [...(frame.cropOverlays || []), frame.cropSourcePreview, frame].filter(Boolean).forEach(object => fCanvas.remove(object));
+      configureCanvasImageCropControl(image);
+      fCanvas.setActiveObject(image);
+      fCanvas.requestRenderAll();
+      saveCanvasState();
+    }
+
+
+    function objectsOverlap(first, second) {
+      const a = first.getBoundingRect(true, true);
+      const b = second.getBoundingRect(true, true);
+      return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
+    }
+
+    async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
+      const rasterScale = 3;
+      const layer = new fabric.StaticCanvas(document.createElement('canvas'), {
+        width: fCanvas.width, height: fCanvas.height, enableRetinaScaling: false, renderOnAddRemove: false
+      });
+      try {
+        const [sketchClone, eraserClone] = await Promise.all([sketchLayer, eraserPath].map(object => new Promise(resolve => object.clone(resolve, ['isSketchStroke', 'isSketchRaster']))));
+        eraserClone.set({ globalCompositeOperation: 'destination-out', selectable: false, evented: false });
+        layer.add(sketchClone, eraserClone);
+        const rendered = layer.toCanvasElement(rasterScale);
+        const pixels = rendered.getContext('2d').getImageData(0, 0, rendered.width, rendered.height).data;
+        let minX = rendered.width, minY = rendered.height, maxX = -1, maxY = -1;
+        for (let y = 0; y < rendered.height; y++) for (let x = 0; x < rendered.width; x++) {
+          if (pixels[(y * rendered.width + x) * 4 + 3] === 0) continue;
+          minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+        }
+        if (maxX < minX || maxY < minY) return null;
+        const padding = rasterScale * 3;
+        minX = Math.max(0, minX - padding); minY = Math.max(0, minY - padding);
+        maxX = Math.min(rendered.width - 1, maxX + padding); maxY = Math.min(rendered.height - 1, maxY + padding);
+        const cropped = document.createElement('canvas');
+        cropped.width = maxX - minX + 1; cropped.height = maxY - minY + 1;
+        cropped.getContext('2d').drawImage(rendered, minX, minY, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+        return new Promise(resolve => fabric.Image.fromURL(cropped.toDataURL('image/png'), image => {
+          image.set({
+            left: minX / rasterScale, top: minY / rasterScale, scaleX: 1 / rasterScale, scaleY: 1 / rasterScale,
+            originX: 'left', originY: 'top', selectable: true, evented: true, objectCaching: false, isSketchRaster: true
+          });
+          resolve(image);
+        }));
+      } finally {
+        layer.dispose();
+      }
+    }
+
+    async function eraseIntersectedSketchLayers(eraserPath) {
+      const targets = fCanvas.getObjects().filter(object => (object.isSketchStroke || object.isSketchRaster) && objectsOverlap(object, eraserPath));
+      isUndoRedo = true;
+      try {
+        // The temporary eraser path is never retained. Each affected Draw item
+        // is independently replaced, preserving all untouched Draw layers as
+        // separate selectable/vector objects.
+        fCanvas.remove(eraserPath);
+        for (const target of targets) {
+          const index = fCanvas.getObjects().indexOf(target);
+          if (index < 0) continue;
+          const replacement = await rasterizeErasedSketchLayer(target, eraserPath);
+          fCanvas.remove(target);
+          if (replacement) {
+            fCanvas.add(replacement);
+            fCanvas.moveTo(replacement, index);
+          }
+        }
+      } finally {
+        isUndoRedo = false;
+      }
+      fCanvas.requestRenderAll();
+      canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
+      updateUndoRedoButtons();
+    }
+
     function setCanvasMode(mode) {
       const btnDraw = document.getElementById('btnDraw');
       const btnSelect = document.getElementById('btnSelect');
@@ -1545,13 +1815,15 @@
       if (mode === 'draw') {
         fCanvas.isDrawingMode = true;
         fCanvas.freeDrawingBrush.color = currentDrawingColor;
+        fCanvas.freeDrawingBrush.width = drawBrushWidth;
         btnDraw.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
         btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
         btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
       } else if (mode === 'erase') {
         fCanvas.isDrawingMode = true;
-        // Fabric renders eraser strokes with destination-out on creation.
-        fCanvas.freeDrawingBrush.color = '#000000';
+        // The path uses destination-out only in the draw/erase sketch layer.
+        fCanvas.freeDrawingBrush.color = 'rgba(0, 0, 0, 1)';
+        fCanvas.freeDrawingBrush.width = eraserBrushWidth;
         btnErase.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
         btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
         btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
@@ -1583,6 +1855,7 @@
             transparentCorners: false
           });
           fCanvas.add(img);
+          configureCanvasImageCropControl(img);
           fCanvas.setActiveObject(img);
           setCanvasMode('select');
         });
@@ -1761,7 +2034,7 @@
         cameras: cameraListState.map(camera => ({ ...camera })),
         activeCamIndex,
         thumbnails: [...pendingShotThumbnails],
-        canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON()) : ''
+        canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : ''
       };
     }
 
@@ -1865,7 +2138,7 @@
       const noteCanvasBlob = await exportCanvasToBlob();
       const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
       const shotThumbnails = pendingShotThumbnails.length ? pendingShotThumbnails : (existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []));
-      const canvasJson = JSON.stringify(fCanvas.toJSON());
+      const canvasJson = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
 
       const payload = {
         operator: document.getElementById('operator').value,
