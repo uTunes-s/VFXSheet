@@ -908,57 +908,6 @@
         ${thumbnailUrls.length ? `<h2>Shot Thumbnails</h2><div class="images">${thumbnailUrls.map(url => `<img class="thumb" src="${url}" alt="Shot thumbnail">`).join('')}</div>` : ''}${sketchUrl ? `<h2>Field Sketch</h2><img class="sketch" src="${sketchUrl}" alt="Field sketch">` : ''}</section>`;
     }
 
-    async function addInvisiblePdfTextLayer(doc, record) {
-      await loadJapanesePdfFont(doc);
-      const cameraText = (record.cameras || []).map(camera => [
-        getCameraFieldLabel(camera), camera.camera, camera.lens, camera.focal_length,
-        camera.t_stop, camera.clip_name, camera.cramerawork, camera.lut_info,
-        camera.height_value, camera.distance_value, camera.tilt_value
-      ].filter(Boolean).join(' / ')).join('\n');
-      const allText = [
-        'VFX Sheet', `Record #${record.id || ''}`, record.show_title, record.operator,
-        record.shoot_datetime, record.location, record.gps_location, record.episode,
-        record.scene, record.shot, record.hdri_captured,
-        Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather,
-        record.hdri_notes, cameraText, record.notes
-      ].filter(Boolean).join('\n');
-      doc.setFont('DroidSansJapanese', 'normal');
-      doc.setFontSize(1);
-      [...allText].reduce((lines, character) => {
-        const lastLine = lines[lines.length - 1];
-        if (character === '\n' || [...lastLine].length >= 48) lines.push(character === '\n' ? '' : character);
-        else lines[lines.length - 1] += character;
-        return lines;
-      }, ['']).filter(Boolean).forEach((line, index) => {
-        doc.text(line, 2, 2 + Math.min(index, 250) * 0.01, { renderingMode: 'invisible' });
-      });
-    }
-
-    async function loadJapanesePdfFont(doc) {
-      if (!japanesePdfFontPromise) {
-        if (!window.VFX_JAPANESE_PDF_FONT_BASE64) {
-          throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
-        }
-        // jsPDF's VFS expects the original Base64 payload. Converting it with atob()
-        // corrupts the font metadata and causes missing Unicode width tables.
-        japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
-      }
-      const fontData = await japanesePdfFontPromise;
-      if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
-        doc.addFileToVFS('DroidSansJapanese.ttf', fontData);
-        doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
-      }
-      doc.setFont('DroidSansJapanese', 'normal');
-      // Some WebKit/jsPDF combinations leave the Unicode metrics object unset
-      // even though the TrueType parser supplies widthOfString/widthOfGlyph.
-      // jsPDF's table layout always dereferences this object, so provide the
-      // fallback table used when a glyph width is unavailable.
-      const font = doc.getFont('DroidSansJapanese', 'normal');
-      font.metadata.Unicode = font.metadata.Unicode || { encoding: {}, kerning: {}, widths: { 0: 1000 } };
-      font.metadata.Unicode.widths = font.metadata.Unicode.widths || { 0: 1000 };
-      font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
-    }
-
     async function renderTextPdfRecord(doc, record) {
       await loadJapanesePdfFont(doc);
       const margin = 12;
@@ -1123,6 +1072,7 @@
   <script src="js/initial-settings-load.js"></script>
   <script src="js/initial-settings-reset.js"></script>
   <script src="js/initial-settings-editor.js"></script>
+  <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-canvas-utils.js"></script>
   <script src="js/preset-transfer.js"></script>
   <script src="js/canvas-actions.js"></script>
