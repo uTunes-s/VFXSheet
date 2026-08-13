@@ -1,7 +1,8 @@
-const CACHE_NAME = 'vfx-sheet-v92';
+const CACHE_NAME = 'vfx-sheet-v93';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
+  './js/app-shell.js',
   './manifest.webmanifest',
   './icon.svg',
   './icon-180.png',

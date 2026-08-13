@@ -13,6 +13,7 @@
   <link rel="icon" href="icon-180.png" sizes="180x180" type="image/png">
   <link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <script defer src="js/app-shell.js"></script>
   <script src="vendor/tailwindcss.js"></script>
   <script src="vendor/dexie.js"></script>
   <script src="vendor/fabric.min.js"></script>
@@ -3333,24 +3334,6 @@ function renderCropControlIcon(context, left, top) {
       });
     }
 
-    function updateOnlineStatus() {
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
-      if (navigator.onLine) {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-        text.innerText = "Online";
-      } else {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
-        text.innerText = "Offline";
-      }
-    }
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('Service Worker registration failed:', error)));
-    }
   </script>
 </body>
 </html>
