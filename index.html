@@ -636,29 +636,6 @@
       renderCameraTabs();
     }
 
-    function createEmptyCameraItem(label) {
-      return {
-        label: label,
-        reel_name: getCameraReelPrefix(label),
-        camera_preset: '',
-        camera_custom: '',
-        lens_preset: '',
-        lens_custom: '',
-        focal_length: '',
-        t_stop: '',
-        clip_name: '',
-        lut_info: '',
-        cramerawork_preset: '',
-        cramerawork_custom: '',
-        height_value: '',
-        distance_value: '',
-        tilt_value: '',
-        flag_chart: 'NO',
-        flag_cleanplate: 'NO',
-        flag_reference: 'NO'
-      };
-    }
-
     let cachedCamPresets = [];
     let cachedLensPresets = [];
     let cachedMovementPresets = [];
@@ -1153,19 +1130,6 @@
       camera.label = reelName;
       camera.reel_name = reelName;
       renderCameraTabs();
-    }
-
-    function getCameraReelPrefix(label) {
-      const match = String(label || '').match(/[A-Za-z]/g);
-      return match ? match[match.length - 1].toUpperCase() : 'A';
-    }
-
-    function getCameraReelName(camera) {
-      return String(camera?.reel_name || camera?.label || 'A').replace(/^Cam\s*/i, '').trim().toUpperCase() || 'A';
-    }
-
-    function getCameraFieldLabel(camera) {
-      return `Cam ${getCameraReelName(camera)}`;
     }
 
     function saveActiveTabState() {
@@ -3075,5 +3039,6 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/shot-thumbnails.js"></script>
   <script src="js/gps.js"></script>
   <script src="js/preset-normalizers.js"></script>
+  <script src="js/camera-model.js"></script>
 </body>
 </html>
