@@ -402,38 +402,9 @@
     </div>
   </div>
 
+  <script src="js/state.js"></script>
+  <script src="js/database.js"></script>
   <script>
-    // Dexie DB
-    const db = new Dexie("VfxSheetDB");
-    db.version(11).stores({
-      sheets: '++id, uuid, operator, show_title, scene, shot, synced, created_at',
-      presets: 'type'
-    }).upgrade(async tx => {
-      await tx.table('sheets').toCollection().modify(record => {
-        if (!record.uuid) record.uuid = newUuid();
-        if (record.syncError === undefined) record.syncError = '';
-        if (!record.canvas_version && record.canvas_json) record.canvas_version = 5;
-      });
-    });
-
-    let currentEditingId = null;
-    let isEditingInModal = false;
-    const selectedRecordIds = new Set();
-    let japanesePdfFontPromise = null;
-    let recordDraftBeforeHistoryEdit = null;
-    let isConfiguringAddDefaults = false;
-    let initialSettingToggleStates = {};
-    let cameraListState = [];
-    let activeCamIndex = 0;
-    let currentDrawingColor = '#00ffff';
-    let pendingShotThumbnails = [];
-
-    const initialSettingItems = [
-      ['operator', 'Operator'], ['show_title', 'Show Title'], ['location', 'Location'],
-      ['shoot_datetime', 'Date & Time'], ['episode', 'Episode'], ['scene', 'Scene'], ['shot', 'Shot'], ['gps_location', 'GPS Location'],
-      ['hdri', 'HDRI Setup'], ['notes', 'Notes'], ['shot_thumbnails', 'Shot Data Thumbnail'], ['sketch', 'Sketch'],
-      ['camera_preset', 'Camera Model'], ['lens_preset', 'Lens Model'], ['focal_length', 'Focal Length'], ['t_stop', 'Aperture'], ['clip_name', 'Clip Name'], ['lut_info', 'LUT Info'], ['cramerawork_preset', 'Movement'], ['height_value', 'Lens Height'], ['distance_value', 'Target Distance'], ['tilt_value', 'Tilt Angle'], ['reference_flags', 'Reference Checklist']
-    ];
 
     function getInitialSettingEnabledFields(values = {}) {
       const saved = values.enabled_fields || {};
