@@ -1146,31 +1146,6 @@
       });
     }
 
-    function setCanvasColor(color) {
-      currentDrawingColor = color;
-      fCanvas.freeDrawingBrush.color = color;
-      document.getElementById('customCanvasColor').value = color;
-
-      const activeObj = fCanvas.getActiveObject();
-      if (activeObj && activeObj.type === 'i-text') {
-        activeObj.set('fill', color);
-        fCanvas.requestRenderAll();
-        saveCanvasState();
-      }
-    }
-
-    function setCanvasBrushSize(type, value) {
-      const size = Number(value);
-      if (type === 'draw') {
-        drawBrushWidth = size;
-        document.getElementById('drawBrushSizeValue').textContent = size;
-      } else {
-        eraserBrushWidth = size;
-        document.getElementById('eraserBrushSizeValue').textContent = size;
-      }
-      if (fCanvas && canvasMode === type) fCanvas.freeDrawingBrush.width = size;
-    }
-
     function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
       context.save();
       context.translate(left, top);
@@ -2683,6 +2658,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/camera-tabs-interactions.js"></script>
   <script src="js/preset-options.js"></script>
   <script src="js/canvas-history.js"></script>
+  <script src="js/canvas-style.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
