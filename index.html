@@ -1580,51 +1580,6 @@ function renderCropControlIcon(context, left, top) {
       listEl.innerHTML = cards.join('');
     }
 
-    function updateHistorySelectionControls(records = []) {
-      const selectedCount = selectedRecordIds.size;
-      const deleteButton = document.getElementById('deleteSelectedBtn');
-      const selectAllButton = document.getElementById('selectAllRecordsBtn');
-      deleteButton.disabled = selectedCount === 0;
-      deleteButton.innerText = `Delete Selected (${selectedCount})`;
-      selectAllButton.innerText = records.length > 0 && selectedCount === records.length ? 'Clear Selection' : 'Select All';
-    }
-
-    function toggleRecordSelection(id, isSelected) {
-      if (isSelected) selectedRecordIds.add(id);
-      else selectedRecordIds.delete(id);
-      renderList();
-    }
-
-    async function toggleSelectAllRecords() {
-      const records = await db.sheets.toArray();
-      if (records.length && selectedRecordIds.size === records.length) selectedRecordIds.clear();
-      else records.forEach(record => selectedRecordIds.add(record.id));
-      renderList();
-    }
-
-    async function getRecordsForHistoryAction() {
-      const records = await db.sheets.reverse().toArray();
-      return selectedRecordIds.size ? records.filter(record => selectedRecordIds.has(record.id)) : records;
-    }
-
-    async function deleteSelectedRecords() {
-      const ids = [...selectedRecordIds];
-      if (!ids.length) return;
-      if (!confirm(`Delete ${ids.length} selected record(s)? This action cannot be undone.`)) return;
-      await db.sheets.bulkDelete(ids);
-      if (currentEditingId && ids.includes(currentEditingId)) closeEditRecordModal();
-      selectedRecordIds.clear();
-      renderList();
-    }
-
-    async function deleteRecord(id) {
-      if (confirm(`Delete Record ID: ${id}?`)) {
-        await db.sheets.delete(id);
-        if (currentEditingId === id) cancelEditMode();
-        renderList();
-      }
-    }
-
     function getRecordShotThumbnails(record) {
       return record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
     }
@@ -2388,6 +2343,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/record-modal.js"></script>
   <script src="js/record-flow.js"></script>
   <script src="js/record-save.js"></script>
+  <script src="js/record-selection.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>

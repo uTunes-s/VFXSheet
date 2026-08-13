@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v118';
+const CACHE_NAME = 'vfx-sheet-v119';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -29,6 +29,7 @@ const APP_SHELL = [
   './js/record-modal.js',
   './js/record-flow.js',
   './js/record-save.js',
+  './js/record-selection.js',
   './js/canvas-actions.js',
   './manifest.webmanifest',
   './icon.svg',
