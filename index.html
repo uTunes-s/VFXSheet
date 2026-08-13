@@ -800,68 +800,6 @@
       return changedFields.length ? changedFields.join('\n') : 'No changes';
     }
 
-    async function exportFullPresetsJSON() {
-      saveActiveTabState();
-      const allPresets = await db.presets.toArray();
-      const exportData = {
-        app: "VFX_Sheet",
-        version: 10,
-        exported_at: new Date().toISOString(),
-        presets: allPresets,
-        current_defaults: {
-          operator: document.getElementById('operator').value,
-          show_title: document.getElementById('show_title').value,
-          location: document.getElementById('location').value,
-          hdri_captured: document.getElementById('hdri_captured').checked,
-          hdri_weather: getWeatherValues(),
-          hdri_notes: document.getElementById('hdri_notes').value,
-          cameras: cameraListState
-        }
-      };
-
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `VFX_Sheet_Presets_${new Date().toISOString().slice(0,10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    async function importFullPresetsJSON(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const data = JSON.parse(event.target.result);
-          if (data.app !== 'VFX_Sheet' || !data.presets) {
-            throw new Error("Invalid preset JSON file format.");
-          }
-
-          for (const p of data.presets) {
-            await db.presets.put(p);
-          }
-
-          if (data.current_defaults) {
-            await db.presets.put({ type: 'user_defaults', values: data.current_defaults });
-          }
-
-          await initPresets();
-          await loadDefaultSettings();
-          renderPresetModalLists();
-          alert("Presets imported successfully!");
-        } catch (err) {
-          alert(`Import Error: ${err.message}`);
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    }
-
     async function renderPresetModalLists() {
       const camRecord = await db.presets.get('camera');
       const lensRecord = await db.presets.get('lens');
@@ -1422,6 +1360,7 @@
   <script src="js/canvas-crop.js"></script>
   <script src="js/initial-settings-ui.js"></script>
   <script src="js/pdf-canvas-utils.js"></script>
+  <script src="js/preset-transfer.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
