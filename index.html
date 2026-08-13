@@ -1472,98 +1472,6 @@ function renderCropControlIcon(context, left, top) {
       document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function saveRecord(e, mode) {
-      if (e) e.preventDefault();
-
-      const form = document.getElementById('vfxForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-
-      saveActiveTabState();
-
-      const processedCameras = cameraListState.map(cam => {
-        const camModel = cam.camera_preset === '__custom__' ? cam.camera_custom : cam.camera_preset;
-        const lensModel = cam.lens_preset === '__custom__' ? cam.lens_custom : cam.lens_preset;
-        const workModel = cam.cramerawork_preset === '__custom__' ? cam.cramerawork_custom : cam.cramerawork_preset;
-        return {
-          label: cam.label,
-          reel_name: cam.reel_name || getCameraReelPrefix(cam.label),
-          camera: camModel,
-          lens: lensModel,
-          focal_length: cam.focal_length,
-          t_stop: cam.t_stop,
-          clip_name: cam.clip_name,
-          lut_info: cam.lut_info,
-          cramerawork: workModel,
-          height_value: cam.height_value,
-          distance_value: cam.distance_value,
-          tilt_value: cam.tilt_value,
-          flag_chart: cam.flag_chart,
-          flag_cleanplate: cam.flag_cleanplate,
-          flag_reference: cam.flag_reference
-        };
-      });
-
-      const isHdri = document.getElementById('hdri_captured').checked;
-      const noteCanvasBlob = await exportCanvasToBlob();
-      const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
-      const shotThumbnails = pendingShotThumbnails.length ? pendingShotThumbnails : (existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []));
-      const canvasJson = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-
-      const payload = {
-        operator: document.getElementById('operator').value,
-        show_title: document.getElementById('show_title').value,
-        shoot_datetime: document.getElementById('shoot_datetime').value,
-        location: document.getElementById('location').value,
-        gps_location: document.getElementById('gps_location').value,
-        episode: document.getElementById('episode').value,
-        scene: document.getElementById('scene').value,
-        shot: document.getElementById('shot').value,
-        hdri_captured: isHdri ? 'YES' : 'NO',
-        hdri_weather: isHdri ? getWeatherValues() : [],
-        hdri_notes: isHdri ? document.getElementById('hdri_notes').value : '',
-        cameras: processedCameras,
-        notes: document.getElementById('notes').value,
-        // Canvas PNG is kept locally for editing; it is intentionally excluded from API sync.
-        images: [noteCanvasBlob],
-        shot_thumbnails: shotThumbnails,
-        canvas_json: canvasJson,
-        canvas_version: 5,
-        uuid: mode === 'update' && currentEditingId ? (await db.sheets.get(currentEditingId)).uuid : newUuid(),
-        synced: 0,
-        syncError: '',
-        created_at: new Date().toISOString()
-      };
-
-      let saved = false;
-      try {
-        if (mode === 'update' && currentEditingId) {
-          await db.sheets.update(currentEditingId, payload);
-          alert(`Record ID: ${currentEditingId} updated.`);
-          saved = true;
-        } else {
-          const newId = await db.sheets.add(payload);
-          alert(`Saved as new record (ID: ${newId}).`);
-          saved = true;
-        }
-      } catch (err) {
-        console.error("Save Record Error:", err);
-        alert("Failed to save record to IndexedDB.");
-      }
-
-      if (saved) {
-        if (isEditingInModal) {
-          recordDraftBeforeHistoryEdit = null;
-          closeEditRecordModal();
-        } else {
-          prepareNextRecord();
-        }
-      }
-      await renderList();
-    }
-
     // Render & Export
 
     async function openRecordPreview(id) {
@@ -2479,6 +2387,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/canvas-images.js"></script>
   <script src="js/record-modal.js"></script>
   <script src="js/record-flow.js"></script>
+  <script src="js/record-save.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
