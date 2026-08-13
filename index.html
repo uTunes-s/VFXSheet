@@ -1098,113 +1098,6 @@
     let drawBrushWidth = 3;
     let eraserBrushWidth = 24;
 
-    function initFabricCanvas() {
-      fCanvas = new fabric.Canvas('noteCanvas', {
-        isDrawingMode: true,
-        backgroundColor: '#090d16',
-        // Keep the selected object's real stack position visible. Without this,
-        // Fabric temporarily renders every selected object on top until deselect.
-        preserveObjectStacking: true
-      });
-      fCanvas.freeDrawingBrush.color = currentDrawingColor;
-      fCanvas.freeDrawingBrush.width = drawBrushWidth;
-      fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
-
-      // On iPad, reserve fingers for native page scrolling and pinch zoom.
-      // Only Apple Pencil (pointerType "pen") reaches Fabric's canvas tools.
-      fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
-        if (event.pointerType !== 'touch') return;
-        event.stopImmediatePropagation();
-        fCanvas.isDrawingMode = false;
-      }, true);
-
-      // Save the initial empty state.
-      saveCanvasState();
-
-      // Record history when objects are added, modified, or removed.
-      fCanvas.on('object:added', () => { if (!isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
-      fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
-      fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
-      fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
-      fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
-      fCanvas.on('path:created', event => {
-        event.path.isSketchStroke = canvasMode === 'draw';
-        // Drawn paths must remain selectable/movable in Select/Move mode.
-        // Only the temporary eraser path should be excluded from interaction.
-        event.path.selectable = canvasMode === 'draw';
-        event.path.evented = canvasMode === 'draw';
-        event.path.globalCompositeOperation = canvasMode === 'erase' ? 'destination-out' : 'source-over';
-        if (canvasMode === 'erase') {
-          eraseIntersectedSketchLayers(event.path);
-          return;
-        }
-        // Preserve Fabric's natural stacking order: Draw, Text, and Library
-        // items created later are displayed above earlier items.
-        fCanvas.requestRenderAll();
-        // `object:added` runs before the path metadata is assigned.
-        canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-      });
-    }
-
-    function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
-      context.save();
-      context.translate(left, top);
-      context.fillStyle = color;
-      context.beginPath(); context.arc(0, 0, 11, 0, Math.PI * 2); context.fill();
-      context.fillStyle = '#0f172a'; context.font = 'bold 13px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
-      context.fillText(text, 0, 1);
-      context.restore();
-    }
-
-function renderCropControlIcon(context, left, top) {
-  context.save();
-  context.translate(left, top);
-  context.strokeStyle = '#fbbf24'; context.lineWidth = 1.4; context.lineCap = 'round'; context.lineJoin = 'round';
-
-  // Exact coordinates for an outward-extending hash symbol and a diagonal line.
-  context.beginPath();
-
-  // 1. Two horizontal lines (top and bottom).
-  context.moveTo(-8, -4); context.lineTo(8, -4); // Top horizontal line.
-  context.moveTo(-8,  4); context.lineTo(8,  4); // Bottom horizontal line.
-
-  // 2. Two vertical lines (left and right).
-  context.moveTo(-4, -8); context.lineTo(-4,  8); // Left vertical line.
-  context.moveTo( 4, -8); context.lineTo( 4,  8); // Right vertical line.
-
-  // 3. A diagonal line from the lower left to the upper right.
-  context.moveTo(-4,  4); context.lineTo( 8, -8); // Diagonal through the lower-left intersection to the upper right.
-
-  context.stroke();
-  context.restore();
-}
-
-    function getOwnCanvasControls(object) {
-      // Fabric's default `controls` map may be shared through the prototype.
-      // Always copy it before adding temporary crop-specific controls; otherwise
-      // the apply checkmark can be inherited by the original image.
-      if (!Object.prototype.hasOwnProperty.call(object, 'controls')) object.controls = { ...(object.controls || {}) };
-      return object.controls;
-    }
-
-    function configureCanvasImageCropControl(object) {
-      if (!object || object.type !== 'image' || object.isSketchRaster || object.isCropFrame || !window.fabric?.Control) return;
-      // Snap image rotation to clean 45° increments while retaining the normal
-      // Fabric rotation handle and a small angle tolerance for touch input.
-      object.set({ snapAngle: 45, snapThreshold: 8 });
-      const controls = getOwnCanvasControls(object);
-      // Remove an apply control that could have been inherited from crop frames
-      // created before controls were isolated per object.
-      delete controls.applyCrop;
-      if (controls.crop) return;
-      controls.crop = new fabric.Control({
-        x: 0.5, y: -0.5, offsetX: 16, offsetY: -16, cursorStyle: 'pointer',
-        mouseUpHandler: (_, transform) => { enterCanvasImageCropMode(transform.target); return true; },
-        render: (ctx, left, top) => renderCropControlIcon(ctx, left, top)
-      });
-      fCanvas.requestRenderAll();
-    }
-
     function enterCanvasImageCropMode(image) {
       if (!image || image.angle) return alert('Reset the image rotation to 0° before cropping.');
       const bounds = image.getBoundingRect(true, true);
@@ -1770,6 +1663,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/backup.js"></script>
   <script src="js/sync.js"></script>
   <script src="js/canvas-eraser.js"></script>
+  <script src="js/canvas-core.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v129';
+const CACHE_NAME = 'vfx-sheet-v130';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -40,6 +40,7 @@ const APP_SHELL = [
   './js/backup.js',
   './js/sync.js',
   './js/canvas-eraser.js',
+  './js/canvas-core.js',
   './js/canvas-actions.js',
   './manifest.webmanifest',
   './icon.svg',
