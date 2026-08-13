@@ -592,42 +592,6 @@
       return name.split(' ').slice(0, 2).join(' ');
     }
 
-    function switchAppPage(page) {
-      const isRecordPage = page === 'record';
-      document.getElementById('recordPage').classList.toggle('hidden', !isRecordPage);
-      document.getElementById('historyPage').classList.toggle('hidden', isRecordPage);
-
-      const recordButton = document.getElementById('recordNavBtn');
-      const historyButton = document.getElementById('historyNavBtn');
-      if (recordButton) {
-        recordButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-amber-400' : 'text-slate-400 hover:text-slate-100'}`;
-        recordButton.toggleAttribute('aria-current', isRecordPage);
-      }
-      historyButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-slate-400 hover:text-slate-100' : 'text-amber-400'}`;
-      historyButton.toggleAttribute('aria-current', !isRecordPage);
-
-      if (!isRecordPage) renderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function toggleHdriWeather(isCaptured) {
-      const container = document.getElementById('weatherContainer');
-      if (isCaptured) {
-        container.classList.remove('hidden');
-      } else {
-        container.classList.add('hidden');
-      }
-    }
-
-    function getWeatherValues() {
-      return [...document.getElementById('hdri_weather').selectedOptions].map(option => option.value);
-    }
-
-    function setWeatherValues(values) {
-      const selected = new Set(Array.isArray(values) ? values : String(values || '').split(', ').filter(Boolean));
-      [...document.getElementById('hdri_weather').options].forEach(option => { option.selected = selected.has(option.value); });
-    }
-
     function addShotThumbnails(event) {
       const files = [...event.target.files];
       if (!files.length) return;
@@ -3275,5 +3239,6 @@ function renderCropControlIcon(context, left, top) {
     }
 
   </script>
+  <script src="js/form-ui.js"></script>
 </body>
 </html>
