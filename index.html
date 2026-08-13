@@ -559,39 +559,6 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-    const retiredCameraPresetNames = new Set(['Freefly Ember S35', 'Freefly Wave 4K', 'Sony Venice 6K FF35', 'Sony Venice II 6K', 'Sony Venice II 8.6K']);
-    const sonyVeniceCameraOrder = [
-      'Sony Venice FF 6K 3:2',
-      'Sony Venice FF 5.7K 16:9',
-      'Sony Venice S35 4K 17:9',
-      'Sony Venice S35 3.8K 16:9',
-      'Sony Venice II FF 8.6K 3:2',
-      'Sony Venice II FF 8.1K 16:9',
-      'Sony Venice II FF 7.6K 16:9',
-      'Sony Venice II S35 5.8K 6:5',
-      'Sony Venice II S35 5.4K 16:9'
-    ];
-
-    function getLensSeries(lens) {
-      if (lens.series) return lens.series;
-      const name = lens.name || '';
-      if (name.startsWith('ARRI Master Prime')) return 'ARRI Master Prime';
-      if (name.startsWith('ARRI Signature Prime')) return 'ARRI Signature Prime';
-      if (name.startsWith('ARRI Signature Zoom')) return 'ARRI Signature Zoom';
-      if (name.startsWith('Cooke S4/i')) return 'Cooke S4/i';
-      if (name.startsWith('Cooke Panchro')) return 'Cooke Panchro Classic';
-      if (name.startsWith('Angénieux Optimo Prime')) return 'Angénieux Optimo Prime';
-      if (name.startsWith('Angénieux Optimo')) return 'Angénieux Optimo';
-      if (name.startsWith('ZEISS CP.2')) return 'ZEISS CP.2';
-      if (name.startsWith('ZEISS CP.3')) return 'ZEISS CP.3';
-      if (name.startsWith('ZEISS Compact Zoom')) return 'ZEISS Compact Zoom CZ.2';
-      if (name.startsWith('Sony FE')) return 'Sony FE';
-      if (name.startsWith('Canon RF')) return 'Canon RF';
-      if (name.startsWith('DJI Inspire 3')) return 'DJI Inspire 3 DL';
-      if (name.startsWith('iPhone 15')) return 'iPhone 15 Pro';
-      return name.split(' ').slice(0, 2).join(' ');
-    }
-
     function moveSelectedLayer(direction) {
       const active = fCanvas?.getActiveObject();
       if (!active) return alert('Select a sketch object first.');
@@ -696,45 +663,6 @@
     let cachedLensPresets = [];
     let cachedMovementPresets = [];
     let openLensSeries = new Set();
-
-    function normalizeCameraPresets(list = []) {
-      const byName = new Map();
-      [...defaultCameras, ...list].forEach(item => {
-        const normalized = typeof item === 'string' ? { name: item, category: 'Custom', enabled: true } : { name: item.name, category: item.category || 'Cine', enabled: item.enabled !== false };
-        if (!normalized.name || retiredCameraPresetNames.has(normalized.name)) return;
-        const existing = byName.get(normalized.name);
-        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
-      });
-      return [...byName.values()].sort((a, b) => {
-        const aVeniceIndex = sonyVeniceCameraOrder.indexOf(a.name);
-        const bVeniceIndex = sonyVeniceCameraOrder.indexOf(b.name);
-        if (aVeniceIndex !== -1 && bVeniceIndex !== -1) return aVeniceIndex - bVeniceIndex;
-        return a.name.localeCompare(b.name);
-      });
-    }
-
-    function normalizeLensPresets(list = []) {
-      const byName = new Map();
-      [...defaultLenses, ...list].forEach(item => {
-        const normalized = { name: item.name, focal: item.focal || '', category: item.category || 'Cine', series: getLensSeries(item), enabled: item.enabled !== false };
-        if (!normalized.name) return;
-        const existing = byName.get(normalized.name);
-        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
-      });
-      const focalValue = lens => Number.parseFloat(String(lens.focal || lens.name).match(/\d+(?:\.\d+)?/)?.[0]) || Number.POSITIVE_INFINITY;
-      return [...byName.values()].sort((a, b) =>
-        presetCategories.indexOf(a.category) - presetCategories.indexOf(b.category) || getLensSeries(a).localeCompare(getLensSeries(b)) || focalValue(a) - focalValue(b) || a.name.localeCompare(b.name)
-      );
-    }
-
-    function normalizeMovementPresets(list = []) {
-      const byName = new Map();
-      [...defaultMovements, ...list].forEach(item => {
-        const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
-        if (normalized.name) byName.set(normalized.name, { ...(byName.get(normalized.name) || {}), ...normalized });
-      });
-      return [...byName.values()];
-    }
 
     async function initPresets() {
       let camRecord = await db.presets.get('camera');
@@ -3146,5 +3074,6 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/form-ui.js"></script>
   <script src="js/shot-thumbnails.js"></script>
   <script src="js/gps.js"></script>
+  <script src="js/preset-normalizers.js"></script>
 </body>
 </html>
