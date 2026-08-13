@@ -1097,30 +1097,6 @@
       }).join('');
     }
 
-    function onTabPresetChange(type) {
-      const preset = document.getElementById(`tab_${type}_preset`);
-      const custom = document.getElementById(`tab_${type}_custom`);
-      if (preset.value === '__custom__') {
-        custom.classList.remove('hidden');
-        preset.classList.replace('w-full', 'w-1/2');
-        custom.classList.add('w-1/2');
-      } else {
-        custom.classList.add('hidden');
-        preset.classList.replace('w-1/2', 'w-full');
-      }
-    }
-
-    function onTabLensChange() {
-      onTabPresetChange('lens');
-      const preset = document.getElementById('tab_lens_preset');
-      const focalInput = document.getElementById('tab_focal_length');
-      const selectedOption = preset.options[preset.selectedIndex];
-      const focalVal = selectedOption.getAttribute('data-focal');
-      if (focalVal && preset.value !== '__custom__') {
-        focalInput.value = focalVal;
-      }
-    }
-
     // Fabric Canvas & Undo/Redo Engine
     let fCanvas = null;
     let canvasHistory = [];
@@ -2757,6 +2733,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/record-thumbnails.js"></script>
   <script src="js/camera-model.js"></script>
   <script src="js/camera-tabs-state.js"></script>
+  <script src="js/camera-tabs-interactions.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
