@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v134';
+const CACHE_NAME = 'vfx-sheet-v135';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -45,6 +45,7 @@ const APP_SHELL = [
   './js/initial-settings-ui.js',
   './js/pdf-canvas-utils.js',
   './js/preset-transfer.js',
+  './js/initial-settings-transfer.js',
   './js/canvas-actions.js',
   './manifest.webmanifest',
   './icon.svg',
