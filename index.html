@@ -1580,23 +1580,6 @@ function renderCropControlIcon(context, left, top) {
       listEl.innerHTML = cards.join('');
     }
 
-    function getRecordShotThumbnails(record) {
-      return record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
-    }
-
-    function getShootingDataName(record, camera = {}) {
-      return [record.episode, record.scene, record.shot, getCameraReelName(camera)].filter(Boolean).join('_');
-    }
-
-    function formatFlowPtId(id) {
-      return String(id ?? '').padStart(5, '0');
-    }
-
-    function getShootingDataExportFilename(record, camera, extension) {
-      const shootingDate = String(record.shoot_datetime || '').match(/^\d{4}-\d{2}-\d{2}/)?.[0].replaceAll('-', '') || 'undated';
-      return `${formatFlowPtId(record.id)}_${getShootingDataName(record, camera)}_${shootingDate}.${extension}`;
-    }
-
     async function createThumbnailCollage(thumbnailBlobs) {
       const images = (await Promise.all(thumbnailBlobs.map(imageFromBlob))).filter(Boolean);
       if (!images.length) return null;
@@ -2344,6 +2327,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/record-flow.js"></script>
   <script src="js/record-save.js"></script>
   <script src="js/record-selection.js"></script>
+  <script src="js/export-naming.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
