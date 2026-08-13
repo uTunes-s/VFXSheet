@@ -1381,35 +1381,6 @@ function renderCropControlIcon(context, left, top) {
       updateUndoRedoButtons();
     }
 
-    function setCanvasMode(mode) {
-      const btnDraw = document.getElementById('btnDraw');
-      const btnSelect = document.getElementById('btnSelect');
-      const btnErase = document.getElementById('btnErase');
-      canvasMode = mode;
-
-      if (mode === 'draw') {
-        fCanvas.isDrawingMode = true;
-        fCanvas.freeDrawingBrush.color = currentDrawingColor;
-        fCanvas.freeDrawingBrush.width = drawBrushWidth;
-        btnDraw.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      } else if (mode === 'erase') {
-        fCanvas.isDrawingMode = true;
-        // The path uses destination-out only in the draw/erase sketch layer.
-        fCanvas.freeDrawingBrush.color = 'rgba(0, 0, 0, 1)';
-        fCanvas.freeDrawingBrush.width = eraserBrushWidth;
-        btnErase.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      } else {
-        fCanvas.isDrawingMode = false;
-        btnSelect.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      }
-    }
-
     function addFreeImageToCanvas(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -2659,6 +2630,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/preset-options.js"></script>
   <script src="js/canvas-history.js"></script>
   <script src="js/canvas-style.js"></script>
+  <script src="js/canvas-mode.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
