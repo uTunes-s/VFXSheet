@@ -685,37 +685,6 @@
       document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    async function loadDefaultSettings() {
-      const defaultSettings = await db.presets.get('user_defaults');
-      if (!defaultSettings || !defaultSettings.values) {
-        alert("No saved default settings found.");
-        return;
-      }
-      const v = defaultSettings.values;
-      const currentValues = getCurrentDefaultSettingsValues();
-      const changes = getDefaultSettingsChangeSummary(currentValues, v);
-      if (changes === 'No changes') {
-        alert('The current form matches the saved default settings.');
-        return;
-      }
-      if (!confirm(`Fields that will change when loaded:\n${changes}\n\nLoad the saved default settings?`)) return;
-
-      document.getElementById('operator').value = v.operator || '';
-      document.getElementById('show_title').value = v.show_title || '';
-      document.getElementById('location').value = v.location || '';
-      document.getElementById('hdri_captured').checked = v.hdri_captured || false;
-      toggleHdriWeather(v.hdri_captured || false);
-      setWeatherValues(v.hdri_weather || ['Sunny']);
-      document.getElementById('hdri_notes').value = v.hdri_notes || '';
-
-      if (v.cameras && v.cameras.length > 0) {
-        cameraListState = v.cameras.map(c => ({ ...c }));
-      }
-      activeCamIndex = 0;
-      renderCameraTabs();
-      alert("Default settings loaded!");
-    }
-
     async function renderPresetModalLists() {
       const camRecord = await db.presets.get('camera');
       const lensRecord = await db.presets.get('lens');
@@ -1277,6 +1246,7 @@
   <script src="js/initial-settings-ui.js"></script>
   <script src="js/initial-settings-transfer.js"></script>
   <script src="js/initial-settings-comparison.js"></script>
+  <script src="js/initial-settings-load.js"></script>
   <script src="js/pdf-canvas-utils.js"></script>
   <script src="js/preset-transfer.js"></script>
   <script src="js/canvas-actions.js"></script>
