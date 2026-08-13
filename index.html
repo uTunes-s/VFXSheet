@@ -559,17 +559,6 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-    function moveSelectedLayer(direction) {
-      const active = fCanvas?.getActiveObject();
-      if (!active) return alert('Select a sketch object first.');
-      if (direction === 'front') fCanvas.bringForward(active);
-      if (direction === 'back') fCanvas.sendBackwards(active);
-      if (direction === 'top') fCanvas.bringToFront(active);
-      if (direction === 'bottom') fCanvas.sendToBack(active);
-      fCanvas.renderAll();
-      saveCanvasState();
-    }
-
     async function resetFormToDefault() {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -1748,49 +1737,6 @@ function renderCropControlIcon(context, left, top) {
       };
       reader.readAsDataURL(file);
       e.target.value = '';
-    }
-
-    function addTextToNote() {
-      const text = new fabric.IText('Text...', {
-        left: 100,
-        top: 100,
-        fontFamily: 'sans-serif',
-        fill: currentDrawingColor,
-        fontSize: 18
-      });
-      fCanvas.add(text);
-      fCanvas.setActiveObject(text);
-      setCanvasMode('select');
-    }
-
-    function deleteSelected() {
-      const activeObjs = fCanvas.getActiveObjects();
-      if (activeObjs.length > 0) {
-        activeObjs.forEach(obj => fCanvas.remove(obj));
-        fCanvas.discardActiveObject();
-        fCanvas.requestRenderAll();
-      }
-    }
-
-    function clearNoteCanvas() {
-      fCanvas.clear();
-      fCanvas.setBackgroundColor('#090d16', () => {
-        fCanvas.renderAll();
-        canvasHistory = [];
-        historyIndex = -1;
-        saveCanvasState();
-      });
-    }
-
-    function exportCanvasToDataURL() {
-      return fCanvas.toDataURL({ format: 'png', multiplier: 1 });
-    }
-
-    function exportCanvasToBlob() {
-      return new Promise((resolve) => {
-        const dataURL = exportCanvasToDataURL();
-        fetch(dataURL).then(res => res.blob()).then(blob => resolve(blob));
-      });
     }
 
     // Load & Save
@@ -3033,5 +2979,6 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/gps.js"></script>
   <script src="js/preset-normalizers.js"></script>
   <script src="js/camera-model.js"></script>
+  <script src="js/canvas-actions.js"></script>
 </body>
 </html>
