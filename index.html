@@ -1940,23 +1940,6 @@ function renderCropControlIcon(context, left, top) {
       document.body.classList.add('overflow-hidden');
     }
 
-    function closeRecordPreview() {
-      document.getElementById('recordPreviewModal').classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
-    }
-    function openMediaLightbox(source, alt = 'Expanded preview') {
-      const image = document.getElementById('mediaLightboxImage');
-      image.src = source;
-      image.alt = alt;
-      document.getElementById('mediaLightbox').classList.remove('hidden');
-      document.getElementById('mediaLightbox').classList.add('flex');
-    }
-    
-    function closeMediaLightbox() {
-      document.getElementById('mediaLightbox').classList.add('hidden');
-      document.getElementById('mediaLightbox').classList.remove('flex');
-      document.getElementById('mediaLightboxImage').src = '';
-    }
     function changeRecordThumbnail(button, direction) {
       const container = button.parentElement;
       const images = [...container.querySelectorAll('.record-thumbnail-image')];
@@ -2846,6 +2829,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/preset-store.js"></script>
   <script src="js/preset-actions.js"></script>
   <script src="js/preset-modal.js"></script>
+  <script src="js/media-modals.js"></script>
   <script src="js/camera-model.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
