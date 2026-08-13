@@ -10,3 +10,12 @@ function incrementTrailingNumber(value) {
   if (!match) return value;
   return `${match[1]}${String(Number(match[2]) + 1).padStart(match[2].length, '0')}${match[3]}`;
 }
+
+function preventFormEnterSubmit(event) {
+  if (event.key === 'Enter') event.preventDefault();
+}
+
+function escapeHtml(value) {
+  const replacements = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+  return String(value ?? '').replace(/[&<>'"]/g, character => replacements[character]);
+}

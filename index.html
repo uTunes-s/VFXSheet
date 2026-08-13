@@ -1725,10 +1725,6 @@ function renderCropControlIcon(context, left, top) {
       }
     }
 
-    function preventFormEnterSubmit(event) {
-      if (event.key === 'Enter') event.preventDefault();
-    }
-
     function addFreeImageToCanvas(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -2111,9 +2107,6 @@ function renderCropControlIcon(context, left, top) {
     }
 
     // Render & Export
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-    }
 
     async function openRecordPreview(id) {
       const record = await db.sheets.get(id);
