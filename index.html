@@ -954,86 +954,6 @@
       document.querySelectorAll('#lensPresetList input[data-indeterminate="true"]').forEach(input => { input.indeterminate = true; });
     }
 
-    async function addPresetItem(type) {
-      if (type === 'camera') {
-        const input = document.getElementById('newCameraInput');
-        const val = input.value.trim();
-        if (!val) return;
-        const record = await db.presets.get('camera');
-        record.list = normalizeCameraPresets(record.list);
-        if (record.list.some(camera => camera.name === val)) return alert('This camera model is already registered.');
-        record.list.push({ name: val, category: 'Custom', enabled: true });
-        await db.presets.put(record);
-        input.value = '';
-      } else if (type === 'lens') {
-        const nameInput = document.getElementById('newLensNameInput');
-        const focalInput = document.getElementById('newLensFocalInput');
-        if (!nameInput.value.trim()) return;
-        const record = await db.presets.get('lens');
-        record.list = normalizeLensPresets(record.list);
-        if (record.list.some(lens => lens.name === nameInput.value.trim())) return alert('This lens model is already registered.');
-        record.list.push({ name: nameInput.value.trim(), focal: focalInput.value.trim(), category: 'Custom', enabled: true });
-        await db.presets.put(record);
-        nameInput.value = '';
-        focalInput.value = '';
-      } else if (type === 'movement') {
-        const input = document.getElementById('newMovementInput');
-        const val = input.value.trim();
-        if (!val) return;
-        const record = await db.presets.get('movement');
-        record.list = normalizeMovementPresets(record.list);
-        if (record.list.some(item => item.name === val)) return alert('This movement is already registered.');
-        record.list.push({ name: val, enabled: true });
-        await db.presets.put(record);
-        input.value = '';
-      }
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function togglePresetItem(type, index, enabled) {
-      const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
-      if (!record.list[index]) return;
-      record.list[index].enabled = enabled;
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    function setLensSeriesOpen(series, isOpen) {
-      if (isOpen) openLensSeries.add(series);
-      else openLensSeries.delete(series);
-    }
-
-    async function toggleLensSeries(series, enabled) {
-      const record = await db.presets.get('lens');
-      record.list = normalizeLensPresets(record.list).map(lens => getLensSeries(lens) === series ? { ...lens, enabled } : lens);
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function removePresetItem(type, index) {
-      const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
-      record.list.splice(index, 1);
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function resetPresetsToDefault() {
-      if (confirm("Reset all presets to default?")) {
-        await db.presets.put({ type: 'camera', list: defaultCameras });
-        await db.presets.put({ type: 'lens', list: defaultLenses });
-        await db.presets.put({ type: 'movement', list: defaultMovements });
-        await db.presets.delete('user_defaults');
-        await initPresets();
-        renderPresetModalLists();
-      }
-    }
-
     // Camera Tabs
     function addCameraTab() {
       saveActiveTabState();
@@ -2934,6 +2854,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/gps.js"></script>
   <script src="js/preset-normalizers.js"></script>
   <script src="js/preset-store.js"></script>
+  <script src="js/preset-actions.js"></script>
   <script src="js/camera-model.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
