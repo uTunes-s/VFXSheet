@@ -1472,30 +1472,6 @@ function renderCropControlIcon(context, left, top) {
       document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function closeEditRecordModal() {
-      if (!isEditingInModal) return;
-      const form = document.getElementById('vfxForm');
-      form.classList.remove('configuring-initial-settings');
-      form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
-      document.getElementById('recordPage').appendChild(form);
-      document.getElementById('editRecordModal').classList.add('hidden');
-      document.getElementById('editRecordModal').classList.remove('initial-settings-modal');
-      document.getElementById('initialSettingsModalActions').classList.add('hidden');
-      document.getElementById('initialSettingsModalActions').classList.remove('flex');
-      document.getElementById('editRecordModalActions').classList.add('hidden');
-      document.getElementById('editRecordModalActions').classList.remove('flex');
-      isEditingInModal = false;
-      document.body.classList.remove('overflow-hidden');
-      document.getElementById('editRecordModalTitle').innerText = 'Edit VFX Sheet';
-      isConfiguringAddDefaults = false;
-      if (currentEditingId && recordDraftBeforeHistoryEdit) {
-        restoreRecordDraft(recordDraftBeforeHistoryEdit);
-        recordDraftBeforeHistoryEdit = null;
-      } else if (currentEditingId) {
-        cancelEditMode();
-      }
-    }
-
     function captureRecordDraft() {
       saveActiveTabState();
       const formValues = {};

@@ -24,3 +24,27 @@ function openEditRecordModal(showActions = true) {
   isEditingInModal = true;
   document.body.classList.add('overflow-hidden');
 }
+
+function closeEditRecordModal() {
+  if (!isEditingInModal) return;
+  const form = document.getElementById('vfxForm');
+  form.classList.remove('configuring-initial-settings');
+  form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
+  document.getElementById('recordPage').appendChild(form);
+  document.getElementById('editRecordModal').classList.add('hidden');
+  document.getElementById('editRecordModal').classList.remove('initial-settings-modal');
+  for (const id of ['initialSettingsModalActions', 'editRecordModalActions']) {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById(id).classList.remove('flex');
+  }
+  isEditingInModal = false;
+  document.body.classList.remove('overflow-hidden');
+  document.getElementById('editRecordModalTitle').innerText = 'Edit VFX Sheet';
+  isConfiguringAddDefaults = false;
+  if (currentEditingId && recordDraftBeforeHistoryEdit) {
+    restoreRecordDraft(recordDraftBeforeHistoryEdit);
+    recordDraftBeforeHistoryEdit = null;
+  } else if (currentEditingId) {
+    cancelEditMode();
+  }
+}
