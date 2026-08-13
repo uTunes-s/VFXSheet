@@ -9,6 +9,9 @@
   
   <meta name="theme-color" content="#090d16">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-180.png" sizes="180x180" type="image/png">
+  <link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
   <script src="vendor/tailwindcss.js"></script>
   <script src="vendor/dexie.js"></script>
@@ -46,6 +49,80 @@
       color: #f1f5f9;
     }
     #noteCanvas, .canvas-container { touch-action: pan-y pinch-zoom !important; }
+    .initial-setting-control { display: none; }
+    .configuring-initial-settings .initial-setting-control {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.125rem 0.375rem;
+      border: 1px dashed #fb7185;
+      border-radius: 0.375rem;
+      background: #4c0519;
+      color: #fecdd3;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.025em;
+      text-transform: none;
+    }
+    .configuring-initial-settings .initial-setting-control:has(input:not(:checked)) {
+      border-color: #475569;
+      background: #0f172a;
+      color: #94a3b8;
+    }
+    #editRecordModal.initial-settings-modal > div {
+      border-color: #737373;
+      background: #171717;
+    }
+    #editRecordModal.initial-settings-modal > div > div:first-child {
+      border-color: #525252;
+      background: #262626;
+    }
+    #editRecordModal.initial-settings-modal #editRecordModalTitle,
+    #editRecordModal.initial-settings-modal .configuring-initial-settings h2 {
+      color: #e2e8f0;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings {
+      border-color: #737373;
+      background: #262626;
+      box-shadow: none;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings hr,
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .border-slate-800 {
+      border-color: #525252;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-950,
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-900 {
+      background-color: #171717;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .form-input,
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .form-select,
+    #editRecordModal.initial-settings-modal .configuring-initial-settings textarea {
+      background: #0a0a0a;
+      border-color: #525252;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-800 {
+      background-color: #404040;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings .initial-setting-control:has(input:checked) > span {
+      background-color: #e11d48;
+      border-color: #fecdd3;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings #mainSubmitBtn {
+      background: #d4d4d4;
+      color: #171717;
+    }
+    #editRecordModal.initial-settings-modal .configuring-initial-settings #mainSubmitBtn:hover {
+      background: #f5f5f5;
+    }
+    #recordPreviewModalContent .preview-value {
+      min-height: 1.9rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+      line-height: 1.1rem;
+    }
+    #recordPreviewModalContent .form-label {
+      margin-bottom: 0.125rem;
+      font-size: 0.625rem;
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-28 md:p-6 md:pb-28 font-sans antialiased">
@@ -58,11 +135,8 @@
         <p class="text-xs text-slate-400">Multi-Cam VFX Field Production Logger</p>
       </div>
       <div class="flex items-center gap-2">
-        <button type="button" onclick="saveCurrentAsDefaultSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
-          💾 Save Defaults
-        </button>
-        <button type="button" onclick="loadDefaultSettings()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
-          📥 Load Defaults
+        <button type="button" onclick="openAddDefaultsEditor()" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/40 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1" title="Configure defaults for new sheets">
+          ⚙️ Sheet Defaults
         </button>
         <div id="netStatus" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
           <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
@@ -72,7 +146,7 @@
     </header>
 
     <!-- Record Sheet Page -->
-    <section id="recordPage">
+    <section id="recordPage" class="hidden">
     <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" onkeydown="preventFormEnterSubmit(event)" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
       
       <!-- Edit Mode Banner -->
@@ -88,38 +162,38 @@
         <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">1. General Information</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">Operator</label>
+            <label class="form-label" data-initial-setting="operator">Operator</label>
             <input type="text" id="operator" placeholder="Name" class="form-input">
           </div>
           <div>
-            <label class="form-label">Show Title</label>
+            <label class="form-label" data-initial-setting="show_title">Show Title</label>
             <input type="text" id="show_title" placeholder="Project Name" class="form-input">
           </div>
           <div>
-            <label class="form-label">Date & Time</label>
+            <label class="form-label" data-initial-setting="shoot_datetime">Date & Time</label>
             <input type="datetime-local" id="shoot_datetime" class="form-input">
           </div>
           <div>
-            <label class="form-label">Location</label>
+            <label class="form-label" data-initial-setting="location">Location</label>
             <input type="text" id="location" placeholder="Stage A / Location" class="form-input">
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">Episode</label>
+            <label class="form-label" data-initial-setting="episode">Episode</label>
             <input type="text" id="episode" placeholder="EP01" class="form-input">
           </div>
           <div>
-            <label class="form-label">Scene</label>
+            <label class="form-label" data-initial-setting="scene">Scene</label>
             <input type="text" id="scene" placeholder="S01" required class="form-input font-mono font-bold text-amber-300">
           </div>
           <div>
-            <label class="form-label">Shot</label>
+            <label class="form-label" data-initial-setting="shot">Shot</label>
             <input type="text" id="shot" placeholder="001" required class="form-input font-mono font-bold text-amber-300">
           </div>
           <div>
-            <label class="form-label">GPS Location / Place</label>
+            <label class="form-label" data-initial-setting="gps_location">GPS Location / Place</label>
             <div class="flex flex-wrap sm:flex-nowrap gap-2">
               <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-[120px]" readonly>
               <button type="button" onclick="getGPSLocation()" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
@@ -156,7 +230,7 @@
 
       <!-- Section 3: HDRI Setup -->
       <div class="space-y-3">
-        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">3. HDRI Setup</h2>
+        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider" data-initial-setting="hdri">3. HDRI Setup</h2>
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
           <div class="flex items-center gap-3">
             <label class="relative inline-flex items-center cursor-pointer">
@@ -194,12 +268,13 @@
         <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">4. VFX Field Notes & Sketch</h2>
         
         <div class="w-full">
+          <label class="form-label" data-initial-setting="notes">Notes</label>
           <textarea id="notes" rows="2" placeholder="Write general notes, spatial info, lighting details..." class="form-input w-full"></textarea>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
           <div class="flex-1">
-            <label class="form-label">Shot Data Thumbnail</label>
+            <label class="form-label" data-initial-setting="shot_thumbnails">Shot Data Thumbnail</label>
             <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
           </div>
           <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" onchange="addShotThumbnails(event)">
@@ -211,6 +286,7 @@
         </div>
 
         <div class="space-y-2 pt-1">
+          <label class="form-label" data-initial-setting="sketch">Sketch</label>
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
             <button type="button" onclick="setCanvasMode('draw')" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
@@ -280,11 +356,13 @@
     </form>
     </section>
 
-    <!-- History Page -->
-    <section id="historyPage" class="hidden bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
-      <div class="flex flex-wrap justify-between items-center gap-2">
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Records History (<span id="totalCount">0</span>)</h2>
-        <div class="flex flex-wrap gap-2 justify-end">
+    <!-- Record Sheets Page -->
+    <section id="historyPage" class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
+      <div class="space-y-2">
+        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Record Sheets (<span id="totalCount">0</span>)</h2>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <button type="button" onclick="openNewRecordModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow">➕ Add</button>
+        <div class="flex flex-wrap justify-end gap-2">
           <button id="selectAllRecordsBtn" type="button" onclick="toggleSelectAllRecords()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
             Select All
           </button>
@@ -292,10 +370,10 @@
             Delete Selected (0)
           </button>
           <button id="exportCsvBtn" type="button" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
-            📦 Export FlowPT ZIP
+            📦 ZIP
           </button>
           <button id="exportPdfBtn" type="button" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
-            📄 Export PDF
+            📄 PDF
           </button>
           <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             💾 Full Backup JSON
@@ -317,12 +395,9 @@
   </div>
 
   <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700 bg-slate-950/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur" aria-label="Main navigation">
-    <div class="mx-auto grid max-w-md grid-cols-3 gap-2">
-      <button type="button" id="recordNavBtn" onclick="switchAppPage('record')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
-        <span class="text-xl leading-5">📝</span><span>Record Sheet</span>
-      </button>
-      <button type="button" id="historyNavBtn" onclick="switchAppPage('history')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
-        <span class="text-xl leading-5">📚</span><span>History <span id="historyNavCount">(0)</span></span>
+    <div class="mx-auto grid max-w-md grid-cols-2 gap-2">
+      <button type="button" id="historyNavBtn" onclick="switchAppPage('history')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
+        <span class="text-xl leading-5">📚</span><span>Record Sheets <span id="historyNavCount">(0)</span></span>
       </button>
       <button type="button" onclick="openPresetModal()" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
         <span class="text-xl leading-5">⚙️</span><span>Settings</span>
@@ -331,10 +406,15 @@
   </nav>
 
   <div id="editRecordModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="editRecordModalTitle">
-    <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
+    <div class="mx-auto flex h-full w-full max-w-none flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
         <h2 id="editRecordModalTitle" class="text-sm font-bold text-amber-400">Edit VFX Sheet</h2>
         <div class="flex items-center gap-2">
+          <div id="initialSettingsModalActions" class="hidden items-center gap-2">
+            <button type="button" onclick="exportSheetInitialSettings()" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Export</button>
+            <button type="button" onclick="selectSheetInitialSettingsImport()" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Import</button>
+            <button type="button" onclick="saveCurrentAsDefaultSettings()" class="rounded-lg bg-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-900 hover:bg-white">Save</button>
+          </div>
           <div id="editRecordModalActions" class="hidden items-center gap-2">
             <button type="button" onclick="saveRecord(event, 'new')" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
             <button type="button" onclick="saveRecord(event, 'update')" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
@@ -346,6 +426,20 @@
     </div>
   </div>
 
+  <div id="recordPreviewModal" class="fixed inset-0 z-[60] hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="recordPreviewModalTitle">
+    <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
+      <div class="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
+        <div class="flex min-w-0 flex-1 items-center gap-4 overflow-hidden"><h2 id="recordPreviewModalTitle" class="shrink-0 truncate text-sm font-bold text-amber-400">VFX Sheet Preview</h2><div id="recordPreviewModalMeta" class="shrink-0 text-[10px] leading-4 text-slate-400"></div></div>
+        <button type="button" onclick="closeRecordPreview()" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+      </div>
+      <div id="recordPreviewModalContent" class="flex-1 overflow-y-auto p-3 md:p-4"></div>
+    </div>
+  </div>
+
+  <div id="mediaLightbox" class="fixed inset-0 z-[70] hidden cursor-zoom-out items-center justify-center bg-black/95 p-4" role="dialog" aria-label="Expanded image" onclick="closeMediaLightbox()">
+    <img id="mediaLightboxImage" src="" alt="Expanded preview" class="max-h-full max-w-full rounded-lg object-contain">
+  </div>
+
   <!-- Presets & Settings Modal -->
   <div id="presetModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
@@ -355,16 +449,10 @@
       </div>
 
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
-        <div class="flex justify-between items-center">
-          <div>
-            <span class="text-xs font-bold text-slate-200 block">Default Setup & Preset Export/Import</span>
-            <span class="text-[11px] text-slate-500">Save current input as default, or share configuration via JSON file.</span>
-          </div>
-          <button type="button" onclick="saveCurrentAsDefaultSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
-            Save Current Form
-          </button>
+        <div>
+          <span class="text-xs font-bold text-slate-200 block">Preset Export / Import</span>
+          <span class="text-[11px] text-slate-500">Share camera, lens, and camera movement presets as JSON.</span>
         </div>
-
         <div class="flex gap-2 pt-1 border-t border-slate-900">
           <button type="button" onclick="exportFullPresetsJSON()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
             📤 Export Config JSON
@@ -378,7 +466,7 @@
 
       <div class="space-y-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Camera Models</label>
+          <label class="form-label text-amber-300 font-bold">Available Cameras</label>
           <div class="flex gap-2">
             <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
             <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
@@ -387,7 +475,7 @@
         </div>
 
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Lens Models</label>
+          <label class="form-label text-amber-300 font-bold">Available Lenses</label>
           <div class="space-y-1.5">
             <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
             <div class="flex gap-2">
@@ -399,7 +487,7 @@
         </div>
 
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Camera Movement</label>
+          <label class="form-label text-amber-300 font-bold">Available Camera Movements</label>
           <div class="flex gap-2">
             <input type="text" id="newMovementInput" placeholder="e.g. Motion Control" class="form-input text-xs">
             <button type="button" onclick="addPresetItem('movement')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
@@ -434,10 +522,35 @@
     const selectedRecordIds = new Set();
     let japanesePdfFontPromise = null;
     let recordDraftBeforeHistoryEdit = null;
+    let isConfiguringAddDefaults = false;
+    let initialSettingToggleStates = {};
     let cameraListState = [];
     let activeCamIndex = 0;
     let currentDrawingColor = '#00ffff';
     let pendingShotThumbnails = [];
+
+    const initialSettingItems = [
+      ['operator', 'Operator'], ['show_title', 'Show Title'], ['location', 'Location'],
+      ['shoot_datetime', 'Date & Time'], ['episode', 'Episode'], ['scene', 'Scene'], ['shot', 'Shot'], ['gps_location', 'GPS Location'],
+      ['hdri', 'HDRI Setup'], ['notes', 'Notes'], ['shot_thumbnails', 'Shot Data Thumbnail'], ['sketch', 'Sketch'],
+      ['camera_preset', 'Camera Model'], ['lens_preset', 'Lens Model'], ['focal_length', 'Focal Length'], ['t_stop', 'Aperture'], ['clip_name', 'Clip Name'], ['lut_info', 'LUT Info'], ['cramerawork_preset', 'Movement'], ['height_value', 'Lens Height'], ['distance_value', 'Target Distance'], ['tilt_value', 'Tilt Angle'], ['reference_flags', 'Reference Checklist']
+    ];
+
+    function getInitialSettingEnabledFields(values = {}) {
+      const saved = values.enabled_fields || {};
+      return Object.fromEntries(initialSettingItems.map(([key]) => [key, saved[key] ?? hasSavedInitialValue(values, key)]));
+    }
+
+    function hasSavedInitialValue(values, key) {
+      if (key === 'hdri') return Boolean(values.hdri_captured || values.hdri_notes || values.hdri_weather?.length);
+      if (key === 'shot_thumbnails') return Boolean((values.shot_thumbnails || []).length);
+      if (key === 'sketch') {
+        try { return Boolean(JSON.parse(values.canvas_json || '{}').objects?.length); }
+        catch { return false; }
+      }
+      if (['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'].includes(key)) return Boolean((values.cameras || []).some(camera => key === 'reference_flags' ? camera.flag_chart === 'YES' || camera.flag_cleanplate === 'YES' || camera.flag_reference === 'YES' : camera[key]));
+      return Boolean(values[key]);
+    }
 
     function newUuid() {
       return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
@@ -632,6 +745,7 @@
       await resetFormToDefault();
       initFabricCanvas();
       renderList();
+      switchAppPage('history');
     });
 
     function switchAppPage(page) {
@@ -641,9 +755,11 @@
 
       const recordButton = document.getElementById('recordNavBtn');
       const historyButton = document.getElementById('historyNavBtn');
-      recordButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-amber-400' : 'text-slate-400 hover:text-slate-100'}`;
+      if (recordButton) {
+        recordButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-amber-400' : 'text-slate-400 hover:text-slate-100'}`;
+        recordButton.toggleAttribute('aria-current', isRecordPage);
+      }
       historyButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-slate-400 hover:text-slate-100' : 'text-amber-400'}`;
-      recordButton.toggleAttribute('aria-current', isRecordPage);
       historyButton.toggleAttribute('aria-current', !isRecordPage);
 
       if (!isRecordPage) renderList();
@@ -673,6 +789,7 @@
       if (!files.length) return;
       if (files.some(file => !file.type.startsWith('image/'))) return alert('Please select image files only.');
       pendingShotThumbnails.push(...files);
+      markInitialSettingEnabled('shot_thumbnails');
       renderShotThumbnailPreviews();
       event.target.value = '';
     }
@@ -733,19 +850,53 @@
       const defaultSettings = await db.presets.get('user_defaults');
       if (defaultSettings && defaultSettings.values) {
         const v = defaultSettings.values;
-        document.getElementById('operator').value = v.operator || '';
-        document.getElementById('show_title').value = v.show_title || '';
-        document.getElementById('location').value = v.location || '';
+        const enabled = getInitialSettingEnabledFields(v);
+        if (enabled.operator) document.getElementById('operator').value = v.operator || '';
+        if (enabled.show_title) document.getElementById('show_title').value = v.show_title || '';
+        if (enabled.location) document.getElementById('location').value = v.location || '';
+        if (enabled.shoot_datetime) document.getElementById('shoot_datetime').value = v.shoot_datetime || document.getElementById('shoot_datetime').value;
+        if (enabled.episode) document.getElementById('episode').value = v.episode || '';
+        if (enabled.scene) document.getElementById('scene').value = v.scene || '';
+        if (enabled.shot) document.getElementById('shot').value = v.shot || '';
+        if (enabled.gps_location) document.getElementById('gps_location').value = v.gps_location || '';
+        if (enabled.notes) document.getElementById('notes').value = v.notes || '';
+        if (enabled.shot_thumbnails) {
+          pendingShotThumbnails = [...(v.shot_thumbnails || [])];
+          renderShotThumbnailPreviews();
+        }
         
-        document.getElementById('hdri_captured').checked = v.hdri_captured || false;
-        toggleHdriWeather(v.hdri_captured || false);
-        setWeatherValues(v.hdri_weather || ['Sunny']);
-        document.getElementById('hdri_notes').value = v.hdri_notes || '';
+        document.getElementById('hdri_captured').checked = enabled.hdri && (v.hdri_captured || false);
+        toggleHdriWeather(enabled.hdri && (v.hdri_captured || false));
+        setWeatherValues(enabled.hdri ? (v.hdri_weather || []) : []);
+        document.getElementById('hdri_notes').value = enabled.hdri ? (v.hdri_notes || '') : '';
 
-        if (v.cameras && v.cameras.length > 0) {
-          cameraListState = v.cameras.map(c => ({ ...c }));
+        const cameraFields = ['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'];
+        const hasCameraSpecificSettings = Object.keys(v.enabled_fields || {}).some(key => key.startsWith('camera_'));
+        const isCameraFieldEnabled = (index, key) => hasCameraSpecificSettings
+          ? Boolean(v.enabled_fields[`camera_${index}_${key}`])
+          : Boolean(enabled[key]);
+        const selectedCameras = (v.cameras || []).map((camera, index) => ({ camera, index }))
+          .filter(({ index }) => cameraFields.some(key => isCameraFieldEnabled(index, key)));
+        if (selectedCameras.length) {
+          cameraListState = selectedCameras.map(({ camera, index }) => {
+            const fallback = createEmptyCameraItem(camera.label || String.fromCharCode(65 + index));
+            const result = { ...fallback, ...camera };
+            cameraFields.forEach(key => {
+              if (isCameraFieldEnabled(index, key)) return;
+              if (key === 'reference_flags') {
+                result.flag_chart = fallback.flag_chart;
+                result.flag_cleanplate = fallback.flag_cleanplate;
+                result.flag_reference = fallback.flag_reference;
+              } else result[key] = fallback[key];
+            });
+            return result;
+          });
         } else {
           cameraListState = [ createEmptyCameraItem("A") ];
+        }
+
+        if (enabled.sketch && v.canvas_json && fCanvas) {
+          fCanvas.loadFromJSON(v.canvas_json, () => { fCanvas.renderAll(); setCanvasMode('select'); });
         }
       } else {
         cameraListState = [ createEmptyCameraItem("A") ];
@@ -769,7 +920,7 @@
         t_stop: '',
         clip_name: '',
         lut_info: '',
-        cramerawork_preset: 'Fix',
+        cramerawork_preset: '',
         cramerawork_custom: '',
         height_value: '',
         distance_value: '',
@@ -784,7 +935,7 @@
       const gpsBtn = document.getElementById('gpsBtn');
       const gpsInput = document.getElementById('gps_location');
 
-      if (!confirm('現在地（緯度・経度）をこの端末のVFX記録に保存します。続行しますか？')) return;
+      if (!confirm('Save the current location (latitude and longitude) to this device\'s VFX record?')) return;
 
       if (!navigator.geolocation) {
         alert("GPS is not supported by your browser/device.");
@@ -925,18 +1076,155 @@
         operator: document.getElementById('operator').value,
         show_title: document.getElementById('show_title').value,
         location: document.getElementById('location').value,
+        shoot_datetime: document.getElementById('shoot_datetime').value,
+        episode: document.getElementById('episode').value,
+        scene: document.getElementById('scene').value,
+        shot: document.getElementById('shot').value,
+        gps_location: document.getElementById('gps_location').value,
         hdri_captured: document.getElementById('hdri_captured').checked,
         hdri_weather: getWeatherValues(),
         hdri_notes: document.getElementById('hdri_notes').value,
+        notes: document.getElementById('notes').value,
+        shot_thumbnails: [...pendingShotThumbnails],
+        canvas_json: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '',
         cameras: cameraListState
       };
+      defaultValues.enabled_fields = isConfiguringAddDefaults
+        ? getVisibleInitialSettingStates()
+        : getInitialSettingEnabledFields((await db.presets.get('user_defaults'))?.values);
 
       const existingDefaults = await db.presets.get('user_defaults');
-      const action = existingDefaults?.values ? '上書き保存' : '新規保存';
-      if (!confirm(`${action}するデフォルト項目:\n${getDefaultSettingsChangeSummary(existingDefaults?.values, defaultValues, true)}\n\n現在のフォーム内容をデフォルトとして保存しますか？`)) return;
+      const action = existingDefaults?.values ? 'Overwrite' : 'Save';
+      if (!confirm(`${action} sheet defaults:\n${getDefaultSettingsChangeSummary(existingDefaults?.values, defaultValues, true)}\n\nUse these values for future new sheets?`)) return;
 
       await db.presets.put({ type: 'user_defaults', values: defaultValues });
-      alert("Current settings saved as user default!");
+      await renderAddDefaultsSummary();
+      alert('Sheet defaults saved.');
+      if (isConfiguringAddDefaults) {
+        closeEditRecordModal();
+        switchAppPage('history');
+      }
+    }
+
+    async function openAddDefaultsEditor() {
+      isConfiguringAddDefaults = true;
+      document.getElementById('editRecordModal').classList.add('initial-settings-modal');
+      currentEditingId = null;
+      recordDraftBeforeHistoryEdit = null;
+      document.getElementById('vfxForm').reset();
+      clearShotThumbnail();
+      clearNoteCanvas();
+      await resetFormToDefault();
+      setCanvasMode('draw');
+      const savedValues = (await db.presets.get('user_defaults'))?.values || {};
+      initialSettingToggleStates = {
+        ...getInitialSettingEnabledFields(savedValues),
+        ...(savedValues.enabled_fields || {})
+      };
+      showInitialSettingToggles(initialSettingToggleStates);
+      document.getElementById('submitBtnContainer').innerHTML = '';
+      openEditRecordModal(false);
+      document.getElementById('editRecordModalTitle').innerText = 'Sheet Defaults';
+      document.getElementById('initialSettingsModalActions').classList.remove('hidden');
+      document.getElementById('initialSettingsModalActions').classList.add('flex');
+      document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showInitialSettingToggles(enabled) {
+      const form = document.getElementById('vfxForm');
+      form.classList.add('configuring-initial-settings');
+      form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
+      form.querySelectorAll('[data-initial-setting]').forEach(element => {
+        const key = element.dataset.initialSetting;
+        const control = document.createElement('span');
+        control.className = 'initial-setting-control mr-1.5 cursor-pointer align-middle';
+        control.title = 'ON: Apply to new sheets / OFF: Leave blank or use application defaults';
+        control.innerHTML = `<input id="initialSetting_${key}" type="checkbox" class="peer sr-only" ${enabled[key] ? 'checked' : ''}><span class="relative h-4 w-8 rounded-md border border-rose-300/50 bg-slate-800 transition peer-checked:border-rose-200 peer-checked:bg-rose-600 after:absolute after:left-0.5 after:top-0.5 after:h-2.5 after:w-2.5 after:rounded-sm after:bg-slate-300 after:shadow-sm after:transition-transform peer-checked:after:translate-x-4 peer-checked:after:bg-white"></span>`;
+        control.onclick = event => {
+          event.preventDefault();
+          event.stopPropagation();
+          const input = control.querySelector('input');
+          input.checked = !input.checked;
+          initialSettingToggleStates[key] = input.checked;
+        };
+        element.prepend(control);
+        const field = element.parentElement?.querySelector('input:not([id^="initialSetting_"]), textarea, select');
+        if (field) {
+          field.addEventListener('input', () => markInitialSettingEnabled(key));
+          field.addEventListener('change', () => markInitialSettingEnabled(key));
+        }
+      });
+    }
+
+    function getVisibleInitialSettingStates() {
+      const states = { ...initialSettingToggleStates };
+      document.querySelectorAll('[id^="initialSetting_"]').forEach(input => {
+        states[input.id.replace('initialSetting_', '')] = input.checked;
+      });
+      initialSettingToggleStates = states;
+      return states;
+    }
+
+    function markInitialSettingEnabled(key) {
+      if (!isConfiguringAddDefaults) return;
+      const toggle = document.getElementById(`initialSetting_${key}`);
+      if (toggle) toggle.checked = true;
+      initialSettingToggleStates[key] = true;
+    }
+
+    async function exportSheetInitialSettings() {
+      const values = (await db.presets.get('user_defaults'))?.values;
+      if (!values) return alert('There are no saved sheet defaults to export. Save the defaults first.');
+      const exportValues = { ...values, shot_thumbnails: await Promise.all((values.shot_thumbnails || []).map(blobToBase64)) };
+      const payload = { app: 'VFX_Sheet', type: 'sheet_initial_settings', version: 1, exported_at: new Date().toISOString(), values: exportValues };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `VFX_Sheet_Initial_Settings_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    }
+
+    function selectSheetInitialSettingsImport() {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json,application/json';
+      input.onchange = () => importSheetInitialSettings(input.files?.[0]);
+      input.click();
+    }
+
+    async function importSheetInitialSettings(file) {
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (data?.app !== 'VFX_Sheet' || data?.type !== 'sheet_initial_settings' || !data?.values) throw new Error('This is not a sheet-defaults file.');
+        const values = { ...data.values, shot_thumbnails: await Promise.all((data.values.shot_thumbnails || []).map(dataUrlToBlob)) };
+        await db.presets.put({ type: 'user_defaults', values });
+        alert('Sheet defaults imported.');
+        closeEditRecordModal();
+        await openAddDefaultsEditor();
+      } catch (error) {
+        alert(`Import failed: ${error.message}`);
+      }
+    }
+
+    async function resetAddDefaults() {
+      if (!confirm('Reset sheet defaults? Available camera and lens options will not be changed.')) return;
+      await db.presets.delete('user_defaults');
+      await renderAddDefaultsSummary();
+      alert('Sheet defaults have been reset.');
+    }
+
+    async function renderAddDefaultsSummary() {
+      const summary = document.getElementById('addDefaultsSummary');
+      if (!summary) return;
+      const values = (await db.presets.get('user_defaults'))?.values;
+      if (!values) {
+        summary.innerHTML = '<span class="text-slate-500">Not configured: a blank form and the standard camera setup will be used.</span>';
+        return;
+      }
+      const fields = [values.operator && `Operator: ${escapeHtml(values.operator)}`, values.show_title && `Title: ${escapeHtml(values.show_title)}`, values.location && `Location: ${escapeHtml(values.location)}`].filter(Boolean);
+      const cameras = values.cameras?.map(camera => escapeHtml(camera.label || 'Camera')).join(', ') || 'None';
+      const enabledCount = Object.values(getInitialSettingEnabledFields(values)).filter(Boolean).length;
+      summary.innerHTML = `<span class="text-emerald-400">Configured</span><span class="text-slate-500"> — ${fields.join(' / ') || 'No general information'} / Cameras: ${cameras} / Applied fields: ${enabledCount}</span>`;
     }
 
     async function loadDefaultSettings() {
@@ -948,11 +1236,11 @@
       const v = defaultSettings.values;
       const currentValues = getCurrentDefaultSettingsValues();
       const changes = getDefaultSettingsChangeSummary(currentValues, v);
-      if (changes === '変更はありません') {
-        alert('現在のフォームは保存済みのデフォルト設定と同じです。');
+      if (changes === 'No changes') {
+        alert('The current form matches the saved default settings.');
         return;
       }
-      if (!confirm(`読み込みにより変更される項目:\n${changes}\n\n保存済みのデフォルト設定を読み込みますか？`)) return;
+      if (!confirm(`Fields that will change when loaded:\n${changes}\n\nLoad the saved default settings?`)) return;
 
       document.getElementById('operator').value = v.operator || '';
       document.getElementById('show_title').value = v.show_title || '';
@@ -996,7 +1284,7 @@
       const changedFields = fields
         .filter(([key]) => includeUnchanged || JSON.stringify(currentValues?.[key] ?? null) !== JSON.stringify(newValues?.[key] ?? null))
         .map(([, label]) => `• ${label}`);
-      return changedFields.length ? changedFields.join('\n') : '変更はありません';
+      return changedFields.length ? changedFields.join('\n') : 'No changes';
     }
 
     async function exportFullPresetsJSON() {
@@ -1063,6 +1351,7 @@
 
     function openPresetModal() {
       renderPresetModalLists();
+      renderAddDefaultsSummary();
       document.getElementById('presetModal').classList.remove('hidden');
     }
 
@@ -1205,7 +1494,7 @@
         alert("At least one camera entry is required.");
         return;
       }
-      if (!confirm(`${cameraListState[idx].label} を削除しますか？`)) return;
+      if (!confirm(`Delete ${cameraListState[idx].label}?`)) return;
       cameraListState.splice(idx, 1);
       if (activeCamIndex >= cameraListState.length) {
         activeCamIndex = cameraListState.length - 1;
@@ -1223,10 +1512,10 @@
       event.stopPropagation();
       saveActiveTabState();
       const camera = cameraListState[idx];
-      const name = prompt('カメラ／リール名を入力してください。', getCameraReelName(camera));
+      const name = prompt('Enter the camera/reel name.', getCameraReelName(camera));
       if (name === null) return;
       const reelName = name.trim().toUpperCase();
-      if (!reelName) return alert('リール名を入力してください。');
+      if (!reelName) return alert('Enter a reel name.');
       camera.label = reelName;
       camera.reel_name = reelName;
       renderCameraTabs();
@@ -1259,7 +1548,7 @@
         t_stop: document.getElementById('tab_t_stop')?.value || '',
         clip_name: document.getElementById('tab_clip_name')?.value || '',
         lut_info: document.getElementById('tab_lut_info')?.value || '',
-        cramerawork_preset: document.getElementById('tab_cramerawork_preset')?.value || 'FIX (Lock-off)',
+        cramerawork_preset: document.getElementById('tab_cramerawork_preset')?.value ?? '',
         cramerawork_custom: document.getElementById('tab_cramerawork_custom')?.value || '',
         height_value: document.getElementById('tab_height_value')?.value || '',
         distance_value: document.getElementById('tab_distance_value')?.value || '',
@@ -1271,6 +1560,7 @@
     }
 
     function renderCameraTabs() {
+      const initialSettingStates = isConfiguringAddDefaults ? getVisibleInitialSettingStates() : null;
       const header = document.getElementById('cameraTabHeader');
       const addBtn = header.querySelector('button[onclick="addCameraTab()"]');
       
@@ -1296,6 +1586,7 @@
       });
 
       renderCameraTabContent();
+      if (initialSettingStates) showInitialSettingToggles(initialSettingStates);
     }
 
     function renderCameraTabContent() {
@@ -1312,7 +1603,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} - Camera Model</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_camera_preset">${getCameraFieldLabel(cam)} - Camera Model</label>
             <div class="flex gap-2">
               <select id="tab_camera_preset" onchange="onTabPresetChange('camera')" class="form-select ${isCamCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
@@ -1324,7 +1615,7 @@
           </div>
 
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} - Lens Model</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_lens_preset">${getCameraFieldLabel(cam)} - Lens Model</label>
             <div class="flex gap-2">
               <select id="tab_lens_preset" onchange="onTabLensChange()" class="form-select ${isLensCustom ? 'w-1/2' : 'w-full'}">
                 <option value="">(Select)</option>
@@ -1338,28 +1629,29 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">Focal Length</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_focal_length">Focal Length</label>
             <input type="text" id="tab_focal_length" value="${cam.focal_length || ''}" placeholder="35mm" class="form-input font-mono">
           </div>
           <div>
-            <label class="form-label">Aperture (T-Stop)</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_t_stop">Aperture (T-Stop)</label>
             <input type="text" id="tab_t_stop" value="${cam.t_stop || ''}" placeholder="T2.8" class="form-input font-mono">
           </div>
           <div>
-            <label class="form-label">Clip Name</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_clip_name">Clip Name</label>
             <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${getCameraReelName(cam)}001C001" class="form-input font-mono">
           </div>
           <div>
-            <label class="form-label">LUT Info</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_lut_info">LUT Info</label>
             <input type="text" id="tab_lut_info" value="${cam.lut_info || ''}" placeholder="SL3SG3cine to Rec709" class="form-input">
           </div>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Movement</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_cramerawork_preset">${getCameraFieldLabel(cam)} Movement</label>
             <div class="flex gap-2">
               <select id="tab_cramerawork_preset" onchange="onTabPresetChange('cramerawork')" class="form-select ${isWorkCustom ? 'w-1/2' : 'w-full'}">
+                <option value="">(Select)</option>
                 ${(cachedMovementPresets.some(item => item.name === cam.cramerawork_preset) ? [] : (cam.cramerawork_preset && cam.cramerawork_preset !== '__custom__' ? [{ name: cam.cramerawork_preset }] : [])).concat(cachedMovementPresets).map(item => `<option value="${escapeHtml(item.name)}" ${cam.cramerawork_preset === item.name ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
                 <option value="__custom__" ${isWorkCustom ? 'selected' : ''}>Custom / Other</option>
               </select>
@@ -1368,23 +1660,23 @@
           </div>
 
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Lens Height</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_height_value">${getCameraFieldLabel(cam)} Lens Height</label>
             <input type="text" id="tab_height_value" value="${cam.height_value || ''}" placeholder="150cm" class="form-input font-mono">
           </div>
 
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Target Distance</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_distance_value">${getCameraFieldLabel(cam)} Target Distance</label>
             <input type="text" id="tab_distance_value" value="${cam.distance_value || ''}" placeholder="3.5m" class="form-input font-mono">
           </div>
 
           <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Tilt Angle</label>
+            <label class="form-label" data-initial-setting="camera_${activeCamIndex}_tilt_value">${getCameraFieldLabel(cam)} Tilt Angle</label>
             <input type="text" id="tab_tilt_value" value="${cam.tilt_value || ''}" placeholder="+10° / -5°" class="form-input font-mono">
           </div>
         </div>
 
         <div class="pt-2 border-t border-slate-800/60">
-          <label class="form-label font-semibold text-amber-400/80 uppercase">${getCameraFieldLabel(cam)} Reference Checklist</label>
+          <label class="form-label font-semibold text-amber-400/80 uppercase" data-initial-setting="camera_${activeCamIndex}_reference_flags">${getCameraFieldLabel(cam)} Reference Checklist</label>
           <div class="grid grid-cols-3 gap-3">
             <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
               <span class="text-xs text-slate-300">Color Chart & Sphere</span>
@@ -1473,11 +1765,11 @@
         fCanvas.isDrawingMode = false;
       }, true);
 
-      // 初期の空状態を保存
+      // Save the initial empty state.
       saveCanvasState();
 
-      // オブジェクトの追加・修正・削除時に履歴登録
-      fCanvas.on('object:added', () => { if (!isUndoRedo) saveCanvasState(); });
+      // Record history when objects are added, modified, or removed.
+      fCanvas.on('object:added', () => { if (!isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
       fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
       fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
@@ -1504,7 +1796,7 @@
     function saveCanvasState() {
       const json = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
       
-      // 新しい操作があった場合、現在のインデックス以降のRedo履歴を破棄
+      // Discard redo history after the current index when a new action occurs.
       if (historyIndex < canvasHistory.length - 1) {
         canvasHistory = canvasHistory.slice(0, historyIndex + 1);
       }
@@ -1586,19 +1878,19 @@ function renderCropControlIcon(context, left, top) {
   context.translate(left, top);
   context.strokeStyle = '#fbbf24'; context.lineWidth = 1.4; context.lineCap = 'round'; context.lineJoin = 'round';
 
-  // 外側に突き出た奇麗な「井」の字と、対角線を引くための正確な座標
+  // Exact coordinates for an outward-extending hash symbol and a diagonal line.
   context.beginPath();
 
-  // 1. 横方向の2本線（上・下）
-  context.moveTo(-8, -4); context.lineTo(8, -4); // 上の横線
-  context.moveTo(-8,  4); context.lineTo(8,  4); // 下の横線
+  // 1. Two horizontal lines (top and bottom).
+  context.moveTo(-8, -4); context.lineTo(8, -4); // Top horizontal line.
+  context.moveTo(-8,  4); context.lineTo(8,  4); // Bottom horizontal line.
 
-  // 2. 縦方向の2本線（左・右）
-  context.moveTo(-4, -8); context.lineTo(-4,  8); // 左の縦線
-  context.moveTo( 4, -8); context.lineTo( 4,  8); // 右の縦線
+  // 2. Two vertical lines (left and right).
+  context.moveTo(-4, -8); context.lineTo(-4,  8); // Left vertical line.
+  context.moveTo( 4, -8); context.lineTo( 4,  8); // Right vertical line.
 
-  // 3. 左下から右上へ綺麗に繋がる対角線
-  context.moveTo(-4,  4); context.lineTo( 8, -8); // 左下の交点から、右上へ突き抜ける斜線
+  // 3. A diagonal line from the lower left to the upper right.
+  context.moveTo(-4,  4); context.lineTo( 8, -8); // Diagonal through the lower-left intersection to the upper right.
 
   context.stroke();
   context.restore();
@@ -1631,7 +1923,7 @@ function renderCropControlIcon(context, left, top) {
     }
 
     function enterCanvasImageCropMode(image) {
-      if (!image || image.angle) return alert('Crop前に画像の回転を0°に戻してください。');
+      if (!image || image.angle) return alert('Reset the image rotation to 0° before cropping.');
       const bounds = image.getBoundingRect(true, true);
       const sourceWidth = image._element?.naturalWidth || image._element?.width || image.width;
       const sourceHeight = image._element?.naturalHeight || image._element?.height || image.height;
@@ -1713,7 +2005,7 @@ function renderCropControlIcon(context, left, top) {
       const top = Math.max(imageBounds.top, cropBounds.top);
       const right = Math.min(imageBounds.left + imageBounds.width, cropBounds.left + cropBounds.width);
       const bottom = Math.min(imageBounds.top + imageBounds.height, cropBounds.top + cropBounds.height);
-      if (right - left < 4 || bottom - top < 4) return alert('Crop範囲を画像内に作成してください。');
+      if (right - left < 4 || bottom - top < 4) return alert('Create a crop area within the image.');
       const scaleX = image.scaleX;
       const scaleY = image.scaleY;
       image.set({
@@ -1908,18 +2200,24 @@ function renderCropControlIcon(context, left, top) {
     }
 
     // Load & Save
-    async function loadRecordForEdit(id) {
+    async function loadRecordForEdit(id, duplicate = false) {
       const record = await db.sheets.get(id);
       if (!record) return alert("Record not found.");
 
-      recordDraftBeforeHistoryEdit = captureRecordDraft();
-      openEditRecordModal();
+      isConfiguringAddDefaults = false;
+      recordDraftBeforeHistoryEdit = duplicate ? null : captureRecordDraft();
+      currentEditingId = duplicate ? null : id;
+      openEditRecordModal(!duplicate);
+      document.getElementById('editRecordModalTitle').innerText = duplicate ? 'Duplicate VFX Sheet' : 'Edit VFX Sheet';
 
-      currentEditingId = id;
-      document.getElementById('editModeBanner').classList.remove('hidden');
-      document.getElementById('editingRecordId').innerText = id;
+      document.getElementById('editModeBanner').classList.toggle('hidden', duplicate);
+      document.getElementById('editingRecordId').innerText = duplicate ? '-' : id;
 
-      document.getElementById('submitBtnContainer').innerHTML = '';
+      if (!duplicate) {
+        document.getElementById('submitBtnContainer').innerHTML = '';
+      } else {
+        document.getElementById('submitBtnContainer').innerHTML = `<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>`;
+      }
 
       document.getElementById('operator').value = record.operator || '';
       document.getElementById('show_title').value = record.show_title || '';
@@ -1992,13 +2290,28 @@ function renderCropControlIcon(context, left, top) {
       document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function openEditRecordModal() {
+    async function openNewRecordModal() {
+      isConfiguringAddDefaults = false;
+      currentEditingId = null;
+      recordDraftBeforeHistoryEdit = null;
+      document.getElementById('vfxForm').reset();
+      clearShotThumbnail();
+      clearNoteCanvas();
+      await resetFormToDefault();
+      setCanvasMode('draw');
+      document.getElementById('submitBtnContainer').innerHTML = `<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>`;
+      openEditRecordModal(false);
+      document.getElementById('editRecordModalTitle').innerText = 'New VFX Sheet';
+      document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openEditRecordModal(showActions = true) {
       const modal = document.getElementById('editRecordModal');
       const form = document.getElementById('vfxForm');
       document.getElementById('editRecordModalContent').appendChild(form);
       modal.classList.remove('hidden');
-      document.getElementById('editRecordModalActions').classList.remove('hidden');
-      document.getElementById('editRecordModalActions').classList.add('flex');
+      document.getElementById('editRecordModalActions').classList.toggle('hidden', !showActions);
+      document.getElementById('editRecordModalActions').classList.toggle('flex', showActions);
       isEditingInModal = true;
       document.body.classList.add('overflow-hidden');
     }
@@ -2006,12 +2319,19 @@ function renderCropControlIcon(context, left, top) {
     function closeEditRecordModal() {
       if (!isEditingInModal) return;
       const form = document.getElementById('vfxForm');
+      form.classList.remove('configuring-initial-settings');
+      form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
       document.getElementById('recordPage').appendChild(form);
       document.getElementById('editRecordModal').classList.add('hidden');
+      document.getElementById('editRecordModal').classList.remove('initial-settings-modal');
+      document.getElementById('initialSettingsModalActions').classList.add('hidden');
+      document.getElementById('initialSettingsModalActions').classList.remove('flex');
       document.getElementById('editRecordModalActions').classList.add('hidden');
       document.getElementById('editRecordModalActions').classList.remove('flex');
       isEditingInModal = false;
       document.body.classList.remove('overflow-hidden');
+      document.getElementById('editRecordModalTitle').innerText = 'Edit VFX Sheet';
+      isConfiguringAddDefaults = false;
       if (currentEditingId && recordDraftBeforeHistoryEdit) {
         restoreRecordDraft(recordDraftBeforeHistoryEdit);
         recordDraftBeforeHistoryEdit = null;
@@ -2091,7 +2411,7 @@ function renderCropControlIcon(context, left, top) {
         ...camera,
         reel_name: camera.reel_name || getCameraReelPrefix(camera.label),
         lens_preset: '', lens_custom: '', focal_length: '', t_stop: '',
-        cramerawork_preset: 'Fix', cramerawork_custom: '',
+        cramerawork_preset: '', cramerawork_custom: '',
         height_value: '', distance_value: '', tilt_value: '',
         clip_name: incrementTrailingNumber(camera.clip_name)
       }));
@@ -2197,6 +2517,53 @@ function renderCropControlIcon(context, left, top) {
       return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
     }
 
+    async function openRecordPreview(id) {
+      const record = await db.sheets.get(id);
+      if (!record) return alert('Record not found.');
+      const safe = escapeHtml;
+      const thumbnails = await Promise.all(getRecordShotThumbnails(record).map(blobToBase64));
+      const valueField = (label, value, wide = false) => `<div class="${wide ? 'md:col-span-2' : ''}"><label class="form-label">${safe(label)}</label><div class="preview-value form-input break-words bg-slate-950/70">${safe(value || '-')}</div></div>`;
+      const cameras = (record.cameras || []).length ? `<div class="w-full overflow-x-auto rounded-lg border border-slate-800 bg-slate-950"><table class="w-full min-w-full table-fixed border-collapse text-left text-[10px]"><colgroup><col class="w-[5%]"><col class="w-[16%]"><col class="w-[16%]"><col span="11"></colgroup><thead class="bg-slate-900 text-slate-400"><tr><th class="px-2 py-1.5">Reel</th><th class="px-2 py-1.5">Camera</th><th class="px-2 py-1.5">Lens</th><th class="px-2 py-1.5">Focal</th><th class="px-2 py-1.5">Aperture</th><th class="px-2 py-1.5">Clip</th><th class="px-2 py-1.5">LUT</th><th class="px-2 py-1.5">Move.</th><th class="px-2 py-1.5">Height</th><th class="px-2 py-1.5">Distance</th><th class="px-2 py-1.5">Tilt</th><th class="px-2 py-1.5">Chart</th><th class="px-2 py-1.5">Plate</th><th class="px-2 py-1.5">Ref.</th></tr></thead><tbody class="divide-y divide-slate-800">${record.cameras.map(camera => `<tr class="text-slate-200"><td class="truncate px-2 py-1 font-bold text-amber-300">${safe(getCameraReelName(camera))}</td><td class="break-words px-2 py-1">${safe(camera.camera || '-')}</td><td class="break-words px-2 py-1">${safe(camera.lens || '-')}</td><td class="truncate px-2 py-1">${safe(camera.focal_length || '-')}</td><td class="truncate px-2 py-1">${safe(camera.t_stop || '-')}</td><td class="truncate px-2 py-1">${safe(camera.clip_name || '-')}</td><td class="truncate px-2 py-1">${safe(camera.lut_info || '-')}</td><td class="truncate px-2 py-1">${safe(camera.cramerawork || '-')}</td><td class="truncate px-2 py-1">${safe(camera.height_value || '-')}</td><td class="truncate px-2 py-1">${safe(camera.distance_value || '-')}</td><td class="truncate px-2 py-1">${safe(camera.tilt_value || '-')}</td><td class="truncate px-2 py-1">${safe(camera.flag_chart || 'NO')}</td><td class="truncate px-2 py-1">${safe(camera.flag_cleanplate || 'NO')}</td><td class="truncate px-2 py-1">${safe(camera.flag_reference || 'NO')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="text-xs text-slate-500">No camera data.</p>';
+      const canvasImage = record.images?.[0] ? await blobToBase64(record.images[0]) : '';
+      const hdri = record.hdri_captured === 'YES' || record.hdri_captured === true;
+      document.getElementById('recordPreviewModalTitle').textContent = `VFX Sheet #${record.id} | ${record.show_title || '-'} ${[record.episode, record.scene, record.shot].filter(Boolean).join('_') || '-'} | ${record.location || '-'}`;
+      document.getElementById('recordPreviewModalMeta').innerHTML = `<table class="border-collapse"><tbody><tr><th class="pr-1 text-left font-medium text-slate-500">Operator</th><td class="pr-3 text-slate-300">${safe(record.operator || '-')}</td><th class="pr-1 text-left font-medium text-slate-500">Date & Time</th><td class="pr-3 text-slate-300">${safe(record.shoot_datetime || '-')}</td><th class="pr-1 text-left font-medium text-slate-500">GPS</th><td class="text-slate-300">${safe(record.gps_location || '-')}</td></tr></tbody></table>`;
+      document.getElementById('recordPreviewModalContent').innerHTML = `
+        <div class="space-y-3">
+          <section class="space-y-2"><h2 class="text-[11px] font-semibold text-amber-400/80 uppercase tracking-wider">Multi-Camera Setup</h2><div class="w-full">${cameras}</div></section>
+          <hr class="border-slate-800"><section class="space-y-2"><h2 class="text-[11px] font-semibold text-amber-400/80 uppercase tracking-wider">HDRI Setup</h2><div class="grid grid-cols-3 gap-2">${valueField('HDRI Captured', hdri ? 'YES' : 'NO')}${valueField('Weather Conditions', Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather)}${valueField('HDRI Notes / EV Range', record.hdri_notes)}</div></section>
+          <hr class="border-slate-800"><section class="space-y-2"><h2 class="text-[11px] font-semibold text-amber-400/80 uppercase tracking-wider">VFX Field Notes & Sketch</h2>${valueField('Notes', record.notes, true)}${thumbnails.length ? `<div><label class="form-label">Shot Data Thumbnail</label><div class="flex gap-2 overflow-x-auto">${thumbnails.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" onclick="openMediaLightbox(this.src, this.alt)" class="h-20 min-w-28 cursor-zoom-in rounded-lg border border-slate-800 object-cover">`).join('')}</div></div>` : ''}${canvasImage ? `<div><label class="form-label">Sketch</label><img src="${canvasImage}" alt="VFX field sketch" onclick="openMediaLightbox(this.src, this.alt)" class="max-h-64 w-full cursor-zoom-in rounded-lg border border-slate-800 object-contain bg-slate-950"></div>` : ''}</section>
+        </div>`;
+      document.getElementById('recordPreviewModal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeRecordPreview() {
+      document.getElementById('recordPreviewModal').classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+    function openMediaLightbox(source, alt = 'Expanded preview') {
+      const image = document.getElementById('mediaLightboxImage');
+      image.src = source;
+      image.alt = alt;
+      document.getElementById('mediaLightbox').classList.remove('hidden');
+      document.getElementById('mediaLightbox').classList.add('flex');
+    }
+    
+    function closeMediaLightbox() {
+      document.getElementById('mediaLightbox').classList.add('hidden');
+      document.getElementById('mediaLightbox').classList.remove('flex');
+      document.getElementById('mediaLightboxImage').src = '';
+    }
+    function changeRecordThumbnail(button, direction) {
+      const container = button.parentElement;
+      const images = [...container.querySelectorAll('.record-thumbnail-image')];
+      const currentIndex = images.findIndex(image => !image.classList.contains('hidden'));
+      const nextIndex = (currentIndex + direction + images.length) % images.length;
+      images[currentIndex]?.classList.add('hidden');
+      images[nextIndex]?.classList.remove('hidden');
+    }
+
     async function renderList() {
       const records = await db.sheets.reverse().toArray();
       const availableIds = new Set(records.map(record => record.id));
@@ -2241,31 +2608,37 @@ function renderCropControlIcon(context, left, top) {
         ).join('');
 
         return `
-          <div class="bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(r.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs">
+          <div onclick="openRecordPreview(${r.id})" class="cursor-pointer bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(r.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs hover:border-slate-600">
             <div class="flex justify-between items-center">
               <div class="flex min-w-0 items-center gap-2">
-                <input type="checkbox" aria-label="Select record ${r.id}" ${selectedRecordIds.has(r.id) ? 'checked' : ''} onchange="toggleRecordSelection(${r.id}, this.checked)" class="h-4 w-4 shrink-0 accent-amber-400">
-                <span class="font-mono text-amber-400 font-bold text-sm truncate">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')}_${safe(r.scene)}_${safe(r.shot)}</span>
+                <input type="checkbox" aria-label="Select record ${r.id}" ${selectedRecordIds.has(r.id) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleRecordSelection(${r.id}, this.checked)" class="h-4 w-4 shrink-0 accent-amber-400">
+                <span class="font-mono text-amber-400 font-bold text-sm truncate">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')}_${safe(r.scene)}_${safe(r.shot)} | ${safe(r.location || '-')}</span>
                 <span class="shrink-0 text-[10px] text-slate-500">${safe(r.shoot_datetime || '-')}</span>
               </div>
               <div class="flex gap-2 items-center">
                 ${syncBadge}
-                <button type="button" onclick="loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
+                <button type="button" onclick="event.stopPropagation(); loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
                   ✏️ Edit
                 </button>
-                <button type="button" onclick="deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 text-xs px-1">
+                <button type="button" onclick="event.stopPropagation(); loadRecordForEdit(${r.id}, true)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] px-3 py-1 rounded-md border border-slate-700 transition-colors">
+                  ⧉ Duplicate
+                </button>
+                <button type="button" onclick="event.stopPropagation(); deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 text-xs px-1">
                   ✕
                 </button>
               </div>
             </div>
-            ${thumbnailUrls.length ? `<div class="flex gap-2 overflow-x-auto">${thumbnailUrls.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="h-28 min-w-36 rounded-lg border border-slate-800 object-cover">`).join('')}</div>` : ''}
-            <div class="space-y-1">
-              ${camSummary}
+            <div class="flex gap-2">
+              ${thumbnailUrls.length ? `<div class="relative flex w-28 shrink-0 items-center justify-center">${thumbnailUrls.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="record-thumbnail-image h-20 w-28 rounded-lg border border-slate-800 object-cover ${index ? 'hidden' : ''}" data-thumbnail-index="${index}">`).join('')}${thumbnailUrls.length > 1 ? `<button type="button" onclick="event.stopPropagation(); changeRecordThumbnail(this, -1)" aria-label="Previous thumbnail" class="absolute left-1 top-1/2 z-10 -translate-y-1/2 rounded-full border border-slate-600 bg-slate-950/90 px-1.5 py-1 text-xs text-white hover:bg-slate-800">‹</button><button type="button" onclick="event.stopPropagation(); changeRecordThumbnail(this, 1)" aria-label="Next thumbnail" class="absolute right-1 top-1/2 z-10 -translate-y-1/2 rounded-full border border-slate-600 bg-slate-950/90 px-1.5 py-1 text-xs text-white hover:bg-slate-800">›</button>` : ''}</div>` : ''}
+              <div class="min-w-0 flex-1 space-y-1">
+                ${camSummary}
+              </div>
             </div>
             <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">
               ${hdriDisp}
               <span class="text-slate-400">${safe(r.hdri_notes || '')}</span>
             </div>
+            ${r.notes ? `<div class="text-[11px] text-slate-300 rounded border border-slate-800 bg-slate-900/60 p-2 whitespace-pre-wrap"><span class="mr-1 font-bold text-slate-500">Notes:</span>${safe(r.notes)}</div>` : ''}
             <div class="text-slate-400 flex flex-wrap justify-between text-[11px] pt-0.5 border-t border-slate-900">
               <span>${gpsDisp}</span>
               <span class="text-slate-500">Op: ${safe(r.operator || '-')}</span>
@@ -2306,7 +2679,7 @@ function renderCropControlIcon(context, left, top) {
     async function deleteSelectedRecords() {
       const ids = [...selectedRecordIds];
       if (!ids.length) return;
-      if (!confirm(`選択した${ids.length}件のレコードを削除しますか？この操作は元に戻せません。`)) return;
+      if (!confirm(`Delete ${ids.length} selected record(s)? This action cannot be undone.`)) return;
       await db.sheets.bulkDelete(ids);
       if (currentEditingId && ids.includes(currentEditingId)) closeEditRecordModal();
       selectedRecordIds.clear();
@@ -2583,7 +2956,7 @@ function renderCropControlIcon(context, left, top) {
       const originalLabel = button.innerHTML;
       // Open immediately from the tap event so iOS does not block the print view.
       const printWindow = window.open('', '_blank');
-      if (!printWindow) return alert('PDF出力画面を開けませんでした。ポップアップを許可してから再試行してください。');
+      if (!printWindow) return alert('Could not open the PDF export window. Allow pop-ups and try again.');
       button.disabled = true;
       button.innerText = 'Preparing PDF…';
       try {
@@ -2976,7 +3349,7 @@ function renderCropControlIcon(context, left, top) {
       const a = document.createElement('a');
       a.href = url; a.download = `VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      alert(`${records.length} records backed up. 写真・サムネイル・Fabricスケッチデータを含むフルバックアップです。`);
+      alert(`${records.length} records backed up. This is a full backup that includes photos, thumbnails, and Fabric sketch data.`);
     }
 
     async function importBackupJSON(event) {
@@ -2986,13 +3359,13 @@ function renderCropControlIcon(context, left, top) {
       try {
         const data = JSON.parse(await file.text());
         if (data.app !== 'VFX_Sheet' || data.format !== 'vfx-sheet-record-backup' || !Array.isArray(data.records)) {
-          throw new Error('VFX Sheet Backup JSONファイルではありません。');
+          throw new Error('This is not a VFX Sheet Backup JSON file.');
         }
         if (!data.records.every(record => record && typeof record === 'object')) {
-          throw new Error('バックアップ内のレコード形式が正しくありません。');
+          throw new Error('The record format in the backup is invalid.');
         }
         const includesAssets = data.records.some(record => record.assets && typeof record.assets === 'object');
-        if (!confirm(`${data.records.length}件のレコードをインポートします。\n同じUUIDのレコードはバックアップ内容で更新されます。\n${includesAssets ? '写真・サムネイルもIndexedDBへ復元します。' : '旧形式のバックアップのため、既存の写真・サムネイルは維持します。'}\n\n続行しますか？`)) return;
+        if (!confirm(`Import ${data.records.length} record(s).\nRecords with matching UUIDs will be updated from the backup.\n${includesAssets ? 'Photos and thumbnails will also be restored to IndexedDB.' : 'This legacy-format backup will retain existing photos and thumbnails.'}\n\nContinue?`)) return;
 
         const restoredRecords = await Promise.all(data.records.map(async backupRecord => ({
           record: backupRecord,
@@ -3027,7 +3400,7 @@ function renderCropControlIcon(context, left, top) {
         });
 
         await renderList();
-        alert(`バックアップをインポートしました。\n新規: ${created}件 / 更新: ${updated}件${includesAssets ? '\n写真・サムネイルをIndexedDBへ復元しました。' : '\n旧形式のため、写真・サムネイルは復元されません。'}`);
+        alert(`Backup imported.\nNew: ${created} / Updated: ${updated}${includesAssets ? '\nPhotos and thumbnails were restored to IndexedDB.' : '\nPhotos and thumbnails were not restored because this is a legacy-format backup.'}`);
       } catch (error) {
         alert(`Backup Import Error: ${error.message}`);
       } finally {
@@ -3037,7 +3410,7 @@ function renderCropControlIcon(context, left, top) {
 
     async function restoreBackupAssets(assets) {
       if (!Array.isArray(assets.images) || !Array.isArray(assets.shot_thumbnails)) {
-        throw new Error('バックアップ内の画像データ形式が正しくありません。');
+        throw new Error('The image data format in the backup is invalid.');
       }
       return {
         images: await Promise.all(assets.images.map(dataUrlToBlob)),
@@ -3048,10 +3421,10 @@ function renderCropControlIcon(context, left, top) {
 
     async function dataUrlToBlob(dataUrl) {
       if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
-        throw new Error('バックアップ内の画像データが正しくありません。');
+        throw new Error('The image data in the backup is invalid.');
       }
       const response = await fetch(dataUrl);
-      if (!response.ok) throw new Error('画像データを復元できませんでした。');
+      if (!response.ok) throw new Error('Could not restore the image data.');
       return response.blob();
     }
 
