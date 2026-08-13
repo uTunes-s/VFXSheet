@@ -1561,19 +1561,6 @@ function renderCropControlIcon(context, left, top) {
       });
     }
 
-    function downloadExportBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = filename;
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      // Safari can cancel downloads if the Object URL is revoked in the same task.
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-    }
-
     async function loadJapanesePdfFont(doc) {
       if (!japanesePdfFontPromise) {
         if (!window.VFX_JAPANESE_PDF_FONT_BASE64) {
@@ -1666,13 +1653,6 @@ function renderCropControlIcon(context, left, top) {
           doc.addImage(sketchCanvas.toDataURL('image/png'), 'PNG', margin, y, pageWidth - margin * 2, 80);
         }
       }
-    }
-
-    async function imageFromBlob(blob) {
-      if (!blob) return null;
-      const url = URL.createObjectURL(blob);
-      try { return await new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = url; }); }
-      finally { URL.revokeObjectURL(url); }
     }
 
     async function renderRecordPdfPage(record) {
@@ -2002,6 +1982,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/zip-utils.js"></script>
   <script src="js/shooting-data-pdf.js"></script>
   <script src="js/flowpt-export.js"></script>
+  <script src="js/media-utils.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
 </html>
