@@ -625,51 +625,6 @@
       renderCameraTabs();
     }
 
-    let cachedCamPresets = [];
-    let cachedLensPresets = [];
-    let cachedMovementPresets = [];
-    let openLensSeries = new Set();
-
-    async function initPresets() {
-      let camRecord = await db.presets.get('camera');
-      if (!camRecord) {
-        camRecord = { type: 'camera', list: defaultCameras };
-        await db.presets.put(camRecord);
-      } else {
-        const normalized = normalizeCameraPresets(camRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(camRecord.list)) {
-          camRecord = { ...camRecord, list: normalized };
-          await db.presets.put(camRecord);
-        }
-      }
-      cachedCamPresets = normalizeCameraPresets(camRecord.list).filter(camera => camera.enabled);
-
-      let lensRecord = await db.presets.get('lens');
-      if (!lensRecord) {
-        lensRecord = { type: 'lens', list: defaultLenses };
-        await db.presets.put(lensRecord);
-      } else {
-        const normalized = normalizeLensPresets(lensRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(lensRecord.list)) {
-          lensRecord = { ...lensRecord, list: normalized };
-          await db.presets.put(lensRecord);
-        }
-      }
-      cachedLensPresets = normalizeLensPresets(lensRecord.list).filter(lens => lens.enabled);
-
-      let movementRecord = await db.presets.get('movement');
-      if (!movementRecord) {
-        movementRecord = { type: 'movement', list: defaultMovements };
-        await db.presets.put(movementRecord);
-      } else {
-        const normalized = normalizeMovementPresets(movementRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(movementRecord.list)) await db.presets.put({ ...movementRecord, list: normalized });
-      }
-      cachedMovementPresets = normalizeMovementPresets((await db.presets.get('movement')).list).filter(item => item.enabled);
-
-      renderCameraTabs();
-    }
-
     async function saveCurrentAsDefaultSettings() {
       saveActiveTabState();
       const defaultValues = {
@@ -2978,6 +2933,7 @@ function renderCropControlIcon(context, left, top) {
   <script src="js/shot-thumbnails.js"></script>
   <script src="js/gps.js"></script>
   <script src="js/preset-normalizers.js"></script>
+  <script src="js/preset-store.js"></script>
   <script src="js/camera-model.js"></script>
   <script src="js/canvas-actions.js"></script>
 </body>
