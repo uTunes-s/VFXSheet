@@ -20,6 +20,7 @@
   <script src="vendor/jspdf.umd.min.js"></script>
   <script src="vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="vendor/japanese-pdf-font.js"></script>
+  <script defer src="js/bootstrap.js"></script>
 
   <link rel="stylesheet" href="css/app.css">
 </head>
@@ -637,14 +638,6 @@
       if (name.startsWith('iPhone 15')) return 'iPhone 15 Pro';
       return name.split(' ').slice(0, 2).join(' ');
     }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initPresets();
-      await resetFormToDefault();
-      initFabricCanvas();
-      renderList();
-      switchAppPage('history');
-    });
 
     function switchAppPage(page) {
       const isRecordPage = page === 'record';
