@@ -17,5 +17,3 @@ export function getShootingDataExportFilename(record, camera, extension) {
   const date = String(record.shoot_datetime || '').match(/^\d{4}-\d{2}-\d{2}/)?.[0].replaceAll('-', '') || 'undated';
   return `${formatFlowPtId(record.id)}_${getShootingDataName(record, camera)}_${date}.${extension}`;
 }
-
-Object.assign(globalThis, { getRecordShotThumbnails, getShootingDataName, formatFlowPtId, getShootingDataExportFilename });

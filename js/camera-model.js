@@ -34,5 +34,3 @@ export function getCameraReelName(camera) {
 export function getCameraFieldLabel(camera) {
   return `Cam ${getCameraReelName(camera)}`;
 }
-
-Object.assign(globalThis, { createEmptyCameraItem, getCameraReelPrefix, getCameraReelName, getCameraFieldLabel });
