@@ -1,5 +1,5 @@
 // Shared browser download and Blob image utilities.
-function downloadExportBlob(blob, filename) {
+export function downloadExportBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
@@ -12,7 +12,7 @@ function downloadExportBlob(blob, filename) {
   window.setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-async function imageFromBlob(blob) {
+export async function imageFromBlob(blob) {
   if (!blob) return null;
   const url = URL.createObjectURL(blob);
   try {
@@ -26,3 +26,5 @@ async function imageFromBlob(blob) {
     URL.revokeObjectURL(url);
   }
 }
+
+Object.assign(globalThis, { downloadExportBlob, imageFromBlob });
