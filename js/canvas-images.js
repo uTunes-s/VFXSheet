@@ -1,5 +1,5 @@
 // Add user-selected images to the Fabric canvas.
-function addFreeImageToCanvas(event) {
+export function addFreeImageToCanvas(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -22,3 +22,5 @@ function addFreeImageToCanvas(event) {
   reader.readAsDataURL(file);
   event.target.value = '';
 }
+
+Object.assign(globalThis, { addFreeImageToCanvas });

@@ -19,7 +19,7 @@ const CLASSIC_ASSETS = [
   '../vendor/japanese-pdf-font.js',
   './form-ui.js', './shot-thumbnails.js', './gps.js',
   './media-modals.js', './record-thumbnails.js',
-  './canvas-images.js', './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
+  './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
   './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
 ];
 
@@ -63,6 +63,7 @@ await import('./initial-settings-transfer.js');
 await import('./canvas-style.js');
 await import('./canvas-history.js');
 await import('./canvas-mode.js');
+await import('./canvas-images.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
