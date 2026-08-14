@@ -1,5 +1,9 @@
 // Record history preview modal rendering.
-async function openRecordPreview(id) {
+import { db } from './database.js';
+import { escapeHtml } from './utils.js';
+import { getRecordShotThumbnails } from './export-naming.js';
+
+export async function openRecordPreview(id) {
   const record = await db.sheets.get(id);
   if (!record) return alert('Record not found.');
   const safe = escapeHtml;
@@ -14,3 +18,5 @@ async function openRecordPreview(id) {
   document.getElementById('recordPreviewModal').classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
 }
+
+Object.assign(globalThis, { openRecordPreview });
