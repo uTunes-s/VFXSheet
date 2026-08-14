@@ -823,7 +823,7 @@
       }
     }
 
-    async function renderPrintableTextPdfRecord(record) {
+    async function renderPrintableTextPdfRecordLegacy(record) {
       const safe = escapeHtml;
       const value = input => safe(input || '-');
       const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
@@ -881,6 +881,7 @@
   <script src="js/preset-list-renderer.js"></script>
   <script src="js/camera-tabs-renderer.js"></script>
   <script src="js/record-preview.js"></script>
+  <script src="js/pdf-print-record.js"></script>
   <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-text-record.js"></script>
   <script src="js/pdf-page-renderer.js"></script>
