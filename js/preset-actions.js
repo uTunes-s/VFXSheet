@@ -5,6 +5,7 @@ import { defaultLenses } from './preset-catalog-lenses.js';
 import { defaultMovements } from './preset-catalog-meta.js';
 import { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
 import { initPresets, openLensSeries } from './preset-store.js';
+import { renderPresetModalLists } from './preset-list-renderer.js';
 
 export function normalizedPresetList(type, list) {
   if (type === 'camera') return normalizeCameraPresets(list);

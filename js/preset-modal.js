@@ -1,4 +1,7 @@
 // Preset modal visibility and refresh behavior.
+import { renderPresetModalLists } from './preset-list-renderer.js';
+import { renderAddDefaultsSummary } from './initial-settings-transfer.js';
+
 export function openPresetModal() {
   renderPresetModalLists();
   renderAddDefaultsSummary();

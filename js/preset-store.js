@@ -4,6 +4,7 @@ import { defaultCameras } from './preset-catalog-cameras.js';
 import { defaultLenses } from './preset-catalog-lenses.js';
 import { defaultMovements } from './preset-catalog-meta.js';
 import { normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
 
 export let cachedCamPresets = [];
 export let cachedLensPresets = [];
