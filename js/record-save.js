@@ -1,6 +1,10 @@
 // Record validation, normalization, and IndexedDB persistence.
-function getSavedCameras() {
-  return cameraListState.map(camera => ({
+import { db } from './database.js';
+import { state } from './state.js';
+import { newUuid } from './utils.js';
+
+export function getSavedCameras() {
+  return state.cameraListState.map(camera => ({
     label: camera.label,
     reel_name: camera.reel_name || getCameraReelPrefix(camera.label),
     camera: camera.camera_preset === '__custom__' ? camera.camera_custom : camera.camera_preset,
@@ -19,7 +23,7 @@ function getSavedCameras() {
   }));
 }
 
-async function saveRecord(event, mode) {
+export async function saveRecord(event, mode) {
   event?.preventDefault();
   const form = document.getElementById('vfxForm');
   if (!form.checkValidity()) {
@@ -28,12 +32,12 @@ async function saveRecord(event, mode) {
   }
   saveActiveTabState();
 
-  const isUpdate = mode === 'update' && currentEditingId;
-  const existingRecord = isUpdate ? await db.sheets.get(currentEditingId) : null;
+  const isUpdate = mode === 'update' && state.currentEditingId;
+  const existingRecord = isUpdate ? await db.sheets.get(state.currentEditingId) : null;
   const isHdri = document.getElementById('hdri_captured').checked;
   const canvasBlob = await exportCanvasToBlob();
-  const currentThumbnails = pendingShotThumbnails.length
-    ? pendingShotThumbnails
+  const currentThumbnails = state.pendingShotThumbnails.length
+    ? state.pendingShotThumbnails
     : existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []);
 
   const field = id => document.getElementById(id).value;
@@ -51,8 +55,8 @@ async function saveRecord(event, mode) {
 
   try {
     if (isUpdate) {
-      await db.sheets.update(currentEditingId, payload);
-      alert(`Record ID: ${currentEditingId} updated.`);
+      await db.sheets.update(state.currentEditingId, payload);
+      alert(`Record ID: ${state.currentEditingId} updated.`);
     } else {
       const id = await db.sheets.add(payload);
       alert(`Saved as new record (ID: ${id}).`);
@@ -63,11 +67,13 @@ async function saveRecord(event, mode) {
     return;
   }
 
-  if (isEditingInModal) {
-    recordDraftBeforeHistoryEdit = null;
+  if (state.isEditingInModal) {
+    state.recordDraftBeforeHistoryEdit = null;
     closeEditRecordModal();
   } else {
     prepareNextRecord();
   }
   await renderList();
 }
+
+Object.assign(globalThis, { getSavedCameras, saveRecord });
