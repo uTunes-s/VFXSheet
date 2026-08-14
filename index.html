@@ -559,8 +559,6 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-     /* Legacy inline renderer copies retained only in Git history (backup/pre-module-refactor
-       and prior refactor commits). Active implementations are loaded from js/*.js. */
      function renderCameraTabContentLegacy() {
       const container = document.getElementById('cameraTabContents');
       const cam = cameraListState[activeCamIndex];
@@ -839,7 +837,6 @@
         <h2>4. VFX Field Notes</h2><table><tr><td><pre>${value(record.notes)}</pre></td></tr></table>
         ${thumbnailUrls.length ? `<h2>Shot Thumbnails</h2><div class="images">${thumbnailUrls.map(url => `<img class="thumb" src="${url}" alt="Shot thumbnail">`).join('')}</div>` : ''}${sketchUrl ? `<h2>Field Sketch</h2><img class="sketch" src="${sketchUrl}" alt="Field sketch">` : ''}</section>`;
     }
-    */
 
   </script>
   <script src="js/form-ui.js"></script>
