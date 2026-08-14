@@ -1,11 +1,15 @@
 // Loading persisted records into the VFX Sheet editor.
-async function loadRecordForEdit(id, duplicate = false) {
+import { db } from './database.js';
+import { state } from './state.js';
+import { getRecordShotThumbnails } from './export-naming.js';
+
+export async function loadRecordForEdit(id, duplicate = false) {
   const record = await db.sheets.get(id);
   if (!record) return alert('Record not found.');
 
-  isConfiguringAddDefaults = false;
-  recordDraftBeforeHistoryEdit = duplicate ? null : captureRecordDraft();
-  currentEditingId = duplicate ? null : id;
+  state.isConfiguringAddDefaults = false;
+  state.recordDraftBeforeHistoryEdit = duplicate ? null : captureRecordDraft();
+  state.currentEditingId = duplicate ? null : id;
   openEditRecordModal(!duplicate);
   document.getElementById('editRecordModalTitle').innerText = duplicate ? 'Duplicate VFX Sheet' : 'Edit VFX Sheet';
 
@@ -34,7 +38,7 @@ async function loadRecordForEdit(id, duplicate = false) {
   document.getElementById('hdri_notes').value = record.hdri_notes || '';
 
   if (record.cameras && record.cameras.length > 0) {
-    cameraListState = record.cameras.map(c => ({
+    state.cameraListState = record.cameras.map(c => ({
       label: c.label,
       reel_name: c.reel_name || getCameraReelPrefix(c.label),
       camera_preset: c.camera || '',
@@ -55,14 +59,14 @@ async function loadRecordForEdit(id, duplicate = false) {
       flag_reference: c.flag_reference || 'NO'
     }));
   } else {
-    cameraListState = [createEmptyCameraItem('A')];
+    state.cameraListState = [createEmptyCameraItem('A')];
   }
-  activeCamIndex = 0;
+  state.activeCamIndex = 0;
   renderCameraTabs();
 
   document.getElementById('notes').value = record.notes || '';
   clearShotThumbnail();
-  pendingShotThumbnails = getRecordShotThumbnails(record);
+  state.pendingShotThumbnails = getRecordShotThumbnails(record);
   renderShotThumbnailPreviews();
 
   isUndoRedo = true;
@@ -88,3 +92,5 @@ async function loadRecordForEdit(id, duplicate = false) {
 
   document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+Object.assign(globalThis, { loadRecordForEdit });
