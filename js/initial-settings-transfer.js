@@ -1,5 +1,10 @@
 // Import, export, reset, and summarize saved sheet defaults.
-async function exportSheetInitialSettings() {
+import { db } from './database.js';
+import { downloadExportBlob } from './media-utils.js';
+import { escapeHtml } from './utils.js';
+import { getInitialSettingEnabledFields } from './default-settings.js';
+
+export async function exportSheetInitialSettings() {
   const values = (await db.presets.get('user_defaults'))?.values;
   if (!values) return alert('There are no saved sheet defaults to export. Save the defaults first.');
   const exportValues = { ...values, shot_thumbnails: await Promise.all((values.shot_thumbnails || []).map(blobToBase64)) };
@@ -7,7 +12,7 @@ async function exportSheetInitialSettings() {
   downloadExportBlob(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), `VFX_Sheet_Initial_Settings_${new Date().toISOString().slice(0, 10)}.json`);
 }
 
-function selectSheetInitialSettingsImport() {
+export function selectSheetInitialSettingsImport() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json,application/json';
@@ -15,7 +20,7 @@ function selectSheetInitialSettingsImport() {
   input.click();
 }
 
-async function importSheetInitialSettings(file) {
+export async function importSheetInitialSettings(file) {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
@@ -30,14 +35,14 @@ async function importSheetInitialSettings(file) {
   }
 }
 
-async function resetAddDefaults() {
+export async function resetAddDefaults() {
   if (!confirm('Reset sheet defaults? Available camera and lens options will not be changed.')) return;
   await db.presets.delete('user_defaults');
   await renderAddDefaultsSummary();
   alert('Sheet defaults have been reset.');
 }
 
-async function renderAddDefaultsSummary() {
+export async function renderAddDefaultsSummary() {
   const summary = document.getElementById('addDefaultsSummary');
   if (!summary) return;
   const values = (await db.presets.get('user_defaults'))?.values;
@@ -50,3 +55,5 @@ async function renderAddDefaultsSummary() {
   const enabledCount = Object.values(getInitialSettingEnabledFields(values)).filter(Boolean).length;
   summary.innerHTML = `<span class="text-emerald-400">Configured</span><span class="text-slate-500"> — ${fields.join(' / ') || 'No general information'} / Cameras: ${cameras} / Applied fields: ${enabledCount}</span>`;
 }
+
+Object.assign(globalThis, { exportSheetInitialSettings, selectSheetInitialSettingsImport, importSheetInitialSettings, resetAddDefaults, renderAddDefaultsSummary });
