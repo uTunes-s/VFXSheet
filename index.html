@@ -707,7 +707,7 @@
       document.body.classList.add('overflow-hidden');
     }
 
-    async function renderList() {
+    async function renderListLegacy() {
       const records = await db.sheets.reverse().toArray();
       const availableIds = new Set(records.map(record => record.id));
       [...selectedRecordIds].forEach(id => { if (!availableIds.has(id)) selectedRecordIds.delete(id); });
@@ -881,6 +881,7 @@
   <script src="js/preset-list-renderer.js"></script>
   <script src="js/camera-tabs-renderer.js"></script>
   <script src="js/record-preview.js"></script>
+  <script src="js/record-list-renderer.js"></script>
   <script src="js/pdf-print-record.js"></script>
   <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-text-record.js"></script>
