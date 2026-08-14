@@ -1,5 +1,4 @@
-// ES module application entry point. It coordinates the remaining classic
-// feature scripts while they are migrated one feature group at a time.
+// ES module application entry point. Vendor globals load before feature modules.
 import './app-shell.js';
 import { initEventDelegation } from './event-delegation.js';
 import './utils.js';
@@ -10,7 +9,7 @@ import './preset-catalog-meta.js';
 import './preset-catalog-cameras.js';
 import './preset-catalog-lenses.js';
 
-const CLASSIC_ASSETS = [
+const VENDOR_ASSETS = [
   '../vendor/tailwindcss.js',
   '../vendor/dexie.js',
   '../vendor/fabric.min.js',
@@ -19,7 +18,7 @@ const CLASSIC_ASSETS = [
   '../vendor/japanese-pdf-font.js'
 ];
 
-function loadClassicScript(source) {
+function loadVendorScript(source) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = new URL(source, import.meta.url).href;
@@ -30,6 +29,7 @@ function loadClassicScript(source) {
   });
 }
 
+for (const source of VENDOR_ASSETS) await loadVendorScript(source);
 await import('./database.js');
 const { initPresets } = await import('./preset-store.js');
 await import('./preset-actions.js');
@@ -80,7 +80,6 @@ await import('./flowpt-export.js');
 await import('./pdf-text-record.js');
 await import('./pdf-print-record.js');
 await import('./pdf-print-export.js');
-for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
 await initPresets();
