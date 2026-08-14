@@ -686,7 +686,7 @@
 
     // Render & Export
 
-    async function openRecordPreview(id) {
+    async function openRecordPreviewLegacy(id) {
       const record = await db.sheets.get(id);
       if (!record) return alert('Record not found.');
       const safe = escapeHtml;
@@ -880,6 +880,7 @@
   <script src="js/initial-settings-editor.js"></script>
   <script src="js/preset-list-renderer.js"></script>
   <script src="js/camera-tabs-renderer.js"></script>
+  <script src="js/record-preview.js"></script>
   <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-text-record.js"></script>
   <script src="js/pdf-page-renderer.js"></script>
