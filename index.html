@@ -410,8 +410,6 @@
 
     // Camera names are curated from the Camera Database by Matchmove Machine.
     // Keep the catalogue local so the field app remains fully usable offline.
-    const presetCategories = ['Cine', 'Photo', 'Phone', 'Drone', 'Custom'];
-    const defaultMovements = ['Fix', 'Pan', 'Rail', 'Steady', 'Jib', 'Crane', 'Handy', 'Drone', 'Rail Jib', 'Other'].map(name => ({ name, enabled: true }));
     const defaultCameras = [
       { name: 'ARRI Alexa 35', category: 'Cine', enabled: false },
       { name: 'ARRI Alexa 35 Live', enabled: false },
@@ -846,6 +844,7 @@
   <script src="js/form-ui.js"></script>
   <script src="js/shot-thumbnails.js"></script>
   <script src="js/gps.js"></script>
+  <script src="js/preset-catalog-meta.js"></script>
   <script src="js/preset-normalizers.js"></script>
   <script src="js/preset-store.js"></script>
   <script src="js/preset-actions.js"></script>
