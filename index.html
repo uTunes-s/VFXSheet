@@ -559,7 +559,7 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-    function renderCameraTabContent() {
+    function renderCameraTabContentLegacy() {
       const container = document.getElementById('cameraTabContents');
       const cam = cameraListState[activeCamIndex];
       if (!cam) return;
@@ -880,6 +880,7 @@
   <script src="js/initial-settings-editor.js"></script>
   <script src="js/preset-list-renderer.js"></script>
   <script src="js/camera-tabs-renderer.js"></script>
+  <script src="js/camera-tab-content-renderer.js"></script>
   <script src="js/record-preview.js"></script>
   <script src="js/record-list-renderer.js"></script>
   <script src="js/pdf-print-record.js"></script>

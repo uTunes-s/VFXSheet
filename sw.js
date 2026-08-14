@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v148';
+const CACHE_NAME = 'vfx-sheet-v149';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -55,6 +55,7 @@ const APP_SHELL = [
   './js/pdf-page-renderer.js',
   './js/preset-list-renderer.js',
   './js/camera-tabs-renderer.js',
+  './js/camera-tab-content-renderer.js',
   './js/record-preview.js',
   './js/pdf-print-record.js',
   './js/record-list-renderer.js',
