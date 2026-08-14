@@ -1,8 +1,10 @@
 // Record editor modal lifecycle.
-async function openNewRecordModal() {
-  isConfiguringAddDefaults = false;
-  currentEditingId = null;
-  recordDraftBeforeHistoryEdit = null;
+import { state } from './state.js';
+
+export async function openNewRecordModal() {
+  state.isConfiguringAddDefaults = false;
+  state.currentEditingId = null;
+  state.recordDraftBeforeHistoryEdit = null;
   openEditRecordModal(false);
   document.getElementById('editRecordModalTitle').innerText = 'New VFX Sheet';
   document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
@@ -15,19 +17,19 @@ async function openNewRecordModal() {
   document.getElementById('submitBtnContainer').innerHTML = '<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>';
 }
 
-function openEditRecordModal(showActions = true) {
+export function openEditRecordModal(showActions = true) {
   const modal = document.getElementById('editRecordModal');
   const form = document.getElementById('vfxForm');
   document.getElementById('editRecordModalContent').appendChild(form);
   modal.classList.remove('hidden');
   document.getElementById('editRecordModalActions').classList.toggle('hidden', !showActions);
   document.getElementById('editRecordModalActions').classList.toggle('flex', showActions);
-  isEditingInModal = true;
+  state.isEditingInModal = true;
   document.body.classList.add('overflow-hidden');
 }
 
-function closeEditRecordModal() {
-  if (!isEditingInModal) return;
+export function closeEditRecordModal() {
+  if (!state.isEditingInModal) return;
   const form = document.getElementById('vfxForm');
   form.classList.remove('configuring-initial-settings');
   form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
@@ -38,19 +40,19 @@ function closeEditRecordModal() {
     document.getElementById(id).classList.add('hidden');
     document.getElementById(id).classList.remove('flex');
   }
-  isEditingInModal = false;
+  state.isEditingInModal = false;
   document.body.classList.remove('overflow-hidden');
   document.getElementById('editRecordModalTitle').innerText = 'Edit VFX Sheet';
-  isConfiguringAddDefaults = false;
-  if (currentEditingId && recordDraftBeforeHistoryEdit) {
-    restoreRecordDraft(recordDraftBeforeHistoryEdit);
-    recordDraftBeforeHistoryEdit = null;
-  } else if (currentEditingId) {
+  state.isConfiguringAddDefaults = false;
+  if (state.currentEditingId && state.recordDraftBeforeHistoryEdit) {
+    restoreRecordDraft(state.recordDraftBeforeHistoryEdit);
+    state.recordDraftBeforeHistoryEdit = null;
+  } else if (state.currentEditingId) {
     cancelEditMode();
   }
 }
 
-function captureRecordDraft() {
+export function captureRecordDraft() {
   saveActiveTabState();
   const formValues = {};
   document.querySelectorAll('#vfxForm input:not([type="file"]), #vfxForm textarea, #vfxForm select').forEach(element => {
@@ -59,11 +61,11 @@ function captureRecordDraft() {
       ? [...element.selectedOptions].map(option => option.value)
       : element.type === 'checkbox' ? element.checked : element.value;
   });
-  return { formValues, cameras: cameraListState.map(camera => ({ ...camera })), activeCamIndex, thumbnails: [...pendingShotThumbnails], canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '' };
+  return { formValues, cameras: state.cameraListState.map(camera => ({ ...camera })), activeCamIndex: state.activeCamIndex, thumbnails: [...state.pendingShotThumbnails], canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '' };
 }
 
-function restoreRecordDraft(draft) {
-  currentEditingId = null;
+export function restoreRecordDraft(draft) {
+  state.currentEditingId = null;
   document.getElementById('editModeBanner').classList.add('hidden');
   document.getElementById('submitBtnContainer').innerHTML = '<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>';
   Object.entries(draft.formValues).forEach(([id, value]) => {
@@ -76,10 +78,12 @@ function restoreRecordDraft(draft) {
     else element.value = value;
   });
   toggleHdriWeather(document.getElementById('hdri_captured').checked);
-  cameraListState = draft.cameras.map(camera => ({ ...camera }));
-  activeCamIndex = Math.min(draft.activeCamIndex, Math.max(0, cameraListState.length - 1));
-  pendingShotThumbnails = [...draft.thumbnails];
+  state.cameraListState = draft.cameras.map(camera => ({ ...camera }));
+  state.activeCamIndex = Math.min(draft.activeCamIndex, Math.max(0, state.cameraListState.length - 1));
+  state.pendingShotThumbnails = [...draft.thumbnails];
   renderCameraTabs();
   renderShotThumbnailPreviews();
   if (draft.canvasJson && fCanvas) fCanvas.loadFromJSON(draft.canvasJson, () => { fCanvas.renderAll(); setCanvasMode('select'); });
 }
+
+Object.assign(globalThis, { openNewRecordModal, openEditRecordModal, closeEditRecordModal, captureRecordDraft, restoreRecordDraft });
