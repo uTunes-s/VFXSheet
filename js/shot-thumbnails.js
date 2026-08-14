@@ -28,10 +28,8 @@ function renderShotThumbnailPreviews() {
     remove.type = 'button';
     remove.textContent = '×';
     remove.className = 'absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-700 text-xs text-white';
-    remove.onclick = () => {
-      pendingShotThumbnails.splice(index, 1);
-      renderShotThumbnailPreviews();
-    };
+    remove.dataset.action = 'remove-shot-thumbnail';
+    remove.dataset.thumbnailIndex = index;
 
     const order = document.createElement('div');
     order.className = 'absolute inset-x-0 bottom-0 flex justify-between bg-slate-950/80 px-0.5';
@@ -41,14 +39,18 @@ function renderShotThumbnailPreviews() {
     moveLeft.title = 'Move left';
     moveLeft.disabled = index === 0;
     moveLeft.className = 'px-1 text-xs text-amber-300 disabled:opacity-30';
-    moveLeft.onclick = () => moveShotThumbnail(index, -1);
+    moveLeft.dataset.action = 'move-shot-thumbnail';
+    moveLeft.dataset.thumbnailIndex = index;
+    moveLeft.dataset.direction = '-1';
     const moveRight = document.createElement('button');
     moveRight.type = 'button';
     moveRight.textContent = '→';
     moveRight.title = 'Move right';
     moveRight.disabled = index === pendingShotThumbnails.length - 1;
     moveRight.className = 'px-1 text-xs text-amber-300 disabled:opacity-30';
-    moveRight.onclick = () => moveShotThumbnail(index, 1);
+    moveRight.dataset.action = 'move-shot-thumbnail';
+    moveRight.dataset.thumbnailIndex = index;
+    moveRight.dataset.direction = '1';
     order.append(moveLeft, moveRight);
     wrapper.append(image, order, remove);
     preview.append(wrapper);

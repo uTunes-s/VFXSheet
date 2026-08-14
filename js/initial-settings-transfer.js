@@ -11,7 +11,7 @@ function selectSheetInitialSettingsImport() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json,application/json';
-  input.onchange = () => importSheetInitialSettings(input.files?.[0]);
+  input.addEventListener('change', () => importSheetInitialSettings(input.files?.[0]), { once: true });
   input.click();
 }
 
