@@ -1,6 +1,9 @@
 // Record history selection and deletion controls.
-function updateHistorySelectionControls(records = []) {
-  const selectedCount = selectedRecordIds.size;
+import { db } from './database.js';
+import { state } from './state.js';
+
+export function updateHistorySelectionControls(records = []) {
+  const selectedCount = state.selectedRecordIds.size;
   const deleteButton = document.getElementById('deleteSelectedBtn');
   const selectAllButton = document.getElementById('selectAllRecordsBtn');
   deleteButton.disabled = selectedCount === 0;
@@ -8,36 +11,38 @@ function updateHistorySelectionControls(records = []) {
   selectAllButton.innerText = records.length && selectedCount === records.length ? 'Clear Selection' : 'Select All';
 }
 
-function toggleRecordSelection(id, isSelected) {
-  if (isSelected) selectedRecordIds.add(id);
-  else selectedRecordIds.delete(id);
+export function toggleRecordSelection(id, isSelected) {
+  if (isSelected) state.selectedRecordIds.add(id);
+  else state.selectedRecordIds.delete(id);
   renderList();
 }
 
-async function toggleSelectAllRecords() {
+export async function toggleSelectAllRecords() {
   const records = await db.sheets.toArray();
-  if (records.length && selectedRecordIds.size === records.length) selectedRecordIds.clear();
-  else records.forEach(record => selectedRecordIds.add(record.id));
+  if (records.length && state.selectedRecordIds.size === records.length) state.selectedRecordIds.clear();
+  else records.forEach(record => state.selectedRecordIds.add(record.id));
   renderList();
 }
 
-async function getRecordsForHistoryAction() {
+export async function getRecordsForHistoryAction() {
   const records = await db.sheets.reverse().toArray();
-  return selectedRecordIds.size ? records.filter(record => selectedRecordIds.has(record.id)) : records;
+  return state.selectedRecordIds.size ? records.filter(record => state.selectedRecordIds.has(record.id)) : records;
 }
 
-async function deleteSelectedRecords() {
-  const ids = [...selectedRecordIds];
+export async function deleteSelectedRecords() {
+  const ids = [...state.selectedRecordIds];
   if (!ids.length || !confirm(`Delete ${ids.length} selected record(s)? This action cannot be undone.`)) return;
   await db.sheets.bulkDelete(ids);
-  if (currentEditingId && ids.includes(currentEditingId)) closeEditRecordModal();
-  selectedRecordIds.clear();
+  if (state.currentEditingId && ids.includes(state.currentEditingId)) closeEditRecordModal();
+  state.selectedRecordIds.clear();
   renderList();
 }
 
-async function deleteRecord(id) {
+export async function deleteRecord(id) {
   if (!confirm(`Delete Record ID: ${id}?`)) return;
   await db.sheets.delete(id);
-  if (currentEditingId === id) cancelEditMode();
+  if (state.currentEditingId === id) cancelEditMode();
   renderList();
 }
+
+Object.assign(globalThis, { updateHistorySelectionControls, toggleRecordSelection, toggleSelectAllRecords, getRecordsForHistoryAction, deleteSelectedRecords, deleteRecord });

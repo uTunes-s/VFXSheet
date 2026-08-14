@@ -19,7 +19,7 @@ const CLASSIC_ASSETS = [
   '../vendor/japanese-pdf-font.js',
   './default-settings.js', './form-ui.js', './shot-thumbnails.js', './gps.js',
   './media-modals.js', './record-thumbnails.js', './camera-model.js', './camera-tabs-state.js', './camera-tabs-interactions.js',
-  './canvas-history.js', './canvas-style.js', './canvas-mode.js', './canvas-images.js', './record-modal.js', './record-flow.js', './record-save.js', './record-selection.js', './record-load.js', './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
+  './canvas-history.js', './canvas-style.js', './canvas-mode.js', './canvas-images.js', './record-modal.js', './record-flow.js', './record-save.js', './record-load.js', './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
   './initial-settings-ui.js', './initial-settings-transfer.js', './initial-settings-comparison.js', './initial-settings-load.js', './initial-settings-reset.js', './initial-settings-editor.js', './camera-tabs-renderer.js', './camera-tab-content-renderer.js', './record-preview.js', './record-list-renderer.js', './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
 ];
 
@@ -41,6 +41,7 @@ await import('./preset-modal.js');
 await import('./preset-options.js');
 await import('./preset-list-renderer.js');
 await import('./preset-transfer.js');
+await import('./record-selection.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
