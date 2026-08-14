@@ -1,6 +1,13 @@
 // Active camera settings form rendering.
-function renderCameraTabContent() {
+import { state } from './state.js';
+import { escapeHtml } from './utils.js';
+import { getCameraFieldLabel, getCameraReelName } from './camera-model.js';
+import { cachedCamPresets, cachedLensPresets, cachedMovementPresets } from './preset-store.js';
+import { renderPresetOptions } from './preset-options.js';
+
+export function renderCameraTabContent() {
   const container = document.getElementById('cameraTabContents');
+  const { cameraListState, activeCamIndex } = state;
   const camera = cameraListState[activeCamIndex];
   if (!camera) return;
   const label = getCameraFieldLabel(camera);
@@ -19,3 +26,5 @@ function renderCameraTabContent() {
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div><label class="form-label" data-initial-setting="camera_${activeCamIndex}_cramerawork_preset">${label} Movement</label><div class="flex gap-2"><select id="tab_cramerawork_preset" data-action="tab-preset-change" data-preset-type="cramerawork" class="form-select ${customClass(camera.cramerawork_preset)}"><option value="">(Select)</option>${movementItems.map(item => `<option value="${escapeHtml(item.name)}" ${camera.cramerawork_preset === item.name ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}<option value="__custom__" ${camera.cramerawork_preset === '__custom__' ? 'selected' : ''}>Custom / Other</option></select>${customInput('tab_cramerawork_custom', camera.cramerawork_custom, 'Movement', camera.cramerawork_preset === '__custom__')}</div></div>${field('height_value', `${label} Lens Height`, '150cm', 'font-mono')}${field('distance_value', `${label} Target Distance`, '3.5m', 'font-mono')}${field('tilt_value', `${label} Tilt Angle`, '+10° / -5°', 'font-mono')}</div>
     <div class="pt-2 border-t border-slate-800/60"><label class="form-label font-semibold text-amber-400/80 uppercase" data-initial-setting="camera_${activeCamIndex}_reference_flags">${label} Reference Checklist</label><div class="grid grid-cols-3 gap-3">${flag('flag_chart', 'Color Chart & Sphere')}${flag('flag_cleanplate', 'Clean Plate')}${flag('flag_reference', 'VFX Reference')}</div></div>`;
 }
+
+  Object.assign(globalThis, { renderCameraTabContent });
