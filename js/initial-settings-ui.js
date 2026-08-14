@@ -1,5 +1,7 @@
 // Controls used while configuring the fields applied to new VFX Sheets.
-function showInitialSettingToggles(enabled) {
+import { state } from './state.js';
+
+export function showInitialSettingToggles(enabled) {
   const form = document.getElementById('vfxForm');
   form.classList.add('configuring-initial-settings');
   form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
@@ -20,18 +22,20 @@ function showInitialSettingToggles(enabled) {
   });
 }
 
-function getVisibleInitialSettingStates() {
-  const states = { ...initialSettingToggleStates };
+export function getVisibleInitialSettingStates() {
+  const states = { ...state.initialSettingToggleStates };
   document.querySelectorAll('[id^="initialSetting_"]').forEach(input => {
     states[input.id.replace('initialSetting_', '')] = input.checked;
   });
-  initialSettingToggleStates = states;
+  state.initialSettingToggleStates = states;
   return states;
 }
 
-function markInitialSettingEnabled(key) {
-  if (!isConfiguringAddDefaults) return;
+export function markInitialSettingEnabled(key) {
+  if (!state.isConfiguringAddDefaults) return;
   const toggle = document.getElementById(`initialSetting_${key}`);
   if (toggle) toggle.checked = true;
-  initialSettingToggleStates[key] = true;
+  state.initialSettingToggleStates[key] = true;
 }
+
+Object.assign(globalThis, { showInitialSettingToggles, getVisibleInitialSettingStates, markInitialSettingEnabled });

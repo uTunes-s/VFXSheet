@@ -20,7 +20,7 @@ const CLASSIC_ASSETS = [
   './form-ui.js', './shot-thumbnails.js', './gps.js',
   './media-modals.js', './record-thumbnails.js',
   './canvas-history.js', './canvas-style.js', './canvas-mode.js', './canvas-images.js', './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
-  './initial-settings-ui.js', './initial-settings-transfer.js', './initial-settings-editor.js', './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
+  './initial-settings-transfer.js', './initial-settings-editor.js', './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
 ];
 
 function loadClassicScript(source) {
@@ -57,6 +57,7 @@ await import('./default-settings.js');
 await import('./initial-settings-comparison.js');
 await import('./initial-settings-load.js');
 await import('./initial-settings-reset.js');
+await import('./initial-settings-ui.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
