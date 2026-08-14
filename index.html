@@ -9,44 +9,11 @@
   
   <meta name="theme-color" content="#090d16">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-180.png" sizes="180x180" type="image/png">
+  <link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-  <script src="vendor/tailwindcss.js"></script>
-  <script src="vendor/dexie.js"></script>
-  <script src="vendor/fabric.min.js"></script>
-  <script src="vendor/jspdf.umd.min.js"></script>
-  <script src="vendor/jspdf.plugin.autotable.min.js"></script>
-  <script src="vendor/japanese-pdf-font.js"></script>
-
-  <style>
-    body { 
-      -webkit-tap-highlight-color: transparent; 
-      overscroll-behavior: none; 
-    }
-    .form-label { 
-      display: block;
-      margin-bottom: 0.25rem;
-      color: #94a3b8;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    .form-input, .form-select, textarea { 
-      width: 100%;
-      padding: 0.625rem;
-      background: #020617;
-      color: #f1f5f9;
-      border: 1px solid #1e293b;
-      border-radius: 0.5rem;
-      font-size: 0.875rem;
-      color-scheme: dark;
-    }
-    .form-input:focus, .form-select:focus, textarea:focus { border-color: #fbbf24; outline: none; }
-    .form-input::placeholder, textarea::placeholder { color: #475569; }
-    option {
-      background-color: #020617;
-      color: #f1f5f9;
-    }
-    #noteCanvas, .canvas-container { touch-action: pan-y pinch-zoom !important; }
-  </style>
+  <link rel="stylesheet" href="css/app.css">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 pb-28 md:p-6 md:pb-28 font-sans antialiased">
 
@@ -58,11 +25,8 @@
         <p class="text-xs text-slate-400">Multi-Cam VFX Field Production Logger</p>
       </div>
       <div class="flex items-center gap-2">
-        <button type="button" onclick="saveCurrentAsDefaultSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
-          💾 Save Defaults
-        </button>
-        <button type="button" onclick="loadDefaultSettings()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
-          📥 Load Defaults
+        <button type="button" data-action="open-defaults-editor" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/40 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1" title="Configure defaults for new sheets">
+          ⚙️ Sheet Defaults
         </button>
         <div id="netStatus" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
           <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
@@ -72,8 +36,8 @@
     </header>
 
     <!-- Record Sheet Page -->
-    <section id="recordPage">
-    <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" onkeydown="preventFormEnterSubmit(event)" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+    <section id="recordPage" class="hidden">
+    <form id="vfxForm" data-action="save-record" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
       
       <!-- Edit Mode Banner -->
       <div id="editModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center">
@@ -88,41 +52,41 @@
         <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">1. General Information</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">Operator</label>
+            <label class="form-label" data-initial-setting="operator">Operator</label>
             <input type="text" id="operator" placeholder="Name" class="form-input">
           </div>
           <div>
-            <label class="form-label">Show Title</label>
+            <label class="form-label" data-initial-setting="show_title">Show Title</label>
             <input type="text" id="show_title" placeholder="Project Name" class="form-input">
           </div>
           <div>
-            <label class="form-label">Date & Time</label>
+            <label class="form-label" data-initial-setting="shoot_datetime">Date & Time</label>
             <input type="datetime-local" id="shoot_datetime" class="form-input">
           </div>
           <div>
-            <label class="form-label">Location</label>
+            <label class="form-label" data-initial-setting="location">Location</label>
             <input type="text" id="location" placeholder="Stage A / Location" class="form-input">
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <label class="form-label">Episode</label>
+            <label class="form-label" data-initial-setting="episode">Episode</label>
             <input type="text" id="episode" placeholder="EP01" class="form-input">
           </div>
           <div>
-            <label class="form-label">Scene</label>
+            <label class="form-label" data-initial-setting="scene">Scene</label>
             <input type="text" id="scene" placeholder="S01" required class="form-input font-mono font-bold text-amber-300">
           </div>
           <div>
-            <label class="form-label">Shot</label>
+            <label class="form-label" data-initial-setting="shot">Shot</label>
             <input type="text" id="shot" placeholder="001" required class="form-input font-mono font-bold text-amber-300">
           </div>
           <div>
-            <label class="form-label">GPS Location / Place</label>
+            <label class="form-label" data-initial-setting="gps_location">GPS Location / Place</label>
             <div class="flex flex-wrap sm:flex-nowrap gap-2">
               <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-[120px]" readonly>
-              <button type="button" onclick="getGPSLocation()" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
+              <button type="button" data-action="get-gps" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
                 📍 Get GPS
               </button>
             </div>
@@ -136,12 +100,12 @@
       <div class="space-y-3">
         <div class="flex justify-between items-center">
           <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">2. Multi-Camera Setup</h2>
-          <button type="button" onclick="openPresetModal()" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
+          <button type="button" data-action="open-preset-modal" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
         </div>
 
         <!-- Camera Tabs Header -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1" id="cameraTabHeader">
-          <button type="button" onclick="addCameraTab()" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
+          <button type="button" data-action="add-camera" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
             ➕ Add Camera
           </button>
         </div>
@@ -156,11 +120,11 @@
 
       <!-- Section 3: HDRI Setup -->
       <div class="space-y-3">
-        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">3. HDRI Setup</h2>
+        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider" data-initial-setting="hdri">3. HDRI Setup</h2>
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
           <div class="flex items-center gap-3">
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="hdri_captured" onchange="toggleHdriWeather(this.checked)" class="sr-only peer">
+              <input type="checkbox" id="hdri_captured" data-action="toggle-hdri" class="sr-only peer">
               <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
             <span class="text-sm font-bold text-slate-200">HDRI Captured</span>
@@ -194,74 +158,76 @@
         <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">4. VFX Field Notes & Sketch</h2>
         
         <div class="w-full">
+          <label class="form-label" data-initial-setting="notes">Notes</label>
           <textarea id="notes" rows="2" placeholder="Write general notes, spatial info, lighting details..." class="form-input w-full"></textarea>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
           <div class="flex-1">
-            <label class="form-label">Shot Data Thumbnail</label>
+            <label class="form-label" data-initial-setting="shot_thumbnails">Shot Data Thumbnail</label>
             <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
           </div>
-          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" onchange="addShotThumbnails(event)">
-          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addShotThumbnails(event)">
-          <button type="button" onclick="document.getElementById('shotThumbnailLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
-          <button type="button" onclick="document.getElementById('shotThumbnailCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
-          <button type="button" onclick="clearShotThumbnail()" class="text-xs text-rose-300 px-2 py-2">Clear</button>
+          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" data-action="add-shot-thumbnails">
+          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-shot-thumbnails">
+          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailLibraryInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
+          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailCameraInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
+          <button type="button" data-action="clear-shot-thumbnails" class="text-xs text-rose-300 px-2 py-2">Clear</button>
           <div id="shotThumbnailPreview" class="hidden flex flex-wrap gap-2" aria-label="Shot thumbnail previews"></div>
         </div>
 
         <div class="space-y-2 pt-1">
+          <label class="form-label" data-initial-setting="sketch">Sketch</label>
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <button type="button" onclick="setCanvasMode('draw')" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
-            <button type="button" onclick="setCanvasMode('erase')" id="btnErase" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">🧽 Eraser</button>
-            <button type="button" onclick="setCanvasMode('select')" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
-            <button type="button" onclick="addTextToNote()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="draw" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="erase" id="btnErase" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">🧽 Eraser</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="select" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
+            <button type="button" data-action="add-canvas-text" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
 
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <label for="drawBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Draw</label>
-              <input type="range" id="drawBrushSize" min="1" max="30" value="3" oninput="setCanvasBrushSize('draw', this.value)" class="w-16 accent-amber-400" aria-label="Draw brush size">
+              <input type="range" id="drawBrushSize" min="1" max="30" value="3" data-action="set-brush-size" data-brush="draw" class="w-16 accent-amber-400" aria-label="Draw brush size">
               <span id="drawBrushSizeValue" class="w-4 text-[10px] font-mono text-slate-300">3</span>
             </div>
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <label for="eraserBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Erase</label>
-              <input type="range" id="eraserBrushSize" min="4" max="100" value="24" oninput="setCanvasBrushSize('erase', this.value)" class="w-16 accent-amber-400" aria-label="Eraser size">
+              <input type="range" id="eraserBrushSize" min="4" max="100" value="24" data-action="set-brush-size" data-brush="erase" class="w-16 accent-amber-400" aria-label="Eraser size">
               <span id="eraserBrushSizeValue" class="w-5 text-[10px] font-mono text-slate-300">24</span>
             </div>
 
             <!-- Undo / Redo Buttons -->
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
-              <button type="button" id="btnUndo" onclick="undoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
-              <button type="button" id="btnRedo" onclick="redoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
+              <button type="button" id="btnUndo" data-action="undo-canvas" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
+              <button type="button" id="btnRedo" data-action="redo-canvas" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
             </div>
 
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <span class="text-[10px] text-slate-400 uppercase font-bold">Layer:</span>
-              <button type="button" onclick="moveSelectedLayer('front')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring forward">↑</button>
-              <button type="button" onclick="moveSelectedLayer('back')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send backward">↓</button>
-              <button type="button" onclick="moveSelectedLayer('top')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring to front">⇈</button>
-              <button type="button" onclick="moveSelectedLayer('bottom')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send to back">⇊</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="front" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring forward">↑</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="back" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send backward">↓</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="top" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring to front">⇈</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="bottom" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send to back">⇊</button>
             </div>
 
             <!-- Color Palette -->
             <div class="flex items-center gap-1.5 border-l border-slate-800 pl-2">
               <span class="text-[10px] text-slate-400 uppercase font-bold">Color:</span>
-              <button type="button" onclick="setCanvasColor('#00ffff')" class="w-5 h-5 rounded-full bg-[#00ffff] border border-slate-600 focus:scale-110 transition-transform" title="Cyan"></button>
-              <button type="button" onclick="setCanvasColor('#f59e0b')" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-slate-600 focus:scale-110 transition-transform" title="Amber"></button>
-              <button type="button" onclick="setCanvasColor('#f43f5e')" class="w-5 h-5 rounded-full bg-[#f43f5e] border border-slate-600 focus:scale-110 transition-transform" title="Rose"></button>
-              <button type="button" onclick="setCanvasColor('#84cc16')" class="w-5 h-5 rounded-full bg-[#84cc16] border border-slate-600 focus:scale-110 transition-transform" title="Lime"></button>
-              <button type="button" onclick="setCanvasColor('#ffffff')" class="w-5 h-5 rounded-full bg-[#ffffff] border border-slate-600 focus:scale-110 transition-transform" title="White"></button>
-              <input type="color" id="customCanvasColor" value="#00ffff" onchange="setCanvasColor(this.value)" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
+              <button type="button" data-action="set-canvas-color" data-color="#00ffff" class="w-5 h-5 rounded-full bg-[#00ffff] border border-slate-600 focus:scale-110 transition-transform" title="Cyan"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#f59e0b" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-slate-600 focus:scale-110 transition-transform" title="Amber"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#f43f5e" class="w-5 h-5 rounded-full bg-[#f43f5e] border border-slate-600 focus:scale-110 transition-transform" title="Rose"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#84cc16" class="w-5 h-5 rounded-full bg-[#84cc16] border border-slate-600 focus:scale-110 transition-transform" title="Lime"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#ffffff" class="w-5 h-5 rounded-full bg-[#ffffff] border border-slate-600 focus:scale-110 transition-transform" title="White"></button>
+              <input type="color" id="customCanvasColor" value="#00ffff" data-action="set-canvas-color" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
             </div>
             
-            <input type="file" id="noteImgLibraryInput" accept="image/*" class="hidden" onchange="addFreeImageToCanvas(event)">
-            <input type="file" id="noteImgCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addFreeImageToCanvas(event)">
-            <button type="button" onclick="document.getElementById('noteImgLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">🖼️ Library</button>
-            <button type="button" onclick="document.getElementById('noteImgCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">📷 Camera</button>
+            <input type="file" id="noteImgLibraryInput" accept="image/*" class="hidden" data-action="add-canvas-image">
+            <input type="file" id="noteImgCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-canvas-image">
+            <button type="button" data-action="open-file-input" data-input-id="noteImgLibraryInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">🖼️ Library</button>
+            <button type="button" data-action="open-file-input" data-input-id="noteImgCameraInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">📷 Camera</button>
             
             <div class="ml-auto flex gap-2">
-              <button type="button" onclick="deleteSelected()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
-              <button type="button" onclick="clearNoteCanvas()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Clear All</button>
+              <button type="button" data-action="delete-canvas-selection" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
+              <button type="button" data-action="clear-canvas" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Clear All</button>
             </div>
           </div>
 
@@ -280,31 +246,33 @@
     </form>
     </section>
 
-    <!-- History Page -->
-    <section id="historyPage" class="hidden bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
-      <div class="flex flex-wrap justify-between items-center gap-2">
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Records History (<span id="totalCount">0</span>)</h2>
-        <div class="flex flex-wrap gap-2 justify-end">
-          <button id="selectAllRecordsBtn" type="button" onclick="toggleSelectAllRecords()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
+    <!-- Record Sheets Page -->
+    <section id="historyPage" class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800/80 space-y-3">
+      <div class="space-y-2">
+        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Record Sheets (<span id="totalCount">0</span>)</h2>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <button type="button" data-action="open-new-record" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow">➕ Add</button>
+        <div class="flex flex-wrap justify-end gap-2">
+          <button id="selectAllRecordsBtn" type="button" data-action="toggle-select-all-records" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
             Select All
           </button>
-          <button id="deleteSelectedBtn" type="button" onclick="deleteSelectedRecords()" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
+          <button id="deleteSelectedBtn" type="button" data-action="delete-selected-records" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
             Delete Selected (0)
           </button>
-          <button id="exportCsvBtn" type="button" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
-            📦 Export FlowPT ZIP
+          <button id="exportCsvBtn" type="button" data-action="export-csv" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+            📦 ZIP
           </button>
-          <button id="exportPdfBtn" type="button" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
-            📄 Export PDF
+          <button id="exportPdfBtn" type="button" data-action="export-pdf" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+            📄 PDF
           </button>
-          <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <button id="exportBackupBtn" data-action="export-backup" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             💾 Full Backup JSON
           </button>
-          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="importBackupJSON(event)">
-          <button type="button" onclick="document.getElementById('importBackupInput').click()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" data-action="import-backup">
+          <button type="button" data-action="open-file-input" data-input-id="importBackupInput" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             📥 Import Full Backup
           </button>
-          <button id="syncBtn" onclick="syncData()" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <button id="syncBtn" data-action="sync-data" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             Sync to FlowPT
           </button>
         </div>
@@ -317,33 +285,49 @@
   </div>
 
   <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700 bg-slate-950/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur" aria-label="Main navigation">
-    <div class="mx-auto grid max-w-md grid-cols-3 gap-2">
-      <button type="button" id="recordNavBtn" onclick="switchAppPage('record')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
-        <span class="text-xl leading-5">📝</span><span>Record Sheet</span>
+    <div class="mx-auto grid max-w-md grid-cols-2 gap-2">
+      <button type="button" id="historyNavBtn" data-action="switch-page" data-page="history" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
+        <span class="text-xl leading-5">📚</span><span>Record Sheets <span id="historyNavCount">(0)</span></span>
       </button>
-      <button type="button" id="historyNavBtn" onclick="switchAppPage('history')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
-        <span class="text-xl leading-5">📚</span><span>History <span id="historyNavCount">(0)</span></span>
-      </button>
-      <button type="button" onclick="openPresetModal()" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
+      <button type="button" data-action="open-preset-modal" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
         <span class="text-xl leading-5">⚙️</span><span>Settings</span>
       </button>
     </div>
   </nav>
 
   <div id="editRecordModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="editRecordModalTitle">
-    <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
+    <div class="mx-auto flex h-full w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-800 px-4 py-3">
         <h2 id="editRecordModalTitle" class="text-sm font-bold text-amber-400">Edit VFX Sheet</h2>
         <div class="flex items-center gap-2">
-          <div id="editRecordModalActions" class="hidden items-center gap-2">
-            <button type="button" onclick="saveRecord(event, 'new')" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
-            <button type="button" onclick="saveRecord(event, 'update')" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
+          <div id="initialSettingsModalActions" class="hidden items-center gap-2">
+            <button type="button" data-action="export-sheet-defaults" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Export</button>
+            <button type="button" data-action="import-sheet-defaults" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Import</button>
+            <button type="button" data-action="save-sheet-defaults" class="rounded-lg bg-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-900 hover:bg-white">Save</button>
           </div>
-          <button type="button" onclick="closeEditRecordModal()" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+          <div id="editRecordModalActions" class="hidden items-center gap-2">
+            <button type="button" data-action="save-new-record" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
+            <button type="button" data-action="save-existing-record" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
+          </div>
+          <button type="button" data-action="close-edit-modal" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
         </div>
       </div>
       <div id="editRecordModalContent" class="flex-1 overflow-y-auto p-3 md:p-5"></div>
     </div>
+  </div>
+
+  <div id="recordPreviewModal" class="fixed inset-0 z-[60] hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="recordPreviewModalTitle">
+    <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
+      <div class="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
+        <div class="flex min-w-0 flex-1 items-center gap-4 overflow-hidden"><h2 id="recordPreviewModalTitle" class="shrink-0 truncate text-sm font-bold text-amber-400">VFX Sheet Preview</h2><div id="recordPreviewModalMeta" class="shrink-0 text-[10px] leading-4 text-slate-400"></div></div>
+        <button type="button" data-action="close-preview-modal" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+      </div>
+      <div id="recordPreviewModalContent" class="flex-1 overflow-y-auto p-3 md:p-4"></div>
+    </div>
+  </div>
+
+  <div id="mediaLightbox" class="fixed inset-0 z-[70] hidden cursor-zoom-out items-center justify-center bg-black/95 p-4" role="dialog" aria-label="Expanded image" data-action="close-media-lightbox">
+    <img id="mediaLightboxImage" src="" alt="Expanded preview" class="max-h-full max-w-full rounded-lg object-contain">
   </div>
 
   <!-- Presets & Settings Modal -->
@@ -351,26 +335,20 @@
     <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="font-bold text-amber-400 text-sm">Presets & Global Config Management</h3>
-        <button type="button" onclick="closePresetModal()" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button type="button" data-action="close-preset-modal" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
-        <div class="flex justify-between items-center">
-          <div>
-            <span class="text-xs font-bold text-slate-200 block">Default Setup & Preset Export/Import</span>
-            <span class="text-[11px] text-slate-500">Save current input as default, or share configuration via JSON file.</span>
-          </div>
-          <button type="button" onclick="saveCurrentAsDefaultSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
-            Save Current Form
-          </button>
+        <div>
+          <span class="text-xs font-bold text-slate-200 block">Preset Export / Import</span>
+          <span class="text-[11px] text-slate-500">Share camera, lens, and camera movement presets as JSON.</span>
         </div>
-
         <div class="flex gap-2 pt-1 border-t border-slate-900">
-          <button type="button" onclick="exportFullPresetsJSON()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+          <button type="button" data-action="export-presets" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
             📤 Export Config JSON
           </button>
-          <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importFullPresetsJSON(event)">
-          <button type="button" onclick="document.getElementById('importJsonInput').click()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+          <input type="file" id="importJsonInput" accept=".json" class="hidden" data-action="import-presets">
+          <button type="button" data-action="open-file-input" data-input-id="importJsonInput" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
             📥 Import Config JSON
           </button>
         </div>
@@ -378,2709 +356,43 @@
 
       <div class="space-y-4 overflow-y-auto pr-1 flex-1">
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Camera Models</label>
+          <label class="form-label text-amber-300 font-bold">Available Cameras</label>
           <div class="flex gap-2">
             <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
-            <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+            <button type="button" data-action="add-preset" data-preset-type="camera" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
           </div>
           <ul id="cameraPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
 
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Lens Models</label>
+          <label class="form-label text-amber-300 font-bold">Available Lenses</label>
           <div class="space-y-1.5">
             <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
             <div class="flex gap-2">
               <input type="text" id="newLensFocalInput" placeholder="Focal Length (e.g. 25mm)" class="form-input text-xs">
-              <button type="button" onclick="addPresetItem('lens')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+              <button type="button" data-action="add-preset" data-preset-type="lens" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
             </div>
           </div>
           <ul id="lensPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
 
         <div class="space-y-2">
-          <label class="form-label text-amber-300 font-bold">Camera Movement</label>
+          <label class="form-label text-amber-300 font-bold">Available Camera Movements</label>
           <div class="flex gap-2">
             <input type="text" id="newMovementInput" placeholder="e.g. Motion Control" class="form-input text-xs">
-            <button type="button" onclick="addPresetItem('movement')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+            <button type="button" data-action="add-preset" data-preset-type="movement" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
           </div>
           <ul id="movementPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
       </div>
 
       <div class="border-t border-slate-800 pt-3 flex justify-end gap-2">
-        <button type="button" onclick="resetPresetsToDefault()" class="text-xs text-rose-400 hover:text-rose-300 mr-auto">Reset All to System Default</button>
-        <button type="button" onclick="closePresetModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs border border-slate-700">Close</button>
+        <button type="button" data-action="reset-presets" class="text-xs text-rose-400 hover:text-rose-300 mr-auto">Reset All to System Default</button>
+        <button type="button" data-action="close-preset-modal" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs border border-slate-700">Close</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // Dexie DB
-    const db = new Dexie("VfxSheetDB");
-    db.version(11).stores({
-      sheets: '++id, uuid, operator, show_title, scene, shot, synced, created_at',
-      presets: 'type'
-    }).upgrade(async tx => {
-      await tx.table('sheets').toCollection().modify(record => {
-        if (!record.uuid) record.uuid = newUuid();
-        if (record.syncError === undefined) record.syncError = '';
-        if (!record.canvas_version && record.canvas_json) record.canvas_version = 5;
-      });
-    });
-
-    let currentEditingId = null;
-    let isEditingInModal = false;
-    const selectedRecordIds = new Set();
-    let japanesePdfFontPromise = null;
-    let recordDraftBeforeHistoryEdit = null;
-    let cameraListState = [];
-    let activeCamIndex = 0;
-    let currentDrawingColor = '#00ffff';
-    let pendingShotThumbnails = [];
-
-    function newUuid() {
-      return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16)}`;
-    }
-
-    // Camera names are curated from the Camera Database by Matchmove Machine.
-    // Keep the catalogue local so the field app remains fully usable offline.
-    const presetCategories = ['Cine', 'Photo', 'Phone', 'Drone', 'Custom'];
-    const defaultMovements = ['Fix', 'Pan', 'Rail', 'Steady', 'Jib', 'Crane', 'Handy', 'Drone', 'Rail Jib', 'Other'].map(name => ({ name, enabled: true }));
-    const defaultCameras = [
-      { name: 'ARRI Alexa 35', category: 'Cine', enabled: false },
-      { name: 'ARRI Alexa 35 Live', enabled: false },
-      { name: 'ARRI Alexa 65', enabled: false },
-      { name: 'ARRI Alexa LF', enabled: false },
-      { name: 'ARRI Alexa Mini', enabled: false },
-      { name: 'ARRI Alexa Mini LF', category: 'Cine', enabled: false },
-      { name: 'ARRI Alexa SXT', enabled: false },
-      { name: 'Blackmagic Design Cinema Camera 6K', enabled: false },
-      { name: 'Blackmagic Design PYXIS 6K', enabled: false },
-      { name: 'Blackmagic Design URSA Cine 12K', enabled: false },
-      { name: 'Canon C300 MK III', enabled: false },
-      { name: 'Canon C500 MK II', enabled: false },
-      { name: 'DJI Inspire 3', category: 'Drone', enabled: true },
-      { name: 'DJI Ronin 4D (Zenmuse X9-8K)', enabled: false },
-      { name: 'Panasonic EVA1 5.7K', enabled: false },
-      { name: 'Panasonic Varicam 35 / LT', enabled: false },
-      { name: 'RED Komodo 6K', enabled: false },
-      { name: 'RED Komodo-X', enabled: false },
-      { name: 'RED V-Raptor 8K S35', enabled: false },
-      { name: 'RED V-Raptor 8K VV', category: 'Cine', enabled: false },
-      { name: 'Sony Burano', enabled: false },
-      { name: 'Sony FX3', category: 'Cine', enabled: true },
-      { name: 'Sony FX6', category: 'Cine', enabled: false },
-      { name: 'Sony FX9', enabled: false },
-      { name: 'Sony Venice FF 6K 3:2', category: 'Cine', enabled: false },
-      { name: 'Sony Venice FF 5.7K 16:9', category: 'Cine', enabled: false },
-      { name: 'Sony Venice S35 4K 17:9', category: 'Cine', enabled: false },
-      { name: 'Sony Venice S35 3.8K 16:9', category: 'Cine', enabled: false },
-      { name: 'Sony Venice II FF 8.6K 3:2', category: 'Cine', enabled: true },
-      { name: 'Sony Venice II FF 8.1K 16:9', category: 'Cine', enabled: false },
-      { name: 'Sony Venice II FF 7.6K 16:9', category: 'Cine', enabled: true },
-      { name: 'Sony Venice II S35 5.8K 6:5', category: 'Cine', enabled: false },
-      { name: 'Sony Venice II S35 5.4K 16:9', category: 'Cine', enabled: true },
-      { name: 'Canon EOS R5 C', category: 'Photo', enabled: false },
-      { name: 'Canon EOS R5 Mark II', category: 'Photo', enabled: false },
-      { name: 'Fujifilm GFX100 II', category: 'Photo', enabled: false },
-      { name: 'Nikon Z8', category: 'Photo', enabled: false },
-      { name: 'Sony Alpha 1', category: 'Photo', enabled: true },
-      { name: 'Sony Alpha 1 II', category: 'Photo', enabled: false },
-      { name: 'Sony Alpha 7S III', category: 'Photo', enabled: false },
-      { name: 'Panasonic GH5', category: 'Photo', enabled: false },
-      { name: 'Panasonic GH5S', category: 'Photo', enabled: false },
-      { name: 'Panasonic GH6', category: 'Photo', enabled: false },
-      { name: 'Apple iPhone 15 Pro / Pro Max', category: 'Phone', enabled: false },
-      { name: 'Apple iPhone 16 Pro / Pro Max', category: 'Phone', enabled: false },
-      { name: 'Apple iPhone 17 Pro', category: 'Phone', enabled: false },
-      { name: 'Samsung Galaxy S24 Ultra', category: 'Phone', enabled: false },
-      { name: 'Google Pixel 9 Pro', category: 'Phone', enabled: false },
-      { name: 'DJI Mavic 3 Cine', category: 'Drone', enabled: false },
-      { name: 'DJI Mavic 3 Pro Cine', category: 'Drone', enabled: false },
-      { name: 'DJI Mavic 4 Pro', category: 'Drone', enabled: false },
-      { name: 'DJI Air 3S', category: 'Drone', enabled: false },
-      { name: 'DJI Mini 4 Pro', category: 'Drone', enabled: false }
-    ];
-    const defaultLenses = [
-      { name: 'ARRI Master Prime 18mm', focal: '18mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Master Prime 35mm', focal: '35mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Master Prime 50mm', focal: '50mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Master Prime 85mm', focal: '85mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Master Macro 100mm', focal: '100mm', category: 'Cine', series: 'ARRI Master Macro', enabled: false },
-      { name: 'ARRI Signature Prime 25mm', focal: '25mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 12mm', focal: '12mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 15mm', focal: '15mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 18mm', focal: '18mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 21mm', focal: '21mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 29mm', focal: '29mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 35mm', focal: '35mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 40mm', focal: '40mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 47mm', focal: '47mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 50mm', focal: '50mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 58mm', focal: '58mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 75mm', focal: '75mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 95mm', focal: '95mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 125mm', focal: '125mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 150mm', focal: '150mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 200mm', focal: '200mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Prime 280mm', focal: '280mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Zoom 16-32mm', focal: '16-32mm', category: 'Cine', enabled: false },
-      { name: 'ARRI Signature Zoom 45-135mm', focal: '45-135mm', category: 'Cine', enabled: false },
-      { name: 'Cooke S4/i 25mm', focal: '25mm', category: 'Cine', enabled: false },
-      { name: 'Cooke S4/i 50mm', focal: '50mm', category: 'Cine', enabled: false },
-      { name: 'Cooke Panchro Classic 32mm', focal: '32mm', category: 'Cine', enabled: false },
-      { name: 'Angénieux Optimo 24-290mm', focal: '24-290mm', category: 'Cine', enabled: false },
-      { name: 'Angénieux Optimo Prime 50mm', focal: '50mm', category: 'Cine', enabled: false },
-      { name: 'Zeiss Supreme Prime 29mm', focal: '29mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 15mm', focal: '15mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 18mm', focal: '18mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 21mm', focal: '21mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 25mm', focal: '25mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 28mm', focal: '28mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 35mm', focal: '35mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 50mm', focal: '50mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 85mm', focal: '85mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 100mm Macro', focal: '100mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.2 135mm', focal: '135mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS CP.3 15mm', focal: '15mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 18mm', focal: '18mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 21mm', focal: '21mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 25mm', focal: '25mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 28mm', focal: '28mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 35mm', focal: '35mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 50mm', focal: '50mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 85mm', focal: '85mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 100mm', focal: '100mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS CP.3 135mm', focal: '135mm', category: 'Cine', enabled: true },
-      { name: 'ZEISS Compact Zoom CZ.2 15-30mm', focal: '15-30mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS Compact Zoom CZ.2 28-80mm', focal: '28-80mm', category: 'Cine', enabled: false },
-      { name: 'ZEISS Compact Zoom CZ.2 70-200mm', focal: '70-200mm', category: 'Cine', enabled: false },
-      { name: 'Leica Summilux-C 35mm', focal: '35mm', category: 'Cine', enabled: false },
-      { name: 'LAOWA 12mm T2.9 Zero-D Cine', focal: '12mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 15mm T2.1 Zero-D Cine', focal: '15mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 24mm T14 2X Periprobe', focal: '24mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 25mm T2.9 2.5-5X Ultra Macro', focal: '25mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 35mm T2.4 1.5X Nanomorph', focal: '35mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 50mm T2.4 1.5X Nanomorph', focal: '50mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 65mm T2.9 2X Ultra Macro APO', focal: '65mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'LAOWA 85mm T2.4 1.5X Nanomorph', focal: '85mm', category: 'Cine', series: 'LAOWA Cine', enabled: false },
-      { name: 'Canon RF 24-70mm F2.8 L IS USM', focal: '24-70mm', category: 'Photo', enabled: false },
-      { name: 'Canon RF 50mm F1.2 L USM', focal: '50mm', category: 'Photo', enabled: false },
-      { name: 'Sony FE 24-70mm F2.8 GM II', focal: '24-70mm', category: 'Photo', enabled: true },
-      { name: 'Sony FE 35mm F1.4 GM', focal: '35mm', category: 'Photo', enabled: false },
-      { name: 'NIKKOR Z 24-70mm f/2.8 S', focal: '24-70mm', category: 'Photo', enabled: false },
-      { name: 'Fujifilm GF 32-64mm F4 R LM WR', focal: '32-64mm', category: 'Photo', enabled: false },
-      { name: 'iPhone 15 Pro Main Camera 24mm equiv.', focal: '24mm equiv.', category: 'Phone', enabled: false },
-      { name: 'iPhone 15 Pro Ultra Wide 13mm equiv.', focal: '13mm equiv.', category: 'Phone', enabled: false },
-      { name: 'iPhone 15 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', enabled: false },
-      { name: 'DJI Inspire 3 DL 18mm F2.8 ASPH', focal: '18mm', category: 'Drone', enabled: true },
-      { name: 'DJI DL-S 16mm F2.8 ND ASPH', focal: '16mm', category: 'Drone', series: 'DJI DL-S', enabled: true },
-      { name: 'DJI Inspire 3 DL 24mm F2.8 LS ASPH', focal: '24mm', category: 'Drone', enabled: true },
-      { name: 'DJI Inspire 3 DL 35mm F2.8 LS ASPH', focal: '35mm', category: 'Drone', enabled: true },
-      { name: 'DJI Inspire 3 DL 50mm F2.8 LS ASPH', focal: '50mm', category: 'Drone', enabled: true },
-      { name: 'Sony FE 14mm F1.8 GM', focal: '14mm', category: 'Photo', series: 'Sony FE', enabled: false },
-      { name: 'Sony FE 16-35mm F2.8 GM II', focal: '16-35mm', category: 'Photo', series: 'Sony FE', enabled: false },
-      { name: 'Sony FE 24mm F1.4 GM', focal: '24mm', category: 'Photo', series: 'Sony FE', enabled: false },
-      { name: 'Sony FE 50mm F1.2 GM', focal: '50mm', category: 'Photo', series: 'Sony FE', enabled: false },
-      { name: 'Sony FE 70-200mm F2.8 GM OSS II', focal: '70-200mm', category: 'Photo', series: 'Sony FE', enabled: false },
-      { name: 'Leica DG Vario-Elmarit 8-18mm F2.8-4.0', focal: '8-18mm', category: 'Photo', series: 'Micro Four Thirds', enabled: false },
-      { name: 'Leica DG Vario-Elmarit 12-60mm F2.8-4.0', focal: '12-60mm', category: 'Photo', series: 'Micro Four Thirds', enabled: false },
-      { name: 'Leica DG Vario-Summilux 10-25mm F1.7', focal: '10-25mm', category: 'Photo', series: 'Micro Four Thirds', enabled: false },
-      { name: 'Leica DG Vario-Summilux 25-50mm F1.7', focal: '25-50mm', category: 'Photo', series: 'Micro Four Thirds', enabled: false },
-      { name: 'Olympus M.Zuiko 12-40mm F2.8 PRO II', focal: '12-40mm', category: 'Photo', series: 'Micro Four Thirds', enabled: false },
-      { name: 'iPhone 17 Pro Main Camera 24mm equiv.', focal: '24mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false },
-      { name: 'iPhone 17 Pro Ultra Wide 13mm equiv.', focal: '13mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false },
-      { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
-    ];
-
-    const retiredCameraPresetNames = new Set(['Freefly Ember S35', 'Freefly Wave 4K', 'Sony Venice 6K FF35', 'Sony Venice II 6K', 'Sony Venice II 8.6K']);
-    const sonyVeniceCameraOrder = [
-      'Sony Venice FF 6K 3:2',
-      'Sony Venice FF 5.7K 16:9',
-      'Sony Venice S35 4K 17:9',
-      'Sony Venice S35 3.8K 16:9',
-      'Sony Venice II FF 8.6K 3:2',
-      'Sony Venice II FF 8.1K 16:9',
-      'Sony Venice II FF 7.6K 16:9',
-      'Sony Venice II S35 5.8K 6:5',
-      'Sony Venice II S35 5.4K 16:9'
-    ];
-
-    function getLensSeries(lens) {
-      if (lens.series) return lens.series;
-      const name = lens.name || '';
-      if (name.startsWith('ARRI Master Prime')) return 'ARRI Master Prime';
-      if (name.startsWith('ARRI Signature Prime')) return 'ARRI Signature Prime';
-      if (name.startsWith('ARRI Signature Zoom')) return 'ARRI Signature Zoom';
-      if (name.startsWith('Cooke S4/i')) return 'Cooke S4/i';
-      if (name.startsWith('Cooke Panchro')) return 'Cooke Panchro Classic';
-      if (name.startsWith('Angénieux Optimo Prime')) return 'Angénieux Optimo Prime';
-      if (name.startsWith('Angénieux Optimo')) return 'Angénieux Optimo';
-      if (name.startsWith('ZEISS CP.2')) return 'ZEISS CP.2';
-      if (name.startsWith('ZEISS CP.3')) return 'ZEISS CP.3';
-      if (name.startsWith('ZEISS Compact Zoom')) return 'ZEISS Compact Zoom CZ.2';
-      if (name.startsWith('Sony FE')) return 'Sony FE';
-      if (name.startsWith('Canon RF')) return 'Canon RF';
-      if (name.startsWith('DJI Inspire 3')) return 'DJI Inspire 3 DL';
-      if (name.startsWith('iPhone 15')) return 'iPhone 15 Pro';
-      return name.split(' ').slice(0, 2).join(' ');
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initPresets();
-      await resetFormToDefault();
-      initFabricCanvas();
-      renderList();
-    });
-
-    function switchAppPage(page) {
-      const isRecordPage = page === 'record';
-      document.getElementById('recordPage').classList.toggle('hidden', !isRecordPage);
-      document.getElementById('historyPage').classList.toggle('hidden', isRecordPage);
-
-      const recordButton = document.getElementById('recordNavBtn');
-      const historyButton = document.getElementById('historyNavBtn');
-      recordButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-amber-400' : 'text-slate-400 hover:text-slate-100'}`;
-      historyButton.className = `flex flex-col items-center rounded-lg py-1 text-xs font-bold ${isRecordPage ? 'text-slate-400 hover:text-slate-100' : 'text-amber-400'}`;
-      recordButton.toggleAttribute('aria-current', isRecordPage);
-      historyButton.toggleAttribute('aria-current', !isRecordPage);
-
-      if (!isRecordPage) renderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function toggleHdriWeather(isCaptured) {
-      const container = document.getElementById('weatherContainer');
-      if (isCaptured) {
-        container.classList.remove('hidden');
-      } else {
-        container.classList.add('hidden');
-      }
-    }
-
-    function getWeatherValues() {
-      return [...document.getElementById('hdri_weather').selectedOptions].map(option => option.value);
-    }
-
-    function setWeatherValues(values) {
-      const selected = new Set(Array.isArray(values) ? values : String(values || '').split(', ').filter(Boolean));
-      [...document.getElementById('hdri_weather').options].forEach(option => { option.selected = selected.has(option.value); });
-    }
-
-    function addShotThumbnails(event) {
-      const files = [...event.target.files];
-      if (!files.length) return;
-      if (files.some(file => !file.type.startsWith('image/'))) return alert('Please select image files only.');
-      pendingShotThumbnails.push(...files);
-      renderShotThumbnailPreviews();
-      event.target.value = '';
-    }
-
-    function renderShotThumbnailPreviews() {
-      const preview = document.getElementById('shotThumbnailPreview');
-      preview.replaceChildren();
-      pendingShotThumbnails.forEach((file, index) => {
-        const wrapper = document.createElement('div'); wrapper.className = 'relative';
-        const image = document.createElement('img'); image.src = URL.createObjectURL(file); image.alt = `Shot thumbnail ${index + 1}`; image.className = 'h-16 w-24 rounded border border-slate-700 object-cover';
-        image.onload = () => URL.revokeObjectURL(image.src);
-        const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.className = 'absolute -right-1 -top-1 h-5 w-5 rounded-full bg-rose-700 text-xs text-white'; remove.onclick = () => { pendingShotThumbnails.splice(index, 1); renderShotThumbnailPreviews(); };
-        const order = document.createElement('div'); order.className = 'absolute inset-x-0 bottom-0 flex justify-between bg-slate-950/80 px-0.5';
-        const moveLeft = document.createElement('button'); moveLeft.type = 'button'; moveLeft.textContent = '←'; moveLeft.title = 'Move left'; moveLeft.disabled = index === 0; moveLeft.className = 'px-1 text-xs text-amber-300 disabled:opacity-30'; moveLeft.onclick = () => moveShotThumbnail(index, -1);
-        const moveRight = document.createElement('button'); moveRight.type = 'button'; moveRight.textContent = '→'; moveRight.title = 'Move right'; moveRight.disabled = index === pendingShotThumbnails.length - 1; moveRight.className = 'px-1 text-xs text-amber-300 disabled:opacity-30'; moveRight.onclick = () => moveShotThumbnail(index, 1);
-        order.append(moveLeft, moveRight); wrapper.append(image, order, remove); preview.append(wrapper);
-      });
-      preview.classList.toggle('hidden', !pendingShotThumbnails.length);
-    }
-
-    function moveShotThumbnail(index, direction) {
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= pendingShotThumbnails.length) return;
-      [pendingShotThumbnails[index], pendingShotThumbnails[nextIndex]] = [pendingShotThumbnails[nextIndex], pendingShotThumbnails[index]];
-      renderShotThumbnailPreviews();
-    }
-
-    function clearShotThumbnail() {
-      const preview = document.getElementById('shotThumbnailPreview');
-      pendingShotThumbnails = [];
-      preview.replaceChildren(); preview.classList.add('hidden');
-      document.getElementById('shotThumbnailLibraryInput').value = '';
-      document.getElementById('shotThumbnailCameraInput').value = '';
-    }
-
-    function moveSelectedLayer(direction) {
-      const active = fCanvas?.getActiveObject();
-      if (!active) return alert('Select a sketch object first.');
-      if (direction === 'front') fCanvas.bringForward(active);
-      if (direction === 'back') fCanvas.sendBackwards(active);
-      if (direction === 'top') fCanvas.bringToFront(active);
-      if (direction === 'bottom') fCanvas.sendToBack(active);
-      fCanvas.renderAll();
-      saveCanvasState();
-    }
-
-    function incrementTrailingNumber(value) {
-      const match = String(value || '').match(/^(.*?)(\d+)([^\d]*)$/);
-      if (!match) return value;
-      return `${match[1]}${String(Number(match[2]) + 1).padStart(match[2].length, '0')}${match[3]}`;
-    }
-
-    async function resetFormToDefault() {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('shoot_datetime').value = now.toISOString().slice(0,16);
-      
-      const defaultSettings = await db.presets.get('user_defaults');
-      if (defaultSettings && defaultSettings.values) {
-        const v = defaultSettings.values;
-        document.getElementById('operator').value = v.operator || '';
-        document.getElementById('show_title').value = v.show_title || '';
-        document.getElementById('location').value = v.location || '';
-        
-        document.getElementById('hdri_captured').checked = v.hdri_captured || false;
-        toggleHdriWeather(v.hdri_captured || false);
-        setWeatherValues(v.hdri_weather || ['Sunny']);
-        document.getElementById('hdri_notes').value = v.hdri_notes || '';
-
-        if (v.cameras && v.cameras.length > 0) {
-          cameraListState = v.cameras.map(c => ({ ...c }));
-        } else {
-          cameraListState = [ createEmptyCameraItem("A") ];
-        }
-      } else {
-        cameraListState = [ createEmptyCameraItem("A") ];
-        document.getElementById('hdri_captured').checked = false;
-        toggleHdriWeather(false);
-      }
-
-      activeCamIndex = 0;
-      renderCameraTabs();
-    }
-
-    function createEmptyCameraItem(label) {
-      return {
-        label: label,
-        reel_name: getCameraReelPrefix(label),
-        camera_preset: '',
-        camera_custom: '',
-        lens_preset: '',
-        lens_custom: '',
-        focal_length: '',
-        t_stop: '',
-        clip_name: '',
-        lut_info: '',
-        cramerawork_preset: 'Fix',
-        cramerawork_custom: '',
-        height_value: '',
-        distance_value: '',
-        tilt_value: '',
-        flag_chart: 'NO',
-        flag_cleanplate: 'NO',
-        flag_reference: 'NO'
-      };
-    }
-
-    function getGPSLocation() {
-      const gpsBtn = document.getElementById('gpsBtn');
-      const gpsInput = document.getElementById('gps_location');
-
-      if (!confirm('現在地（緯度・経度）をこの端末のVFX記録に保存します。続行しますか？')) return;
-
-      if (!navigator.geolocation) {
-        alert("GPS is not supported by your browser/device.");
-        return;
-      }
-
-      gpsBtn.innerText = "Locating...";
-      gpsBtn.disabled = true;
-
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude.toFixed(6);
-          const lng = pos.coords.longitude.toFixed(6);
-          const alt = pos.coords.altitude ? `${Math.round(pos.coords.altitude)}m` : '';
-          const coordinates = `${lat}, ${lng}${alt ? ` / ${alt}` : ''}`;
-          gpsInput.value = coordinates;
-          gpsBtn.innerText = "📍 Get GPS";
-          gpsBtn.disabled = false;
-
-          // Coordinates are available offline. Place-name lookup is best-effort and
-          // deliberately never prevents saving when the location service is offline.
-          if (navigator.onLine) {
-            gpsBtn.innerText = 'Finding place…';
-            gpsBtn.disabled = true;
-            try {
-              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1`, {
-                headers: { Accept: 'application/json' }
-              });
-              if (!response.ok) throw new Error(`HTTP ${response.status}`);
-              const location = await response.json();
-              const address = location.address || {};
-              const place = [address.road || address.pedestrian || address.neighbourhood, address.suburb || address.city_district, address.city || address.town || address.village || address.municipality, address.state, address.country].filter(Boolean).filter((value, index, list) => list.indexOf(value) === index).join(', ');
-              if (place) gpsInput.value = `${coordinates} / ${place}`;
-            } catch (error) {
-              console.info('Place-name lookup unavailable; saved coordinates only.', error);
-            } finally {
-              gpsBtn.innerText = '📍 Get GPS';
-              gpsBtn.disabled = false;
-            }
-          }
-        },
-        (err) => {
-          alert(`GPS Error: ${err.message}`);
-          gpsBtn.innerText = "📍 Get GPS";
-          gpsBtn.disabled = false;
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    }
-
-    let cachedCamPresets = [];
-    let cachedLensPresets = [];
-    let cachedMovementPresets = [];
-    let openLensSeries = new Set();
-
-    function normalizeCameraPresets(list = []) {
-      const byName = new Map();
-      [...defaultCameras, ...list].forEach(item => {
-        const normalized = typeof item === 'string' ? { name: item, category: 'Custom', enabled: true } : { name: item.name, category: item.category || 'Cine', enabled: item.enabled !== false };
-        if (!normalized.name || retiredCameraPresetNames.has(normalized.name)) return;
-        const existing = byName.get(normalized.name);
-        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
-      });
-      return [...byName.values()].sort((a, b) => {
-        const aVeniceIndex = sonyVeniceCameraOrder.indexOf(a.name);
-        const bVeniceIndex = sonyVeniceCameraOrder.indexOf(b.name);
-        if (aVeniceIndex !== -1 && bVeniceIndex !== -1) return aVeniceIndex - bVeniceIndex;
-        return a.name.localeCompare(b.name);
-      });
-    }
-
-    function normalizeLensPresets(list = []) {
-      const byName = new Map();
-      [...defaultLenses, ...list].forEach(item => {
-        const normalized = { name: item.name, focal: item.focal || '', category: item.category || 'Cine', series: getLensSeries(item), enabled: item.enabled !== false };
-        if (!normalized.name) return;
-        const existing = byName.get(normalized.name);
-        byName.set(normalized.name, existing ? { ...existing, ...normalized } : normalized);
-      });
-      const focalValue = lens => Number.parseFloat(String(lens.focal || lens.name).match(/\d+(?:\.\d+)?/)?.[0]) || Number.POSITIVE_INFINITY;
-      return [...byName.values()].sort((a, b) =>
-        presetCategories.indexOf(a.category) - presetCategories.indexOf(b.category) || getLensSeries(a).localeCompare(getLensSeries(b)) || focalValue(a) - focalValue(b) || a.name.localeCompare(b.name)
-      );
-    }
-
-    function normalizeMovementPresets(list = []) {
-      const byName = new Map();
-      [...defaultMovements, ...list].forEach(item => {
-        const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
-        if (normalized.name) byName.set(normalized.name, { ...(byName.get(normalized.name) || {}), ...normalized });
-      });
-      return [...byName.values()];
-    }
-
-    async function initPresets() {
-      let camRecord = await db.presets.get('camera');
-      if (!camRecord) {
-        camRecord = { type: 'camera', list: defaultCameras };
-        await db.presets.put(camRecord);
-      } else {
-        const normalized = normalizeCameraPresets(camRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(camRecord.list)) {
-          camRecord = { ...camRecord, list: normalized };
-          await db.presets.put(camRecord);
-        }
-      }
-      cachedCamPresets = normalizeCameraPresets(camRecord.list).filter(camera => camera.enabled);
-
-      let lensRecord = await db.presets.get('lens');
-      if (!lensRecord) {
-        lensRecord = { type: 'lens', list: defaultLenses };
-        await db.presets.put(lensRecord);
-      } else {
-        const normalized = normalizeLensPresets(lensRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(lensRecord.list)) {
-          lensRecord = { ...lensRecord, list: normalized };
-          await db.presets.put(lensRecord);
-        }
-      }
-      cachedLensPresets = normalizeLensPresets(lensRecord.list).filter(lens => lens.enabled);
-
-      let movementRecord = await db.presets.get('movement');
-      if (!movementRecord) {
-        movementRecord = { type: 'movement', list: defaultMovements };
-        await db.presets.put(movementRecord);
-      } else {
-        const normalized = normalizeMovementPresets(movementRecord.list);
-        if (JSON.stringify(normalized) !== JSON.stringify(movementRecord.list)) await db.presets.put({ ...movementRecord, list: normalized });
-      }
-      cachedMovementPresets = normalizeMovementPresets((await db.presets.get('movement')).list).filter(item => item.enabled);
-
-      renderCameraTabs();
-    }
-
-    async function saveCurrentAsDefaultSettings() {
-      saveActiveTabState();
-      const defaultValues = {
-        operator: document.getElementById('operator').value,
-        show_title: document.getElementById('show_title').value,
-        location: document.getElementById('location').value,
-        hdri_captured: document.getElementById('hdri_captured').checked,
-        hdri_weather: getWeatherValues(),
-        hdri_notes: document.getElementById('hdri_notes').value,
-        cameras: cameraListState
-      };
-
-      const existingDefaults = await db.presets.get('user_defaults');
-      const action = existingDefaults?.values ? '上書き保存' : '新規保存';
-      if (!confirm(`${action}するデフォルト項目:\n${getDefaultSettingsChangeSummary(existingDefaults?.values, defaultValues, true)}\n\n現在のフォーム内容をデフォルトとして保存しますか？`)) return;
-
-      await db.presets.put({ type: 'user_defaults', values: defaultValues });
-      alert("Current settings saved as user default!");
-    }
-
-    async function loadDefaultSettings() {
-      const defaultSettings = await db.presets.get('user_defaults');
-      if (!defaultSettings || !defaultSettings.values) {
-        alert("No saved default settings found.");
-        return;
-      }
-      const v = defaultSettings.values;
-      const currentValues = getCurrentDefaultSettingsValues();
-      const changes = getDefaultSettingsChangeSummary(currentValues, v);
-      if (changes === '変更はありません') {
-        alert('現在のフォームは保存済みのデフォルト設定と同じです。');
-        return;
-      }
-      if (!confirm(`読み込みにより変更される項目:\n${changes}\n\n保存済みのデフォルト設定を読み込みますか？`)) return;
-
-      document.getElementById('operator').value = v.operator || '';
-      document.getElementById('show_title').value = v.show_title || '';
-      document.getElementById('location').value = v.location || '';
-      document.getElementById('hdri_captured').checked = v.hdri_captured || false;
-      toggleHdriWeather(v.hdri_captured || false);
-      setWeatherValues(v.hdri_weather || ['Sunny']);
-      document.getElementById('hdri_notes').value = v.hdri_notes || '';
-
-      if (v.cameras && v.cameras.length > 0) {
-        cameraListState = v.cameras.map(c => ({ ...c }));
-      }
-      activeCamIndex = 0;
-      renderCameraTabs();
-      alert("Default settings loaded!");
-    }
-
-    function getCurrentDefaultSettingsValues() {
-      saveActiveTabState();
-      return {
-        operator: document.getElementById('operator').value,
-        show_title: document.getElementById('show_title').value,
-        location: document.getElementById('location').value,
-        hdri_captured: document.getElementById('hdri_captured').checked,
-        hdri_weather: getWeatherValues(),
-        hdri_notes: document.getElementById('hdri_notes').value,
-        cameras: cameraListState
-      };
-    }
-
-    function getDefaultSettingsChangeSummary(currentValues, newValues, includeUnchanged = false) {
-      const fields = [
-        ['operator', 'Operator'],
-        ['show_title', 'Show / Title'],
-        ['location', 'Location'],
-        ['hdri_captured', 'HDRI Captured'],
-        ['hdri_weather', 'HDRI Weather'],
-        ['hdri_notes', 'HDRI Notes'],
-        ['cameras', 'Camera / Reel Settings']
-      ];
-      const changedFields = fields
-        .filter(([key]) => includeUnchanged || JSON.stringify(currentValues?.[key] ?? null) !== JSON.stringify(newValues?.[key] ?? null))
-        .map(([, label]) => `• ${label}`);
-      return changedFields.length ? changedFields.join('\n') : '変更はありません';
-    }
-
-    async function exportFullPresetsJSON() {
-      saveActiveTabState();
-      const allPresets = await db.presets.toArray();
-      const exportData = {
-        app: "VFX_Sheet",
-        version: 10,
-        exported_at: new Date().toISOString(),
-        presets: allPresets,
-        current_defaults: {
-          operator: document.getElementById('operator').value,
-          show_title: document.getElementById('show_title').value,
-          location: document.getElementById('location').value,
-          hdri_captured: document.getElementById('hdri_captured').checked,
-          hdri_weather: getWeatherValues(),
-          hdri_notes: document.getElementById('hdri_notes').value,
-          cameras: cameraListState
-        }
-      };
-
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `VFX_Sheet_Presets_${new Date().toISOString().slice(0,10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    async function importFullPresetsJSON(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const data = JSON.parse(event.target.result);
-          if (data.app !== 'VFX_Sheet' || !data.presets) {
-            throw new Error("Invalid preset JSON file format.");
-          }
-
-          for (const p of data.presets) {
-            await db.presets.put(p);
-          }
-
-          if (data.current_defaults) {
-            await db.presets.put({ type: 'user_defaults', values: data.current_defaults });
-          }
-
-          await initPresets();
-          await loadDefaultSettings();
-          renderPresetModalLists();
-          alert("Presets imported successfully!");
-        } catch (err) {
-          alert(`Import Error: ${err.message}`);
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    }
-
-    function openPresetModal() {
-      renderPresetModalLists();
-      document.getElementById('presetModal').classList.remove('hidden');
-    }
-
-    function closePresetModal() {
-      document.getElementById('presetModal').classList.add('hidden');
-    }
-
-    async function renderPresetModalLists() {
-      const camRecord = await db.presets.get('camera');
-      const lensRecord = await db.presets.get('lens');
-      const movementRecord = await db.presets.get('movement');
-
-      const renderGroups = (items, type, defaults) => presetCategories.map(category => {
-        const group = items.map((item, index) => ({ item, index })).filter(({ item }) => item.category === category);
-        if (!group.length) return '';
-        return `<li class="pt-2 first:pt-0"><div class="sticky top-0 bg-slate-950 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400">${category}</div>${group.map(({ item, index }) => `
-          <div class="flex justify-between items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800">
-            <label class="flex min-w-0 items-center gap-2 cursor-pointer"><input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="togglePresetItem('${type}', ${index}, this.checked)" class="accent-amber-400"><span class="text-slate-200 truncate">${escapeHtml(item.name)}</span></label>
-            ${type === 'lens' ? `<span class="text-[10px] text-slate-500 font-mono">${escapeHtml(item.focal || '')}</span>` : ''}
-            ${defaults.some(defaultItem => defaultItem.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('${type}', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}
-          </div>`).join('')}</li>`;
-      }).join('');
-      const renderLensSeries = lenses => {
-        const renderCategory = category => {
-          const bySeries = new Map();
-          lenses.forEach((lens, index) => {
-            if (lens.category !== category) return;
-            const series = lens.series || getLensSeries(lens);
-            if (!bySeries.has(series)) bySeries.set(series, []);
-            bySeries.get(series).push({ lens, index });
-          });
-          if (!bySeries.size) return '';
-          const seriesPanels = [...bySeries.entries()].map(([series, entries]) => {
-          const allEnabled = entries.every(({ lens }) => lens.enabled);
-          const someEnabled = entries.some(({ lens }) => lens.enabled);
-          return `<li><details ${openLensSeries.has(series) ? 'open' : ''} ontoggle="setLensSeriesOpen('${escapeHtml(series)}', this.open)" class="rounded-lg border border-slate-800 bg-slate-950"><summary class="flex cursor-pointer items-center gap-2 px-2.5 py-2 text-xs font-bold text-amber-300"><input type="checkbox" ${allEnabled ? 'checked' : ''} ${someEnabled && !allEnabled ? 'data-indeterminate="true"' : ''} onclick="event.stopPropagation()" onchange="toggleLensSeries('${escapeHtml(series)}', this.checked)" class="accent-amber-400"><span>${escapeHtml(series)}</span><span class="ml-auto text-[10px] font-normal text-slate-500">${entries.length} lenses</span></summary><div class="space-y-1 border-t border-slate-800 p-2">${entries.map(({ lens, index }) => `<div class="flex items-center justify-between gap-2 rounded border border-slate-800 bg-slate-900 px-2.5 py-1.5"><label class="flex min-w-0 items-center gap-2 cursor-pointer"><input type="checkbox" ${lens.enabled ? 'checked' : ''} onchange="togglePresetItem('lens', ${index}, this.checked)" class="accent-amber-400"><span class="truncate text-slate-200">${escapeHtml(lens.name)}</span></label><span class="shrink-0 text-[10px] font-mono text-slate-500">${escapeHtml(lens.focal || '')}</span>${defaultLenses.some(defaultLens => defaultLens.name === lens.name) ? '' : `<button type="button" onclick="removePresetItem('lens', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}</div>`).join('')}</div></details></li>`;
-          }).join('');
-          return `<li class="pt-2 first:pt-0"><div class="sticky top-0 z-10 bg-slate-950 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400">${category}</div><ul class="space-y-1">${seriesPanels}</ul></li>`;
-        };
-        return presetCategories.map(renderCategory).join('');
-      };
-      document.getElementById('cameraPresetList').innerHTML = renderGroups(normalizeCameraPresets(camRecord?.list || []), 'camera', defaultCameras);
-      document.getElementById('lensPresetList').innerHTML = renderLensSeries(normalizeLensPresets(lensRecord?.list || []));
-      document.getElementById('movementPresetList').innerHTML = normalizeMovementPresets(movementRecord?.list || []).map((item, index) => `<li class="flex justify-between items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800"><label class="flex min-w-0 items-center gap-2 cursor-pointer"><input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="togglePresetItem('movement', ${index}, this.checked)" class="accent-amber-400"><span class="text-slate-200 truncate">${escapeHtml(item.name)}</span></label>${defaultMovements.some(defaultItem => defaultItem.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : `<button type="button" onclick="removePresetItem('movement', ${index})" class="text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>`}</li>`).join('');
-      document.querySelectorAll('#lensPresetList input[data-indeterminate="true"]').forEach(input => { input.indeterminate = true; });
-    }
-
-    async function addPresetItem(type) {
-      if (type === 'camera') {
-        const input = document.getElementById('newCameraInput');
-        const val = input.value.trim();
-        if (!val) return;
-        const record = await db.presets.get('camera');
-        record.list = normalizeCameraPresets(record.list);
-        if (record.list.some(camera => camera.name === val)) return alert('This camera model is already registered.');
-        record.list.push({ name: val, category: 'Custom', enabled: true });
-        await db.presets.put(record);
-        input.value = '';
-      } else if (type === 'lens') {
-        const nameInput = document.getElementById('newLensNameInput');
-        const focalInput = document.getElementById('newLensFocalInput');
-        if (!nameInput.value.trim()) return;
-        const record = await db.presets.get('lens');
-        record.list = normalizeLensPresets(record.list);
-        if (record.list.some(lens => lens.name === nameInput.value.trim())) return alert('This lens model is already registered.');
-        record.list.push({ name: nameInput.value.trim(), focal: focalInput.value.trim(), category: 'Custom', enabled: true });
-        await db.presets.put(record);
-        nameInput.value = '';
-        focalInput.value = '';
-      } else if (type === 'movement') {
-        const input = document.getElementById('newMovementInput');
-        const val = input.value.trim();
-        if (!val) return;
-        const record = await db.presets.get('movement');
-        record.list = normalizeMovementPresets(record.list);
-        if (record.list.some(item => item.name === val)) return alert('This movement is already registered.');
-        record.list.push({ name: val, enabled: true });
-        await db.presets.put(record);
-        input.value = '';
-      }
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function togglePresetItem(type, index, enabled) {
-      const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
-      if (!record.list[index]) return;
-      record.list[index].enabled = enabled;
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    function setLensSeriesOpen(series, isOpen) {
-      if (isOpen) openLensSeries.add(series);
-      else openLensSeries.delete(series);
-    }
-
-    async function toggleLensSeries(series, enabled) {
-      const record = await db.presets.get('lens');
-      record.list = normalizeLensPresets(record.list).map(lens => getLensSeries(lens) === series ? { ...lens, enabled } : lens);
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function removePresetItem(type, index) {
-      const record = await db.presets.get(type);
-      record.list = type === 'camera' ? normalizeCameraPresets(record.list) : type === 'lens' ? normalizeLensPresets(record.list) : normalizeMovementPresets(record.list);
-      record.list.splice(index, 1);
-      await db.presets.put(record);
-      await initPresets();
-      renderPresetModalLists();
-    }
-
-    async function resetPresetsToDefault() {
-      if (confirm("Reset all presets to default?")) {
-        await db.presets.put({ type: 'camera', list: defaultCameras });
-        await db.presets.put({ type: 'lens', list: defaultLenses });
-        await db.presets.put({ type: 'movement', list: defaultMovements });
-        await db.presets.delete('user_defaults');
-        await initPresets();
-        renderPresetModalLists();
-      }
-    }
-
-    // Camera Tabs
-    function addCameraTab() {
-      saveActiveTabState();
-      const nextChar = String.fromCharCode(65 + cameraListState.length);
-      cameraListState.push(createEmptyCameraItem(nextChar));
-      activeCamIndex = cameraListState.length - 1;
-      renderCameraTabs();
-    }
-
-    function removeCameraTab(idx, e) {
-      e.stopPropagation();
-      if (cameraListState.length <= 1) {
-        alert("At least one camera entry is required.");
-        return;
-      }
-      if (!confirm(`${cameraListState[idx].label} を削除しますか？`)) return;
-      cameraListState.splice(idx, 1);
-      if (activeCamIndex >= cameraListState.length) {
-        activeCamIndex = cameraListState.length - 1;
-      }
-      renderCameraTabs();
-    }
-
-    function switchCameraTab(idx) {
-      saveActiveTabState();
-      activeCamIndex = idx;
-      renderCameraTabs();
-    }
-
-    function editCameraReelName(idx, event) {
-      event.stopPropagation();
-      saveActiveTabState();
-      const camera = cameraListState[idx];
-      const name = prompt('カメラ／リール名を入力してください。', getCameraReelName(camera));
-      if (name === null) return;
-      const reelName = name.trim().toUpperCase();
-      if (!reelName) return alert('リール名を入力してください。');
-      camera.label = reelName;
-      camera.reel_name = reelName;
-      renderCameraTabs();
-    }
-
-    function getCameraReelPrefix(label) {
-      const match = String(label || '').match(/[A-Za-z]/g);
-      return match ? match[match.length - 1].toUpperCase() : 'A';
-    }
-
-    function getCameraReelName(camera) {
-      return String(camera?.reel_name || camera?.label || 'A').replace(/^Cam\s*/i, '').trim().toUpperCase() || 'A';
-    }
-
-    function getCameraFieldLabel(camera) {
-      return `Cam ${getCameraReelName(camera)}`;
-    }
-
-    function saveActiveTabState() {
-      if (!cameraListState[activeCamIndex]) return;
-
-      cameraListState[activeCamIndex] = {
-        label: cameraListState[activeCamIndex].label,
-        reel_name: cameraListState[activeCamIndex].reel_name || cameraListState[activeCamIndex].label,
-        camera_preset: document.getElementById('tab_camera_preset')?.value || '',
-        camera_custom: document.getElementById('tab_camera_custom')?.value || '',
-        lens_preset: document.getElementById('tab_lens_preset')?.value || '',
-        lens_custom: document.getElementById('tab_lens_custom')?.value || '',
-        focal_length: document.getElementById('tab_focal_length')?.value || '',
-        t_stop: document.getElementById('tab_t_stop')?.value || '',
-        clip_name: document.getElementById('tab_clip_name')?.value || '',
-        lut_info: document.getElementById('tab_lut_info')?.value || '',
-        cramerawork_preset: document.getElementById('tab_cramerawork_preset')?.value || 'FIX (Lock-off)',
-        cramerawork_custom: document.getElementById('tab_cramerawork_custom')?.value || '',
-        height_value: document.getElementById('tab_height_value')?.value || '',
-        distance_value: document.getElementById('tab_distance_value')?.value || '',
-        tilt_value: document.getElementById('tab_tilt_value')?.value || '',
-        flag_chart: document.getElementById('tab_flag_chart')?.checked ? 'YES' : 'NO',
-        flag_cleanplate: document.getElementById('tab_flag_cleanplate')?.checked ? 'YES' : 'NO',
-        flag_reference: document.getElementById('tab_flag_reference')?.checked ? 'YES' : 'NO'
-      };
-    }
-
-    function renderCameraTabs() {
-      const header = document.getElementById('cameraTabHeader');
-      const addBtn = header.querySelector('button[onclick="addCameraTab()"]');
-      
-      const existingTabs = header.querySelectorAll('.cam-tab-btn');
-      existingTabs.forEach(el => el.remove());
-
-      cameraListState.forEach((cam, idx) => {
-        const isActive = idx === activeCamIndex;
-        const tabBtn = document.createElement('div');
-        tabBtn.className = `cam-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors border ${
-          isActive 
-            ? 'bg-amber-500 text-slate-950 border-amber-400' 
-            : 'bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800'
-        }`;
-        tabBtn.onclick = () => switchCameraTab(idx);
-
-        tabBtn.innerHTML = `
-          <span>${getCameraReelName(cam)}</span>
-          <button type="button" onclick="editCameraReelName(${idx}, event)" class="rounded border border-current/30 px-1 text-[10px] hover:bg-black/10">Edit</button>
-          ${cameraListState.length > 1 ? `<button type="button" onclick="removeCameraTab(${idx}, event)" class="hover:text-rose-300 font-bold ml-1">✕</button>` : ''}
-        `;
-        header.insertBefore(tabBtn, addBtn);
-      });
-
-      renderCameraTabContent();
-    }
-
-    function renderCameraTabContent() {
-      const container = document.getElementById('cameraTabContents');
-      const cam = cameraListState[activeCamIndex];
-      if (!cam) return;
-
-      const isCamCustom = cam.camera_preset === '__custom__';
-      const isLensCustom = cam.lens_preset === '__custom__';
-      const isWorkCustom = cam.cramerawork_preset === '__custom__';
-
-      container.innerHTML = `
-        <div class="text-xs font-bold text-amber-400/90 pb-1 border-b border-slate-800/60">${getCameraFieldLabel(cam)} Settings</div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} - Camera Model</label>
-            <div class="flex gap-2">
-              <select id="tab_camera_preset" onchange="onTabPresetChange('camera')" class="form-select ${isCamCustom ? 'w-1/2' : 'w-full'}">
-                <option value="">(Select)</option>
-                ${renderPresetOptions(cachedCamPresets, cam.camera_preset)}
-                <option value="__custom__" ${isCamCustom ? 'selected' : ''}>Custom / Other</option>
-              </select>
-              <input type="text" id="tab_camera_custom" value="${cam.camera_custom || ''}" placeholder="Camera Model" class="form-input ${isCamCustom ? 'w-1/2' : 'hidden'}">
-            </div>
-          </div>
-
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} - Lens Model</label>
-            <div class="flex gap-2">
-              <select id="tab_lens_preset" onchange="onTabLensChange()" class="form-select ${isLensCustom ? 'w-1/2' : 'w-full'}">
-                <option value="">(Select)</option>
-                ${renderPresetOptions(cachedLensPresets, cam.lens_preset, true)}
-                <option value="__custom__" data-focal="" ${isLensCustom ? 'selected' : ''}>Custom / Zoom</option>
-              </select>
-              <input type="text" id="tab_lens_custom" value="${cam.lens_custom || ''}" placeholder="Lens Model" class="form-input ${isLensCustom ? 'w-1/2' : 'hidden'}">
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div>
-            <label class="form-label">Focal Length</label>
-            <input type="text" id="tab_focal_length" value="${cam.focal_length || ''}" placeholder="35mm" class="form-input font-mono">
-          </div>
-          <div>
-            <label class="form-label">Aperture (T-Stop)</label>
-            <input type="text" id="tab_t_stop" value="${cam.t_stop || ''}" placeholder="T2.8" class="form-input font-mono">
-          </div>
-          <div>
-            <label class="form-label">Clip Name</label>
-            <input type="text" id="tab_clip_name" value="${cam.clip_name || ''}" placeholder="${getCameraReelName(cam)}001C001" class="form-input font-mono">
-          </div>
-          <div>
-            <label class="form-label">LUT Info</label>
-            <input type="text" id="tab_lut_info" value="${cam.lut_info || ''}" placeholder="SL3SG3cine to Rec709" class="form-input">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Movement</label>
-            <div class="flex gap-2">
-              <select id="tab_cramerawork_preset" onchange="onTabPresetChange('cramerawork')" class="form-select ${isWorkCustom ? 'w-1/2' : 'w-full'}">
-                ${(cachedMovementPresets.some(item => item.name === cam.cramerawork_preset) ? [] : (cam.cramerawork_preset && cam.cramerawork_preset !== '__custom__' ? [{ name: cam.cramerawork_preset }] : [])).concat(cachedMovementPresets).map(item => `<option value="${escapeHtml(item.name)}" ${cam.cramerawork_preset === item.name ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}
-                <option value="__custom__" ${isWorkCustom ? 'selected' : ''}>Custom / Other</option>
-              </select>
-              <input type="text" id="tab_cramerawork_custom" value="${cam.cramerawork_custom || ''}" placeholder="Movement" class="form-input ${isWorkCustom ? 'w-1/2' : 'hidden'}">
-            </div>
-          </div>
-
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Lens Height</label>
-            <input type="text" id="tab_height_value" value="${cam.height_value || ''}" placeholder="150cm" class="form-input font-mono">
-          </div>
-
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Target Distance</label>
-            <input type="text" id="tab_distance_value" value="${cam.distance_value || ''}" placeholder="3.5m" class="form-input font-mono">
-          </div>
-
-          <div>
-            <label class="form-label">${getCameraFieldLabel(cam)} Tilt Angle</label>
-            <input type="text" id="tab_tilt_value" value="${cam.tilt_value || ''}" placeholder="+10° / -5°" class="form-input font-mono">
-          </div>
-        </div>
-
-        <div class="pt-2 border-t border-slate-800/60">
-          <label class="form-label font-semibold text-amber-400/80 uppercase">${getCameraFieldLabel(cam)} Reference Checklist</label>
-          <div class="grid grid-cols-3 gap-3">
-            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
-              <span class="text-xs text-slate-300">Color Chart & Sphere</span>
-              <label class="relative inline-flex items-center cursor-pointer" title="Color Chart & Sphere">
-                <input type="checkbox" id="tab_flag_chart" ${cam.flag_chart === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="Color Chart & Sphere captured">
-                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
-              </label>
-            </div>
-            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
-              <span class="text-xs text-slate-300">Clean Plate</span>
-              <label class="relative inline-flex items-center cursor-pointer" title="Clean Plate">
-                <input type="checkbox" id="tab_flag_cleanplate" ${cam.flag_cleanplate === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="Clean Plate captured">
-                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
-              </label>
-            </div>
-            <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
-              <span class="text-xs text-slate-300">VFX Reference</span>
-              <label class="relative inline-flex items-center cursor-pointer" title="VFX Reference">
-                <input type="checkbox" id="tab_flag_reference" ${cam.flag_reference === 'YES' ? 'checked' : ''} class="sr-only peer" aria-label="VFX Reference captured">
-                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-slate-300 after:transition-all peer-checked:bg-amber-500"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderPresetOptions(items, selectedName, includeFocal = false) {
-      return presetCategories.map(category => {
-        const group = items.filter(item => item.category === category);
-        if (!group.length) return '';
-        return `<optgroup label="${category}">${group.map(item => `<option value="${escapeHtml(item.name)}" ${includeFocal ? `data-focal="${escapeHtml(item.focal || '')}"` : ''} ${selectedName === item.name ? 'selected' : ''}>${escapeHtml(item.name)}${includeFocal && item.focal ? ` (${escapeHtml(item.focal)})` : ''}</option>`).join('')}</optgroup>`;
-      }).join('');
-    }
-
-    function onTabPresetChange(type) {
-      const preset = document.getElementById(`tab_${type}_preset`);
-      const custom = document.getElementById(`tab_${type}_custom`);
-      if (preset.value === '__custom__') {
-        custom.classList.remove('hidden');
-        preset.classList.replace('w-full', 'w-1/2');
-        custom.classList.add('w-1/2');
-      } else {
-        custom.classList.add('hidden');
-        preset.classList.replace('w-1/2', 'w-full');
-      }
-    }
-
-    function onTabLensChange() {
-      onTabPresetChange('lens');
-      const preset = document.getElementById('tab_lens_preset');
-      const focalInput = document.getElementById('tab_focal_length');
-      const selectedOption = preset.options[preset.selectedIndex];
-      const focalVal = selectedOption.getAttribute('data-focal');
-      if (focalVal && preset.value !== '__custom__') {
-        focalInput.value = focalVal;
-      }
-    }
-
-    // Fabric Canvas & Undo/Redo Engine
-    let fCanvas = null;
-    let canvasHistory = [];
-    let historyIndex = -1;
-    let isUndoRedo = false;
-    let canvasMode = 'draw';
-    let drawBrushWidth = 3;
-    let eraserBrushWidth = 24;
-
-    function initFabricCanvas() {
-      fCanvas = new fabric.Canvas('noteCanvas', {
-        isDrawingMode: true,
-        backgroundColor: '#090d16',
-        // Keep the selected object's real stack position visible. Without this,
-        // Fabric temporarily renders every selected object on top until deselect.
-        preserveObjectStacking: true
-      });
-      fCanvas.freeDrawingBrush.color = currentDrawingColor;
-      fCanvas.freeDrawingBrush.width = drawBrushWidth;
-      fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
-
-      // On iPad, reserve fingers for native page scrolling and pinch zoom.
-      // Only Apple Pencil (pointerType "pen") reaches Fabric's canvas tools.
-      fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
-        if (event.pointerType !== 'touch') return;
-        event.stopImmediatePropagation();
-        fCanvas.isDrawingMode = false;
-      }, true);
-
-      // 初期の空状態を保存
-      saveCanvasState();
-
-      // オブジェクトの追加・修正・削除時に履歴登録
-      fCanvas.on('object:added', () => { if (!isUndoRedo) saveCanvasState(); });
-      fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
-      fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
-      fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
-      fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
-      fCanvas.on('path:created', event => {
-        event.path.isSketchStroke = canvasMode === 'draw';
-        // Drawn paths must remain selectable/movable in Select/Move mode.
-        // Only the temporary eraser path should be excluded from interaction.
-        event.path.selectable = canvasMode === 'draw';
-        event.path.evented = canvasMode === 'draw';
-        event.path.globalCompositeOperation = canvasMode === 'erase' ? 'destination-out' : 'source-over';
-        if (canvasMode === 'erase') {
-          eraseIntersectedSketchLayers(event.path);
-          return;
-        }
-        // Preserve Fabric's natural stacking order: Draw, Text, and Library
-        // items created later are displayed above earlier items.
-        fCanvas.requestRenderAll();
-        // `object:added` runs before the path metadata is assigned.
-        canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-      });
-    }
-
-    function saveCanvasState() {
-      const json = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-      
-      // 新しい操作があった場合、現在のインデックス以降のRedo履歴を破棄
-      if (historyIndex < canvasHistory.length - 1) {
-        canvasHistory = canvasHistory.slice(0, historyIndex + 1);
-      }
-
-      canvasHistory.push(json);
-      historyIndex = canvasHistory.length - 1;
-      updateUndoRedoButtons();
-    }
-
-    function undoCanvas() {
-      if (historyIndex > 0) {
-        isUndoRedo = true;
-        historyIndex--;
-        fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
-          fCanvas.renderAll();
-          isUndoRedo = false;
-          updateUndoRedoButtons();
-        });
-      }
-    }
-
-    function redoCanvas() {
-      if (historyIndex < canvasHistory.length - 1) {
-        isUndoRedo = true;
-        historyIndex++;
-        fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
-          fCanvas.renderAll();
-          isUndoRedo = false;
-          updateUndoRedoButtons();
-        });
-      }
-    }
-
-    function updateUndoRedoButtons() {
-      const btnUndo = document.getElementById('btnUndo');
-      const btnRedo = document.getElementById('btnRedo');
-
-      if (btnUndo) btnUndo.disabled = historyIndex <= 0;
-      if (btnRedo) btnRedo.disabled = historyIndex >= canvasHistory.length - 1;
-    }
-
-    function setCanvasColor(color) {
-      currentDrawingColor = color;
-      fCanvas.freeDrawingBrush.color = color;
-      document.getElementById('customCanvasColor').value = color;
-
-      const activeObj = fCanvas.getActiveObject();
-      if (activeObj && activeObj.type === 'i-text') {
-        activeObj.set('fill', color);
-        fCanvas.requestRenderAll();
-        saveCanvasState();
-      }
-    }
-
-    function setCanvasBrushSize(type, value) {
-      const size = Number(value);
-      if (type === 'draw') {
-        drawBrushWidth = size;
-        document.getElementById('drawBrushSizeValue').textContent = size;
-      } else {
-        eraserBrushWidth = size;
-        document.getElementById('eraserBrushSizeValue').textContent = size;
-      }
-      if (fCanvas && canvasMode === type) fCanvas.freeDrawingBrush.width = size;
-    }
-
-    function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
-      context.save();
-      context.translate(left, top);
-      context.fillStyle = color;
-      context.beginPath(); context.arc(0, 0, 11, 0, Math.PI * 2); context.fill();
-      context.fillStyle = '#0f172a'; context.font = 'bold 13px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle';
-      context.fillText(text, 0, 1);
-      context.restore();
-    }
-
-function renderCropControlIcon(context, left, top) {
-  context.save();
-  context.translate(left, top);
-  context.strokeStyle = '#fbbf24'; context.lineWidth = 1.4; context.lineCap = 'round'; context.lineJoin = 'round';
-
-  // 外側に突き出た奇麗な「井」の字と、対角線を引くための正確な座標
-  context.beginPath();
-
-  // 1. 横方向の2本線（上・下）
-  context.moveTo(-8, -4); context.lineTo(8, -4); // 上の横線
-  context.moveTo(-8,  4); context.lineTo(8,  4); // 下の横線
-
-  // 2. 縦方向の2本線（左・右）
-  context.moveTo(-4, -8); context.lineTo(-4,  8); // 左の縦線
-  context.moveTo( 4, -8); context.lineTo( 4,  8); // 右の縦線
-
-  // 3. 左下から右上へ綺麗に繋がる対角線
-  context.moveTo(-4,  4); context.lineTo( 8, -8); // 左下の交点から、右上へ突き抜ける斜線
-
-  context.stroke();
-  context.restore();
-}
-
-    function getOwnCanvasControls(object) {
-      // Fabric's default `controls` map may be shared through the prototype.
-      // Always copy it before adding temporary crop-specific controls; otherwise
-      // the apply checkmark can be inherited by the original image.
-      if (!Object.prototype.hasOwnProperty.call(object, 'controls')) object.controls = { ...(object.controls || {}) };
-      return object.controls;
-    }
-
-    function configureCanvasImageCropControl(object) {
-      if (!object || object.type !== 'image' || object.isSketchRaster || object.isCropFrame || !window.fabric?.Control) return;
-      // Snap image rotation to clean 45° increments while retaining the normal
-      // Fabric rotation handle and a small angle tolerance for touch input.
-      object.set({ snapAngle: 45, snapThreshold: 8 });
-      const controls = getOwnCanvasControls(object);
-      // Remove an apply control that could have been inherited from crop frames
-      // created before controls were isolated per object.
-      delete controls.applyCrop;
-      if (controls.crop) return;
-      controls.crop = new fabric.Control({
-        x: 0.5, y: -0.5, offsetX: 16, offsetY: -16, cursorStyle: 'pointer',
-        mouseUpHandler: (_, transform) => { enterCanvasImageCropMode(transform.target); return true; },
-        render: (ctx, left, top) => renderCropControlIcon(ctx, left, top)
-      });
-      fCanvas.requestRenderAll();
-    }
-
-    function enterCanvasImageCropMode(image) {
-      if (!image || image.angle) return alert('Crop前に画像の回転を0°に戻してください。');
-      const bounds = image.getBoundingRect(true, true);
-      const sourceWidth = image._element?.naturalWidth || image._element?.width || image.width;
-      const sourceHeight = image._element?.naturalHeight || image._element?.height || image.height;
-      const sourceBounds = {
-        left: image.left - (image.cropX || 0) * image.scaleX,
-        top: image.top - (image.cropY || 0) * image.scaleY,
-        width: sourceWidth * image.scaleX,
-        height: sourceHeight * image.scaleY
-      };
-      const frame = new fabric.Rect({
-        left: bounds.left, top: bounds.top, width: bounds.width, height: bounds.height,
-        fill: 'rgba(251, 191, 36, 0.06)', stroke: '#fbbf24', strokeWidth: 2,
-        strokeDashArray: [6, 4], cornerColor: '#fbbf24', cornerSize: 12,
-        transparentCorners: false, isCropFrame: true, cropTarget: image, cropSourceBounds: sourceBounds,
-        lockRotation: true, originX: 'left', originY: 'top'
-      });
-      // During a second crop, show the original source behind the current crop.
-      // The source-bounded overlays darken previously trimmed areas while the
-      // active crop remains bright and editable.
-      const sourcePreview = new fabric.Image(image._element, {
-        left: sourceBounds.left, top: sourceBounds.top, width: sourceWidth, height: sourceHeight,
-        scaleX: image.scaleX, scaleY: image.scaleY, originX: 'left', originY: 'top',
-        selectable: false, evented: false, excludeFromExport: true, isCropSourcePreview: true
-      });
-      frame.cropSourcePreview = sourcePreview;
-      const frameControls = getOwnCanvasControls(frame);
-      delete frameControls.crop;
-      frameControls.applyCrop = new fabric.Control({
-        x: 0.5, y: -0.5, offsetX: 16, offsetY: -16, cursorStyle: 'pointer',
-        mouseUpHandler: (_, transform) => { applyCanvasImageCrop(transform.target); return true; },
-        render: (ctx, left, top, style, target) => renderCanvasControlIcon(ctx, left, top, style, target, '✓', '#84cc16')
-      });
-      image.selectable = false;
-      image.evented = false;
-      const overlays = Array.from({ length: 4 }, () => new fabric.Rect({ fill: 'rgba(2, 6, 23, 0.68)', selectable: false, evented: false, excludeFromExport: true, isCropOverlay: true }));
-      frame.cropOverlays = overlays;
-      const imageIndex = fCanvas.getObjects().indexOf(image);
-      fCanvas.add(sourcePreview);
-      fCanvas.moveTo(sourcePreview, imageIndex);
-      fCanvas.add(...overlays, frame);
-      const refreshOverlays = () => updateCanvasCropOverlays(frame);
-      frame.on('moving', refreshOverlays);
-      frame.on('scaling', refreshOverlays);
-      frame.on('modified', refreshOverlays);
-      updateCanvasCropOverlays(frame);
-      fCanvas.setActiveObject(frame);
-      fCanvas.requestRenderAll();
-    }
-
-    function updateCanvasCropOverlays(frame) {
-      const bounds = frame.getBoundingRect(true, true);
-      const source = frame.cropSourceBounds;
-      const sourceLeft = source.left;
-      const sourceTop = source.top;
-      const sourceRight = source.left + source.width;
-      const sourceBottom = source.top + source.height;
-      const left = Math.max(sourceLeft, bounds.left);
-      const top = Math.max(sourceTop, bounds.top);
-      const right = Math.min(sourceRight, bounds.left + bounds.width);
-      const bottom = Math.min(sourceBottom, bounds.top + bounds.height);
-      const rectangles = [
-        [sourceLeft, sourceTop, source.width, Math.max(0, top - sourceTop)],
-        [sourceLeft, bottom, source.width, Math.max(0, sourceBottom - bottom)],
-        [sourceLeft, top, Math.max(0, left - sourceLeft), Math.max(0, bottom - top)],
-        [right, top, Math.max(0, sourceRight - right), Math.max(0, bottom - top)]
-      ];
-      frame.cropOverlays.forEach((overlay, index) => overlay.set({ left: rectangles[index][0], top: rectangles[index][1], width: rectangles[index][2], height: rectangles[index][3] }));
-      frame.cropOverlays.forEach(overlay => fCanvas.moveTo(overlay, fCanvas.getObjects().indexOf(frame) - 1));
-      frame.setCoords();
-      fCanvas.requestRenderAll();
-    }
-
-    function applyCanvasImageCrop(frame) {
-      const image = frame?.cropTarget;
-      if (!image) return;
-      const imageBounds = frame.cropSourceBounds;
-      const cropBounds = frame.getBoundingRect(true, true);
-      const left = Math.max(imageBounds.left, cropBounds.left);
-      const top = Math.max(imageBounds.top, cropBounds.top);
-      const right = Math.min(imageBounds.left + imageBounds.width, cropBounds.left + cropBounds.width);
-      const bottom = Math.min(imageBounds.top + imageBounds.height, cropBounds.top + cropBounds.height);
-      if (right - left < 4 || bottom - top < 4) return alert('Crop範囲を画像内に作成してください。');
-      const scaleX = image.scaleX;
-      const scaleY = image.scaleY;
-      image.set({
-        cropX: (left - imageBounds.left) / scaleX,
-        cropY: (top - imageBounds.top) / scaleY,
-        width: (right - left) / scaleX,
-        height: (bottom - top) / scaleY,
-        left,
-        top,
-        selectable: true,
-        evented: true
-      });
-      image.setCoords();
-      // Fabric Canvas#remove accepts one object at a time. Remove every crop
-      // helper before selecting the original image, otherwise the ✓ control
-      // remains visible after applying a crop.
-      fCanvas.discardActiveObject();
-      [...(frame.cropOverlays || []), frame.cropSourcePreview, frame].filter(Boolean).forEach(object => fCanvas.remove(object));
-      configureCanvasImageCropControl(image);
-      fCanvas.setActiveObject(image);
-      fCanvas.requestRenderAll();
-      saveCanvasState();
-    }
-
-
-    function objectsOverlap(first, second) {
-      const a = first.getBoundingRect(true, true);
-      const b = second.getBoundingRect(true, true);
-      return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
-    }
-
-    async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
-      const rasterScale = 3;
-      const layer = new fabric.StaticCanvas(document.createElement('canvas'), {
-        width: fCanvas.width, height: fCanvas.height, enableRetinaScaling: false, renderOnAddRemove: false
-      });
-      try {
-        const [sketchClone, eraserClone] = await Promise.all([sketchLayer, eraserPath].map(object => new Promise(resolve => object.clone(resolve, ['isSketchStroke', 'isSketchRaster']))));
-        eraserClone.set({ globalCompositeOperation: 'destination-out', selectable: false, evented: false });
-        layer.add(sketchClone, eraserClone);
-        const rendered = layer.toCanvasElement(rasterScale);
-        const pixels = rendered.getContext('2d').getImageData(0, 0, rendered.width, rendered.height).data;
-        let minX = rendered.width, minY = rendered.height, maxX = -1, maxY = -1;
-        for (let y = 0; y < rendered.height; y++) for (let x = 0; x < rendered.width; x++) {
-          if (pixels[(y * rendered.width + x) * 4 + 3] === 0) continue;
-          minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-        }
-        if (maxX < minX || maxY < minY) return null;
-        const padding = rasterScale * 3;
-        minX = Math.max(0, minX - padding); minY = Math.max(0, minY - padding);
-        maxX = Math.min(rendered.width - 1, maxX + padding); maxY = Math.min(rendered.height - 1, maxY + padding);
-        const cropped = document.createElement('canvas');
-        cropped.width = maxX - minX + 1; cropped.height = maxY - minY + 1;
-        cropped.getContext('2d').drawImage(rendered, minX, minY, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
-        return new Promise(resolve => fabric.Image.fromURL(cropped.toDataURL('image/png'), image => {
-          image.set({
-            left: minX / rasterScale, top: minY / rasterScale, scaleX: 1 / rasterScale, scaleY: 1 / rasterScale,
-            originX: 'left', originY: 'top', selectable: true, evented: true, objectCaching: false, isSketchRaster: true
-          });
-          resolve(image);
-        }));
-      } finally {
-        layer.dispose();
-      }
-    }
-
-    async function eraseIntersectedSketchLayers(eraserPath) {
-      const targets = fCanvas.getObjects().filter(object => (object.isSketchStroke || object.isSketchRaster) && objectsOverlap(object, eraserPath));
-      isUndoRedo = true;
-      try {
-        // The temporary eraser path is never retained. Each affected Draw item
-        // is independently replaced, preserving all untouched Draw layers as
-        // separate selectable/vector objects.
-        fCanvas.remove(eraserPath);
-        for (const target of targets) {
-          const index = fCanvas.getObjects().indexOf(target);
-          if (index < 0) continue;
-          const replacement = await rasterizeErasedSketchLayer(target, eraserPath);
-          fCanvas.remove(target);
-          if (replacement) {
-            fCanvas.add(replacement);
-            fCanvas.moveTo(replacement, index);
-          }
-        }
-      } finally {
-        isUndoRedo = false;
-      }
-      fCanvas.requestRenderAll();
-      canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-      updateUndoRedoButtons();
-    }
-
-    function setCanvasMode(mode) {
-      const btnDraw = document.getElementById('btnDraw');
-      const btnSelect = document.getElementById('btnSelect');
-      const btnErase = document.getElementById('btnErase');
-      canvasMode = mode;
-
-      if (mode === 'draw') {
-        fCanvas.isDrawingMode = true;
-        fCanvas.freeDrawingBrush.color = currentDrawingColor;
-        fCanvas.freeDrawingBrush.width = drawBrushWidth;
-        btnDraw.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      } else if (mode === 'erase') {
-        fCanvas.isDrawingMode = true;
-        // The path uses destination-out only in the draw/erase sketch layer.
-        fCanvas.freeDrawingBrush.color = 'rgba(0, 0, 0, 1)';
-        fCanvas.freeDrawingBrush.width = eraserBrushWidth;
-        btnErase.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnSelect.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      } else {
-        fCanvas.isDrawingMode = false;
-        btnSelect.className = "bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg";
-        btnDraw.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-        btnErase.className = "bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700";
-      }
-    }
-
-    function preventFormEnterSubmit(event) {
-      if (event.key === 'Enter') event.preventDefault();
-    }
-
-    function addFreeImageToCanvas(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (f) => {
-        fabric.Image.fromURL(f.target.result, (img) => {
-          img.scaleToWidth(280);
-          img.set({
-            left: 50 + (Math.random() * 50),
-            top: 50 + (Math.random() * 50),
-            cornerColor: '#f59e0b',
-            cornerSize: 10,
-            transparentCorners: false
-          });
-          fCanvas.add(img);
-          configureCanvasImageCropControl(img);
-          fCanvas.setActiveObject(img);
-          setCanvasMode('select');
-        });
-      };
-      reader.readAsDataURL(file);
-      e.target.value = '';
-    }
-
-    function addTextToNote() {
-      const text = new fabric.IText('Text...', {
-        left: 100,
-        top: 100,
-        fontFamily: 'sans-serif',
-        fill: currentDrawingColor,
-        fontSize: 18
-      });
-      fCanvas.add(text);
-      fCanvas.setActiveObject(text);
-      setCanvasMode('select');
-    }
-
-    function deleteSelected() {
-      const activeObjs = fCanvas.getActiveObjects();
-      if (activeObjs.length > 0) {
-        activeObjs.forEach(obj => fCanvas.remove(obj));
-        fCanvas.discardActiveObject();
-        fCanvas.requestRenderAll();
-      }
-    }
-
-    function clearNoteCanvas() {
-      fCanvas.clear();
-      fCanvas.setBackgroundColor('#090d16', () => {
-        fCanvas.renderAll();
-        canvasHistory = [];
-        historyIndex = -1;
-        saveCanvasState();
-      });
-    }
-
-    function exportCanvasToDataURL() {
-      return fCanvas.toDataURL({ format: 'png', multiplier: 1 });
-    }
-
-    function exportCanvasToBlob() {
-      return new Promise((resolve) => {
-        const dataURL = exportCanvasToDataURL();
-        fetch(dataURL).then(res => res.blob()).then(blob => resolve(blob));
-      });
-    }
-
-    // Load & Save
-    async function loadRecordForEdit(id) {
-      const record = await db.sheets.get(id);
-      if (!record) return alert("Record not found.");
-
-      recordDraftBeforeHistoryEdit = captureRecordDraft();
-      openEditRecordModal();
-
-      currentEditingId = id;
-      document.getElementById('editModeBanner').classList.remove('hidden');
-      document.getElementById('editingRecordId').innerText = id;
-
-      document.getElementById('submitBtnContainer').innerHTML = '';
-
-      document.getElementById('operator').value = record.operator || '';
-      document.getElementById('show_title').value = record.show_title || '';
-      document.getElementById('shoot_datetime').value = record.shoot_datetime || '';
-      document.getElementById('location').value = record.location || '';
-      document.getElementById('gps_location').value = record.gps_location || '';
-      document.getElementById('episode').value = record.episode || '';
-      document.getElementById('scene').value = record.scene || '';
-      document.getElementById('shot').value = record.shot || '';
-
-      const isHdri = record.hdri_captured === 'YES' || record.hdri_captured === true;
-      document.getElementById('hdri_captured').checked = isHdri;
-      toggleHdriWeather(isHdri);
-      setWeatherValues(record.hdri_weather || ['Sunny']);
-      document.getElementById('hdri_notes').value = record.hdri_notes || '';
-
-      if (record.cameras && record.cameras.length > 0) {
-        cameraListState = record.cameras.map(c => ({
-          label: c.label,
-          reel_name: c.reel_name || getCameraReelPrefix(c.label),
-          camera_preset: c.camera || '',
-          camera_custom: '',
-          lens_preset: c.lens || '',
-          lens_custom: '',
-          focal_length: c.focal_length || '',
-          t_stop: c.t_stop || '',
-          clip_name: c.clip_name || '',
-          lut_info: c.lut_info || '',
-          cramerawork_preset: c.cramerawork || 'Fix',
-          cramerawork_custom: '',
-          height_value: c.height_value || '',
-          distance_value: c.distance_value || '',
-          tilt_value: c.tilt_value || '',
-          flag_chart: c.flag_chart || 'NO',
-          flag_cleanplate: c.flag_cleanplate || 'NO',
-          flag_reference: c.flag_reference || 'NO'
-        }));
-      } else {
-        cameraListState = [ createEmptyCameraItem("A") ];
-      }
-      activeCamIndex = 0;
-      renderCameraTabs();
-
-      document.getElementById('notes').value = record.notes || '';
-      clearShotThumbnail();
-      pendingShotThumbnails = record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
-      renderShotThumbnailPreviews();
-
-      isUndoRedo = true;
-      fCanvas.clear();
-      if (record.canvas_json) {
-        fCanvas.loadFromJSON(record.canvas_json, () => {
-          fCanvas.renderAll();
-          setCanvasMode('select');
-          canvasHistory = [record.canvas_json];
-          historyIndex = 0;
-          isUndoRedo = false;
-          updateUndoRedoButtons();
-        });
-      } else {
-        fCanvas.setBackgroundColor('#090d16', () => {
-          fCanvas.renderAll();
-          canvasHistory = [];
-          historyIndex = -1;
-          isUndoRedo = false;
-          saveCanvasState();
-        });
-      }
-
-      document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function openEditRecordModal() {
-      const modal = document.getElementById('editRecordModal');
-      const form = document.getElementById('vfxForm');
-      document.getElementById('editRecordModalContent').appendChild(form);
-      modal.classList.remove('hidden');
-      document.getElementById('editRecordModalActions').classList.remove('hidden');
-      document.getElementById('editRecordModalActions').classList.add('flex');
-      isEditingInModal = true;
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function closeEditRecordModal() {
-      if (!isEditingInModal) return;
-      const form = document.getElementById('vfxForm');
-      document.getElementById('recordPage').appendChild(form);
-      document.getElementById('editRecordModal').classList.add('hidden');
-      document.getElementById('editRecordModalActions').classList.add('hidden');
-      document.getElementById('editRecordModalActions').classList.remove('flex');
-      isEditingInModal = false;
-      document.body.classList.remove('overflow-hidden');
-      if (currentEditingId && recordDraftBeforeHistoryEdit) {
-        restoreRecordDraft(recordDraftBeforeHistoryEdit);
-        recordDraftBeforeHistoryEdit = null;
-      } else if (currentEditingId) {
-        cancelEditMode();
-      }
-    }
-
-    function captureRecordDraft() {
-      saveActiveTabState();
-      const formValues = {};
-      document.querySelectorAll('#vfxForm input:not([type="file"]), #vfxForm textarea, #vfxForm select').forEach(element => {
-        if (!element.id) return;
-        formValues[element.id] = element.tagName === 'SELECT' && element.multiple
-          ? [...element.selectedOptions].map(option => option.value)
-          : element.type === 'checkbox' ? element.checked : element.value;
-      });
-      return {
-        formValues,
-        cameras: cameraListState.map(camera => ({ ...camera })),
-        activeCamIndex,
-        thumbnails: [...pendingShotThumbnails],
-        canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : ''
-      };
-    }
-
-    function restoreRecordDraft(draft) {
-      currentEditingId = null;
-      document.getElementById('editModeBanner').classList.add('hidden');
-      document.getElementById('submitBtnContainer').innerHTML = `<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>`;
-      Object.entries(draft.formValues).forEach(([id, value]) => {
-        const element = document.getElementById(id);
-        if (!element) return;
-        if (element.tagName === 'SELECT' && element.multiple) {
-          const values = new Set(value);
-          [...element.options].forEach(option => { option.selected = values.has(option.value); });
-        } else if (element.type === 'checkbox') element.checked = value;
-        else element.value = value;
-      });
-      toggleHdriWeather(document.getElementById('hdri_captured').checked);
-      cameraListState = draft.cameras.map(camera => ({ ...camera }));
-      activeCamIndex = Math.min(draft.activeCamIndex, Math.max(0, cameraListState.length - 1));
-      pendingShotThumbnails = [...draft.thumbnails];
-      renderCameraTabs();
-      renderShotThumbnailPreviews();
-      if (draft.canvasJson && fCanvas) {
-        fCanvas.loadFromJSON(draft.canvasJson, () => { fCanvas.renderAll(); setCanvasMode('select'); });
-      }
-    }
-
-    function cancelEditMode() {
-      currentEditingId = null;
-      document.getElementById('editModeBanner').classList.add('hidden');
-      
-      document.getElementById('submitBtnContainer').innerHTML = `
-        <button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">
-          Save VFX Sheet (IndexedDB)
-        </button>
-      `;
-
-      document.getElementById('vfxForm').reset();
-      resetFormToDefault();
-      clearShotThumbnail();
-      clearNoteCanvas();
-      setCanvasMode('draw');
-    }
-
-    function prepareNextRecord() {
-      currentEditingId = null;
-      document.getElementById('editModeBanner').classList.add('hidden');
-      document.getElementById('submitBtnContainer').innerHTML = `<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>`;
-      const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('shoot_datetime').value = now.toISOString().slice(0, 16);
-      document.getElementById('shot').value = incrementTrailingNumber(document.getElementById('shot').value);
-      saveActiveTabState();
-      cameraListState = cameraListState.map(camera => ({
-        ...camera,
-        reel_name: camera.reel_name || getCameraReelPrefix(camera.label),
-        lens_preset: '', lens_custom: '', focal_length: '', t_stop: '',
-        cramerawork_preset: 'Fix', cramerawork_custom: '',
-        height_value: '', distance_value: '', tilt_value: '',
-        clip_name: incrementTrailingNumber(camera.clip_name)
-      }));
-      activeCamIndex = 0;
-      renderCameraTabs();
-      clearShotThumbnail();
-    }
-
-    async function saveRecord(e, mode) {
-      if (e) e.preventDefault();
-
-      const form = document.getElementById('vfxForm');
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
-
-      saveActiveTabState();
-
-      const processedCameras = cameraListState.map(cam => {
-        const camModel = cam.camera_preset === '__custom__' ? cam.camera_custom : cam.camera_preset;
-        const lensModel = cam.lens_preset === '__custom__' ? cam.lens_custom : cam.lens_preset;
-        const workModel = cam.cramerawork_preset === '__custom__' ? cam.cramerawork_custom : cam.cramerawork_preset;
-        return {
-          label: cam.label,
-          reel_name: cam.reel_name || getCameraReelPrefix(cam.label),
-          camera: camModel,
-          lens: lensModel,
-          focal_length: cam.focal_length,
-          t_stop: cam.t_stop,
-          clip_name: cam.clip_name,
-          lut_info: cam.lut_info,
-          cramerawork: workModel,
-          height_value: cam.height_value,
-          distance_value: cam.distance_value,
-          tilt_value: cam.tilt_value,
-          flag_chart: cam.flag_chart,
-          flag_cleanplate: cam.flag_cleanplate,
-          flag_reference: cam.flag_reference
-        };
-      });
-
-      const isHdri = document.getElementById('hdri_captured').checked;
-      const noteCanvasBlob = await exportCanvasToBlob();
-      const existingRecord = mode === 'update' && currentEditingId ? await db.sheets.get(currentEditingId) : null;
-      const shotThumbnails = pendingShotThumbnails.length ? pendingShotThumbnails : (existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []));
-      const canvasJson = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-
-      const payload = {
-        operator: document.getElementById('operator').value,
-        show_title: document.getElementById('show_title').value,
-        shoot_datetime: document.getElementById('shoot_datetime').value,
-        location: document.getElementById('location').value,
-        gps_location: document.getElementById('gps_location').value,
-        episode: document.getElementById('episode').value,
-        scene: document.getElementById('scene').value,
-        shot: document.getElementById('shot').value,
-        hdri_captured: isHdri ? 'YES' : 'NO',
-        hdri_weather: isHdri ? getWeatherValues() : [],
-        hdri_notes: isHdri ? document.getElementById('hdri_notes').value : '',
-        cameras: processedCameras,
-        notes: document.getElementById('notes').value,
-        // Canvas PNG is kept locally for editing; it is intentionally excluded from API sync.
-        images: [noteCanvasBlob],
-        shot_thumbnails: shotThumbnails,
-        canvas_json: canvasJson,
-        canvas_version: 5,
-        uuid: mode === 'update' && currentEditingId ? (await db.sheets.get(currentEditingId)).uuid : newUuid(),
-        synced: 0,
-        syncError: '',
-        created_at: new Date().toISOString()
-      };
-
-      let saved = false;
-      try {
-        if (mode === 'update' && currentEditingId) {
-          await db.sheets.update(currentEditingId, payload);
-          alert(`Record ID: ${currentEditingId} updated.`);
-          saved = true;
-        } else {
-          const newId = await db.sheets.add(payload);
-          alert(`Saved as new record (ID: ${newId}).`);
-          saved = true;
-        }
-      } catch (err) {
-        console.error("Save Record Error:", err);
-        alert("Failed to save record to IndexedDB.");
-      }
-
-      if (saved) {
-        if (isEditingInModal) {
-          recordDraftBeforeHistoryEdit = null;
-          closeEditRecordModal();
-        } else {
-          prepareNextRecord();
-        }
-      }
-      await renderList();
-    }
-
-    // Render & Export
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
-    }
-
-    async function renderList() {
-      const records = await db.sheets.reverse().toArray();
-      const availableIds = new Set(records.map(record => record.id));
-      [...selectedRecordIds].forEach(id => { if (!availableIds.has(id)) selectedRecordIds.delete(id); });
-      document.getElementById('totalCount').innerText = records.length;
-      document.getElementById('historyNavCount').innerText = `(${records.length})`;
-      updateHistorySelectionControls(records);
-      
-      const listEl = document.getElementById('recordList');
-      if (records.length === 0) {
-        listEl.innerHTML = `<p class="text-xs text-slate-600 text-center py-4">No records saved</p>`;
-        return;
-      }
-
-      const cards = await Promise.all(records.map(async r => {
-        const safe = escapeHtml;
-        const thumbnailUrls = await Promise.all((r.shot_thumbnails || (r.shot_thumbnail ? [r.shot_thumbnail] : [])).map(blobToBase64));
-        const syncBadge = r.synced 
-          ? `<span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">Synced</span>`
-          : `<span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded">Unsynced</span>`;
-
-        const gpsDisp = r.gps_location ? `<span class="text-amber-300 font-mono">📍 ${safe(r.gps_location)}</span>` : '';
-        const hdriDisp = r.hdri_captured === 'YES' 
-          ? `<span class="text-amber-400 font-bold">HDRI: YES (${safe(Array.isArray(r.hdri_weather) ? r.hdri_weather.join(' / ') : r.hdri_weather || '-')})</span>`
-          : `<span class="text-slate-500">HDRI: NO</span>`;
-
-        const camSummary = (r.cameras || []).map(c => 
-          `<div class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-[10px] space-y-0.5">
-            <div class="flex justify-between font-bold text-slate-200">
-              <span>🎥 ${safe(c.label)}: ${safe(c.camera || '-')} (${safe(c.lens || '-')})</span>
-              <span>Work: ${safe(c.cramerawork || '-')}</span>
-            </div>
-            <div class="text-slate-400 flex justify-between">
-              <span>Clip:${safe(c.clip_name || '-')} Aperture:${safe(c.t_stop || '-')}</span>
-              <span>H:${safe(c.height_value || '-')} D:${safe(c.distance_value || '-')} Tilt:${safe(c.tilt_value || '-')}</span>
-            </div>
-            <div class="text-slate-400 flex justify-between">
-              <span>Chart:${safe(c.flag_chart||'NO')} Clean:${safe(c.flag_cleanplate||'NO')} Ref:${safe(c.flag_reference||'NO')}</span>
-              <span>LUT:${safe(c.lut_info || '-')}</span>
-            </div>
-          </div>`
-        ).join('');
-
-        return `
-          <div class="bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(r.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <div class="flex min-w-0 items-center gap-2">
-                <input type="checkbox" aria-label="Select record ${r.id}" ${selectedRecordIds.has(r.id) ? 'checked' : ''} onchange="toggleRecordSelection(${r.id}, this.checked)" class="h-4 w-4 shrink-0 accent-amber-400">
-                <span class="font-mono text-amber-400 font-bold text-sm truncate">#${r.id} | ${safe(r.show_title)} ${safe(r.episode || '-')}_${safe(r.scene)}_${safe(r.shot)}</span>
-                <span class="shrink-0 text-[10px] text-slate-500">${safe(r.shoot_datetime || '-')}</span>
-              </div>
-              <div class="flex gap-2 items-center">
-                ${syncBadge}
-                <button type="button" onclick="loadRecordForEdit(${r.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">
-                  ✏️ Edit
-                </button>
-                <button type="button" onclick="deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 text-xs px-1">
-                  ✕
-                </button>
-              </div>
-            </div>
-            ${thumbnailUrls.length ? `<div class="flex gap-2 overflow-x-auto">${thumbnailUrls.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="h-28 min-w-36 rounded-lg border border-slate-800 object-cover">`).join('')}</div>` : ''}
-            <div class="space-y-1">
-              ${camSummary}
-            </div>
-            <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">
-              ${hdriDisp}
-              <span class="text-slate-400">${safe(r.hdri_notes || '')}</span>
-            </div>
-            <div class="text-slate-400 flex flex-wrap justify-between text-[11px] pt-0.5 border-t border-slate-900">
-              <span>${gpsDisp}</span>
-              <span class="text-slate-500">Op: ${safe(r.operator || '-')}</span>
-            </div>
-          </div>
-        `;
-      }));
-      listEl.innerHTML = cards.join('');
-    }
-
-    function updateHistorySelectionControls(records = []) {
-      const selectedCount = selectedRecordIds.size;
-      const deleteButton = document.getElementById('deleteSelectedBtn');
-      const selectAllButton = document.getElementById('selectAllRecordsBtn');
-      deleteButton.disabled = selectedCount === 0;
-      deleteButton.innerText = `Delete Selected (${selectedCount})`;
-      selectAllButton.innerText = records.length > 0 && selectedCount === records.length ? 'Clear Selection' : 'Select All';
-    }
-
-    function toggleRecordSelection(id, isSelected) {
-      if (isSelected) selectedRecordIds.add(id);
-      else selectedRecordIds.delete(id);
-      renderList();
-    }
-
-    async function toggleSelectAllRecords() {
-      const records = await db.sheets.toArray();
-      if (records.length && selectedRecordIds.size === records.length) selectedRecordIds.clear();
-      else records.forEach(record => selectedRecordIds.add(record.id));
-      renderList();
-    }
-
-    async function getRecordsForHistoryAction() {
-      const records = await db.sheets.reverse().toArray();
-      return selectedRecordIds.size ? records.filter(record => selectedRecordIds.has(record.id)) : records;
-    }
-
-    async function deleteSelectedRecords() {
-      const ids = [...selectedRecordIds];
-      if (!ids.length) return;
-      if (!confirm(`選択した${ids.length}件のレコードを削除しますか？この操作は元に戻せません。`)) return;
-      await db.sheets.bulkDelete(ids);
-      if (currentEditingId && ids.includes(currentEditingId)) closeEditRecordModal();
-      selectedRecordIds.clear();
-      renderList();
-    }
-
-    async function deleteRecord(id) {
-      if (confirm(`Delete Record ID: ${id}?`)) {
-        await db.sheets.delete(id);
-        if (currentEditingId === id) cancelEditMode();
-        renderList();
-      }
-    }
-
-    function getRecordShotThumbnails(record) {
-      return record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
-    }
-
-    function getShootingDataName(record, camera = {}) {
-      return [record.episode, record.scene, record.shot, getCameraReelName(camera)].filter(Boolean).join('_');
-    }
-
-    function formatFlowPtId(id) {
-      return String(id ?? '').padStart(5, '0');
-    }
-
-    function getShootingDataExportFilename(record, camera, extension) {
-      const shootingDate = String(record.shoot_datetime || '').match(/^\d{4}-\d{2}-\d{2}/)?.[0].replaceAll('-', '') || 'undated';
-      return `${formatFlowPtId(record.id)}_${getShootingDataName(record, camera)}_${shootingDate}.${extension}`;
-    }
-
-    async function createThumbnailCollage(thumbnailBlobs) {
-      const images = (await Promise.all(thumbnailBlobs.map(imageFromBlob))).filter(Boolean);
-      if (!images.length) return null;
-
-      const targetAspectRatio = 16 / 9;
-      const collageWidth = 1600;
-      const imageAspects = images.map(image => image.width / image.height);
-      // Keep the saved order and group adjacent images into rows with similar
-      // total aspect ratios. This produces an overall collage close to 16:9
-      // while every source image remains fully visible and uncropped.
-      const totalAspect = imageAspects.reduce((total, aspect) => total + aspect, 0);
-      const idealRowCount = Math.sqrt(totalAspect / targetAspectRatio);
-      const rowCountCandidates = [...new Set([Math.floor(idealRowCount), Math.ceil(idealRowCount)].map(count => Math.min(images.length, Math.max(1, count))))];
-      const rowCount = rowCountCandidates.reduce((best, candidate) =>
-        Math.abs(totalAspect / (candidate * candidate) - targetAspectRatio) < Math.abs(totalAspect / (best * best) - targetAspectRatio) ? candidate : best
-      );
-      const targetRowAspect = totalAspect / rowCount;
-      const rows = [];
-      let currentRow = [];
-      let currentAspect = 0;
-      imageAspects.forEach((aspect, index) => {
-        const rowsRemaining = rowCount - rows.length;
-        const imagesRemaining = images.length - index;
-        const shouldStartNextRow = currentRow.length > 0
-          && rowsRemaining > 1
-          && imagesRemaining > rowsRemaining - 1
-          && Math.abs(currentAspect - targetRowAspect) < Math.abs(currentAspect + aspect - targetRowAspect);
-        if (shouldStartNextRow) {
-          rows.push(currentRow);
-          currentRow = [];
-          currentAspect = 0;
-        }
-        currentRow.push({ image: images[index], aspect });
-        currentAspect += aspect;
-      });
-      if (currentRow.length) rows.push(currentRow);
-
-      const rowLayouts = rows.map(row => {
-        const aspect = row.reduce((total, item) => total + item.aspect, 0);
-        return { items: row, height: Math.max(1, Math.round(collageWidth / aspect)) };
-      });
-      const canvas = document.createElement('canvas');
-      canvas.width = collageWidth;
-      canvas.height = rowLayouts.reduce((height, row) => height + row.height, 0);
-      const context = canvas.getContext('2d');
-
-      let y = 0;
-      rowLayouts.forEach(({ items, height }) => {
-        let x = 0;
-        items.forEach(({ image, aspect }, index) => {
-          // Rounding is assigned to the final image so every row reaches the
-          // canvas edge without altering source aspect ratios or cropping.
-          const width = index === items.length - 1 ? collageWidth - x : Math.round(height * aspect);
-          context.drawImage(image, x, y, width, height);
-          x += width;
-        });
-        y += height;
-      });
-
-      return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-    }
-
-    function crc32(bytes) {
-      let crc = 0xffffffff;
-      for (const byte of bytes) {
-        crc ^= byte;
-        for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
-      }
-      return (crc ^ 0xffffffff) >>> 0;
-    }
-
-    function createZip(files) {
-      const encoder = new TextEncoder();
-      const now = new Date();
-      const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
-      const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
-      const localParts = [];
-      const centralParts = [];
-      let offset = 0;
-
-      files.forEach(({ path, bytes }) => {
-        const filename = encoder.encode(path);
-        const checksum = crc32(bytes);
-        const localHeader = new Uint8Array(30 + filename.length);
-        const localView = new DataView(localHeader.buffer);
-        localView.setUint32(0, 0x04034b50, true);
-        localView.setUint16(4, 20, true);
-        localView.setUint16(6, 0x0800, true);
-        localView.setUint16(8, 0, true);
-        localView.setUint16(10, dosTime, true);
-        localView.setUint16(12, dosDate, true);
-        localView.setUint32(14, checksum, true);
-        localView.setUint32(18, bytes.length, true);
-        localView.setUint32(22, bytes.length, true);
-        localView.setUint16(26, filename.length, true);
-        localHeader.set(filename, 30);
-        localParts.push(localHeader, bytes);
-
-        const centralHeader = new Uint8Array(46 + filename.length);
-        const centralView = new DataView(centralHeader.buffer);
-        centralView.setUint32(0, 0x02014b50, true);
-        centralView.setUint16(4, 20, true);
-        centralView.setUint16(6, 20, true);
-        centralView.setUint16(8, 0x0800, true);
-        centralView.setUint16(10, 0, true);
-        centralView.setUint16(12, dosTime, true);
-        centralView.setUint16(14, dosDate, true);
-        centralView.setUint32(16, checksum, true);
-        centralView.setUint32(20, bytes.length, true);
-        centralView.setUint32(24, bytes.length, true);
-        centralView.setUint16(28, filename.length, true);
-        centralView.setUint32(42, offset, true);
-        centralHeader.set(filename, 46);
-        centralParts.push(centralHeader);
-        offset += localHeader.length + bytes.length;
-      });
-
-      const centralSize = centralParts.reduce((size, part) => size + part.length, 0);
-      const end = new Uint8Array(22);
-      const endView = new DataView(end.buffer);
-      endView.setUint32(0, 0x06054b50, true);
-      endView.setUint16(8, files.length, true);
-      endView.setUint16(10, files.length, true);
-      endView.setUint32(12, centralSize, true);
-      endView.setUint32(16, offset, true);
-      return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
-    }
-
-    async function createShootingDataPdf(record, camera) {
-      if (!window.jspdf?.jsPDF) throw new Error('PDF export library is unavailable. Please reload the app once while online.');
-      const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      // One FlowPT Shooting Data item corresponds to one camera/reel. Render the
-      // same visual VFX Sheet report layout as PDF export, as one PDF per item.
-      // The report background is compressed, then source images are embedded
-      // separately at high quality to keep file size low without soft photos.
-      const shootingDataRecord = { ...record, cameras: [camera] };
-      const reportPage = await renderRecordPdfPage(shootingDataRecord);
-      doc.addImage(reportPage.background, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
-      reportPage.thumbnailBoxes.forEach(box => addHighResolutionPdfImage(doc, box));
-      if (reportPage.sketchBox) addHighResolutionPdfImage(doc, reportPage.sketchBox);
-      await addInvisiblePdfTextLayer(doc, shootingDataRecord);
-      return new Uint8Array(doc.output('arraybuffer'));
-    }
-
-    function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
-      if (!image) return;
-      const ratio = Math.min(width / image.width, height / image.height);
-      const imageWidth = image.width * ratio;
-      const imageHeight = image.height * ratio;
-      const source = document.createElement('canvas');
-      const maxDimension = 2000;
-      const sourceRatio = Math.min(1, maxDimension / Math.max(image.width, image.height));
-      source.width = Math.max(1, Math.round(image.width * sourceRatio));
-      source.height = Math.max(1, Math.round(image.height * sourceRatio));
-      source.getContext('2d').drawImage(image, 0, 0, source.width, source.height);
-      // renderRecordPdfPage uses a 1240 × 1754 logical A4 layout.
-      doc.addImage(source.toDataURL('image/jpeg', 0.88), 'JPEG', (x + (width - imageWidth) / 2) / 1240 * 210, (y + (height - imageHeight) / 2) / 1754 * 297, imageWidth / 1240 * 210, imageHeight / 1754 * 297, undefined, 'FAST');
-    }
-
-    async function exportToCSV() {
-      const button = document.getElementById('exportCsvBtn');
-      const originalLabel = button.innerHTML;
-      button.disabled = true;
-      button.innerText = 'Creating FlowPT ZIP…';
-      try {
-        const records = await getRecordsForHistoryAction();
-        if (!records || records.length === 0) return alert("No records to export.");
-
-        const headers = ["ID", "UUID", "Project", "Shooting Data Name", "ThumbText", "PDF", "Shoot Day", "Shoot Place", "Shoot Time", "Description", "Camera", "Lens", "Focal Length", "F-stop", "ClipName", "LUT", "Camerawork", "Height", "Distance", "Angle"];
-        const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-        const formatShootDate = value => {
-          const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
-          return match ? { day: `${match[1]}${match[2]}${match[3]}`, time: `${match[2]}/${match[3]} ${match[4]}:${match[5]}` } : { day: '', time: '' };
-        };
-        const thumbnails = new Map();
-        const shootingDataItems = new Map();
-        const rows = records.flatMap(record => {
-          const dateTime = formatShootDate(record.shoot_datetime);
-          const cameras = record.cameras?.length ? record.cameras : [{}];
-          const shotThumbnails = getRecordShotThumbnails(record);
-          return cameras.map(camera => {
-            const shootingDataName = getShootingDataName(record, camera);
-            const thumbnailFilename = getShootingDataExportFilename(record, camera, 'jpg');
-            const pdfFilename = getShootingDataExportFilename(record, camera, 'pdf');
-            const exportKey = pdfFilename;
-            if (shotThumbnails.length && !thumbnails.has(exportKey)) thumbnails.set(exportKey, shotThumbnails);
-            if (!shootingDataItems.has(exportKey)) shootingDataItems.set(exportKey, { record, camera, thumbnailFilename, pdfFilename });
-            return [
-            formatFlowPtId(record.id),
-            record.uuid || '',
-            record.show_title,
-            shootingDataName,
-            shotThumbnails.length ? `thumbnails/${thumbnailFilename}` : '',
-            `pdfs/${pdfFilename}`,
-            dateTime.day,
-            record.location,
-            dateTime.time,
-            record.notes,
-            camera.camera,
-            camera.lens,
-            camera.focal_length,
-            camera.t_stop,
-            camera.clip_name,
-            camera.lut_info,
-            camera.cramerawork,
-            camera.height_value,
-            camera.distance_value,
-            camera.tilt_value
-            ].map(csvEscape).join(',');
-          });
-        });
-
-        const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
-        const thumbnailFiles = (await Promise.all([...thumbnails].map(async ([exportKey, shotThumbnails]) => {
-          const collage = await createThumbnailCollage(shotThumbnails);
-          const { thumbnailFilename } = shootingDataItems.get(exportKey);
-          return collage ? { path: `thumbnails/${thumbnailFilename}`, bytes: new Uint8Array(await collage.arrayBuffer()) } : null;
-        }))).filter(Boolean);
-        const pdfFiles = [];
-        for (const [, { record, camera, pdfFilename }] of shootingDataItems) {
-          button.innerText = `Creating PDF ${pdfFiles.length + 1}/${shootingDataItems.size}…`;
-          pdfFiles.push({ path: `pdfs/${pdfFilename}`, bytes: await createShootingDataPdf(record, camera) });
-        }
-        const date = new Date().toISOString().slice(0, 10);
-        const zip = createZip([
-          { path: `VFX_Sheet_${date}.csv`, bytes: new TextEncoder().encode(csvContent) },
-          ...thumbnailFiles,
-          ...pdfFiles
-        ]);
-        downloadExportBlob(zip, `VFX_Sheet_${date}.zip`);
-        alert(`FlowPT ZIP exported with ${thumbnailFiles.length} thumbnail file(s) and ${pdfFiles.length} PDF file(s).`);
-      } catch (error) {
-        console.error('CSV export error:', error);
-        alert(`CSV Export Error: ${error.message || error}`);
-      } finally {
-        button.disabled = false;
-        button.innerHTML = originalLabel;
-      }
-    }
-
-    async function exportToPDF() {
-      const button = document.getElementById('exportPdfBtn');
-      const originalLabel = button.innerHTML;
-      // Open immediately from the tap event so iOS does not block the print view.
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) return alert('PDF出力画面を開けませんでした。ポップアップを許可してから再試行してください。');
-      button.disabled = true;
-      button.innerText = 'Preparing PDF…';
-      try {
-        const records = await getRecordsForHistoryAction();
-        if (!records || records.length === 0) {
-          printWindow.close();
-          return alert("No records to export.");
-        }
-        const pages = await Promise.all(records.map(renderPrintableTextPdfRecord));
-        printWindow.document.open();
-        printWindow.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>VFX Sheet Report</title><style>
-          @page { size: A3 portrait; margin: 10mm; }
-          * { box-sizing: border-box; } body { color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif; font-size:10px; line-height:1.4; } .return-bar { position:sticky; top:0; z-index:1; display:flex; justify-content:flex-end; gap:8px; padding:8px; background:#0f172a; } .return-bar button { border:0; border-radius:6px; padding:8px 12px; color:#0f172a; background:#fbbf24; font-weight:700; } .return-bar .close { color:#e2e8f0; background:#334155; } .page { break-after:page; page-break-after:always; break-inside:avoid-page; page-break-inside:avoid; } .page:last-child { break-after:auto; page-break-after:auto; } .report-header { position:relative; min-height:48px; } h1 { font-size:20px; margin:0; color:#0f172a; text-align:center; } .meta { margin:2px 0 10px; color:#475569; text-align:center; } .header-meta { position:absolute; top:0; right:0; max-width:42%; color:#475569; font-size:9px; line-height:1.55; text-align:right; } .header-meta div { white-space:nowrap; } .header-meta strong { color:#334155; } h2 { font-size:12px; color:#92400e; border-bottom:1px solid #cbd5e1; padding-bottom:3px; margin:12px 0 5px; } table { border-collapse:collapse; width:100%; margin-bottom:6px; break-inside:avoid; page-break-inside:avoid; } th,td { border:1px solid #cbd5e1; padding:4px; text-align:left; vertical-align:top; word-break:break-word; } th { background:#e2e8f0; font-weight:700; white-space:nowrap; } .images { display:flex; flex-wrap:wrap; gap:6px; break-inside:avoid; page-break-inside:avoid; } .thumb { width:31%; max-height:120px; object-fit:contain; border:1px solid #cbd5e1; } .sketch { display:block; width:100%; height:auto; max-height:520px; object-fit:contain; border:1px solid #cbd5e1; break-inside:avoid; page-break-inside:avoid; } pre { margin:0; white-space:pre-wrap; font-family:inherit; } @media print { .return-bar { display:none; } }</style></head><body><div class="return-bar"><button onclick="window.print()">Export PDF</button><button class="close" onclick="window.close()">Close &amp; Return to VFX Sheet</button></div>${pages.join('')}<script>window.onafterprint=()=>window.close();<\/script></body></html>`);
-        printWindow.document.close();
-        printWindow.focus();
-      } catch (error) {
-        printWindow.close();
-        console.error('PDF export error:', error);
-        alert(`PDF Export Error: ${error.message || error}`);
-      } finally {
-        button.disabled = false;
-        button.innerHTML = originalLabel;
-      }
-    }
-
-    async function renderPrintableTextPdfRecord(record) {
-      const safe = escapeHtml;
-      const value = input => safe(input || '-');
-      const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
-      const thumbnailUrls = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(blobToBase64));
-      const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
-      const sketchUrl = sketch ? (() => { const canvas = document.createElement('canvas'); canvas.width = sketch.naturalWidth || sketch.width; canvas.height = sketch.naturalHeight || sketch.height; canvas.getContext('2d').drawImage(sketch, 0, 0); return canvas.toDataURL('image/png'); })() : '';
-      return `<section class="page"><div class="report-header"><h1>VFX Sheet</h1><div class="meta">Record #${value(record.id)}</div><div class="header-meta"><div><strong>Operator:</strong> ${value(record.operator)}</div><div><strong>Date &amp; Time:</strong> ${value(record.shoot_datetime)}</div><div><strong>GPS:</strong> ${value(record.gps_location)}</div></div></div>
-        <h2>1. General Information</h2><table><tr><th>Show Title</th><td>${value(record.show_title)}</td><th>Episode_Scene_Shot</th><td>${value(record.episode)}_${value(record.scene)}_${value(record.shot)}</td><th>Location</th><td>${value(record.location)}</td></tr></table>
-        <h2>2. Multi-Camera Setup</h2><table><tr><th>Reel</th><th>Camera</th><th>Lens / Focal</th><th>T Stop</th><th>Clip</th><th>Movement</th><th>H / D / Tilt</th><th>LUT / Reference</th></tr>${cameras.map(camera => `<tr><td>${value(getCameraFieldLabel(camera))}</td><td>${value(camera.camera)}</td><td>${value(camera.lens)} / ${value(camera.focal_length)}</td><td>${value(camera.t_stop)}</td><td>${value(camera.clip_name)}</td><td>${value(camera.cramerawork)}</td><td>${value(camera.height_value)} / ${value(camera.distance_value)} / ${value(camera.tilt_value)}</td><td>${value(camera.lut_info)}<br>Chart:${value(camera.flag_chart)} Clean:${value(camera.flag_cleanplate)} Ref:${value(camera.flag_reference)}</td></tr>`).join('')}</table>
-        <h2>3. HDRI Setup</h2><table><tr><th>Captured</th><td>${value(record.hdri_captured)}</td><th>Weather</th><td>${value(Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather)}</td><th>Notes / EV</th><td>${value(record.hdri_notes)}</td></tr></table>
-        <h2>4. VFX Field Notes</h2><table><tr><td><pre>${value(record.notes)}</pre></td></tr></table>
-        ${thumbnailUrls.length ? `<h2>Shot Thumbnails</h2><div class="images">${thumbnailUrls.map(url => `<img class="thumb" src="${url}" alt="Shot thumbnail">`).join('')}</div>` : ''}${sketchUrl ? `<h2>Field Sketch</h2><img class="sketch" src="${sketchUrl}" alt="Field sketch">` : ''}</section>`;
-    }
-
-    async function addInvisiblePdfTextLayer(doc, record) {
-      await loadJapanesePdfFont(doc);
-      const cameraText = (record.cameras || []).map(camera => [
-        getCameraFieldLabel(camera), camera.camera, camera.lens, camera.focal_length,
-        camera.t_stop, camera.clip_name, camera.cramerawork, camera.lut_info,
-        camera.height_value, camera.distance_value, camera.tilt_value
-      ].filter(Boolean).join(' / ')).join('\n');
-      const allText = [
-        'VFX Sheet', `Record #${record.id || ''}`, record.show_title, record.operator,
-        record.shoot_datetime, record.location, record.gps_location, record.episode,
-        record.scene, record.shot, record.hdri_captured,
-        Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather,
-        record.hdri_notes, cameraText, record.notes
-      ].filter(Boolean).join('\n');
-      doc.setFont('DroidSansJapanese', 'normal');
-      doc.setFontSize(1);
-      [...allText].reduce((lines, character) => {
-        const lastLine = lines[lines.length - 1];
-        if (character === '\n' || [...lastLine].length >= 48) lines.push(character === '\n' ? '' : character);
-        else lines[lines.length - 1] += character;
-        return lines;
-      }, ['']).filter(Boolean).forEach((line, index) => {
-        doc.text(line, 2, 2 + Math.min(index, 250) * 0.01, { renderingMode: 'invisible' });
-      });
-    }
-
-    function downloadExportBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = filename;
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      // Safari can cancel downloads if the Object URL is revoked in the same task.
-      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-    }
-
-    async function loadJapanesePdfFont(doc) {
-      if (!japanesePdfFontPromise) {
-        if (!window.VFX_JAPANESE_PDF_FONT_BASE64) {
-          throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
-        }
-        // jsPDF's VFS expects the original Base64 payload. Converting it with atob()
-        // corrupts the font metadata and causes missing Unicode width tables.
-        japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
-      }
-      const fontData = await japanesePdfFontPromise;
-      if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
-        doc.addFileToVFS('DroidSansJapanese.ttf', fontData);
-        doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
-      }
-      doc.setFont('DroidSansJapanese', 'normal');
-      // Some WebKit/jsPDF combinations leave the Unicode metrics object unset
-      // even though the TrueType parser supplies widthOfString/widthOfGlyph.
-      // jsPDF's table layout always dereferences this object, so provide the
-      // fallback table used when a glyph width is unavailable.
-      const font = doc.getFont('DroidSansJapanese', 'normal');
-      font.metadata.Unicode = font.metadata.Unicode || { encoding: {}, kerning: {}, widths: { 0: 1000 } };
-      font.metadata.Unicode.widths = font.metadata.Unicode.widths || { 0: 1000 };
-      font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
-    }
-
-    async function renderTextPdfRecord(doc, record) {
-      await loadJapanesePdfFont(doc);
-      const margin = 12;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const text = value => String(value ?? '').trim() || '-';
-      const addSection = (title, rows, startY) => {
-        doc.setFontSize(11);
-        doc.setTextColor(180, 83, 9);
-        doc.text(title, margin, startY);
-        let y = startY + 5;
-        doc.setFontSize(7.5);
-        rows.forEach((row, index) => {
-          const line = row.map(value => text(value)).join('  |  ');
-          // Japanese glyph widths vary by font and jsPDF/WebKit version. Fixed
-          // character clipping avoids relying on those metrics for layout.
-          const clipped = [...line].slice(0, 58).join('');
-          doc.setFillColor(index % 2 ? 248 : 241, index % 2 ? 250 : 245, index % 2 ? 252 : 249);
-          doc.rect(margin, y - 3.2, pageWidth - margin * 2, 5.6, 'F');
-          doc.setTextColor(15, 23, 42);
-          doc.text(clipped, margin + 2, y);
-          y += 6;
-        });
-        return y + 4;
-      };
-
-      doc.setTextColor(15, 23, 42);
-      doc.setFontSize(18);
-      doc.text('VFX Sheet', margin, 16);
-      doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Record #${record.id}  |  ${text(record.show_title)}  |  ${text(record.episode)}_${text(record.scene)}_${text(record.shot)}`, margin, 22);
-      let y = 30;
-      y = addSection('1. General Information', [[
-        'Operator', text(record.operator), 'Date & Time', text(record.shoot_datetime),
-        'Location', text(record.location), 'GPS', text(record.gps_location)
-      ]], y);
-      const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
-      y = addSection('2. Multi-Camera Setup', [[
-        'Reel', 'Camera', 'Lens / Focal', 'T Stop', 'Clip Name', 'Movement', 'Height / Distance / Tilt', 'LUT / Reference'
-      ], ...cameras.map(camera => [
-        text(getCameraFieldLabel(camera)), text(camera.camera), `${text(camera.lens)} / ${text(camera.focal_length)}`,
-        text(camera.t_stop), text(camera.clip_name), text(camera.cramerawork),
-        `${text(camera.height_value)} / ${text(camera.distance_value)} / ${text(camera.tilt_value)}`,
-        `${text(camera.lut_info)} / Chart:${text(camera.flag_chart)} Clean:${text(camera.flag_cleanplate)} Ref:${text(camera.flag_reference)}`
-      ])], y);
-      y = addSection('3. HDRI Setup', [[
-        'HDRI Captured', text(record.hdri_captured), 'Weather', text(Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather), 'HDRI Notes / EV', text(record.hdri_notes)
-      ]], y);
-      y = addSection('4. VFX Field Notes', [['Notes', text(record.notes)]], y);
-
-      const thumbnailUrls = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(blobToBase64));
-      const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
-      if (thumbnailUrls.length || sketch) {
-        if (y > pageHeight - 95) { doc.addPage(); y = 18; }
-        doc.setFontSize(11); doc.setTextColor(180, 83, 9); doc.text('5. Reference Images', margin, y); y += 4;
-        const thumbnailWidth = Math.min(42, (pageWidth - margin * 2 - 3 * Math.max(0, thumbnailUrls.length - 1)) / Math.max(1, thumbnailUrls.length));
-        thumbnailUrls.forEach((url, index) => doc.addImage(url, 'JPEG', margin + index * (thumbnailWidth + 3), y, thumbnailWidth, 30));
-        if (thumbnailUrls.length) y += 36;
-        if (sketch) {
-          if (y > pageHeight - 105) { doc.addPage(); y = 18; }
-          const sketchCanvas = document.createElement('canvas');
-          sketchCanvas.width = sketch.naturalWidth || sketch.width; sketchCanvas.height = sketch.naturalHeight || sketch.height;
-          sketchCanvas.getContext('2d').drawImage(sketch, 0, 0);
-          doc.addImage(sketchCanvas.toDataURL('image/png'), 'PNG', margin, y, pageWidth - margin * 2, 80);
-        }
-      }
-    }
-
-    async function imageFromBlob(blob) {
-      if (!blob) return null;
-      const url = URL.createObjectURL(blob);
-      try { return await new Promise((resolve, reject) => { const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = url; }); }
-      finally { URL.revokeObjectURL(url); }
-    }
-
-    async function renderRecordPdfPage(record) {
-      // Render the entire page at 2× so jsPDF receives a sharper raster page.
-      const canvas = document.createElement('canvas'); canvas.width = 2480; canvas.height = 3508;
-      const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.scale(2, 2);
-      ctx.fillStyle = '#0f172a'; ctx.font = 'bold 30px sans-serif'; ctx.fillText('VFX Sheet', 40, 55);
-      ctx.fillStyle = '#64748b'; ctx.font = '14px sans-serif'; ctx.fillText(`Record #${record.id}`, 40, 79);
-      drawPdfHeaderMeta(ctx, record);
-      let y = 128;
-      y = drawPdfSectionTitle(ctx, '1. General Information', y);
-      y = drawPdfTable(ctx, y, [
-        [{ label: 'Location', value: record.location }, { label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }]
-      ], 4);
-
-      y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 12);
-      const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
-      cameras.forEach((camera, index) => {
-        y = drawPdfCameraTable(ctx, y, camera, index + 1);
-        y += 10;
-      });
-
-      y = drawPdfSectionTitle(ctx, '3. HDRI Setup', y + 4);
-      y = drawPdfTable(ctx, y, [[
-        { label: 'HDRI Captured', value: record.hdri_captured || 'NO' },
-        { label: 'Weather', value: Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather },
-        { label: 'HDRI Notes / EV', value: record.hdri_notes }
-      ]], 3);
-
-      y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 12);
-      y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
-      const thumbnails = await Promise.all((record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : [])).map(imageFromBlob));
-      const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
-      const thumbnailBoxes = [];
-      let imageY = Math.max(y + 14, 760);
-      if (thumbnails.length) {
-        ctx.fillStyle = '#b45309'; ctx.font = 'bold 20px sans-serif'; ctx.fillText('Shot Thumbnails', 60, imageY);
-        const gap = 12; const thumbnailWidth = Math.min(220, (1160 - gap * (thumbnails.length - 1)) / thumbnails.length); const thumbnailHeight = 100;
-        thumbnails.forEach((thumbnail, index) => { const x = 40 + index * (thumbnailWidth + gap); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(x, imageY + 12, thumbnailWidth, thumbnailHeight); if (thumbnail) { drawImageContain(ctx, thumbnail, x, imageY + 12, thumbnailWidth, thumbnailHeight); thumbnailBoxes.push({ image: thumbnail, x, y: imageY + 12, width: thumbnailWidth, height: thumbnailHeight }); } });
-        imageY += 142;
-      }
-      ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText('Field Sketch', 40, imageY);
-      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(40, imageY + 12, 1160, 760);
-      if (sketch) drawImageContain(ctx, sketch, 40, imageY + 12, 1160, 760);
-      // Keep the report layout compact at 180 dpi. The higher-quality source
-      // thumbnails and sketch are subsequently overlaid in the PDF.
-      const compressedCanvas = document.createElement('canvas');
-      compressedCanvas.width = 1488; compressedCanvas.height = 2105;
-      compressedCanvas.getContext('2d').drawImage(canvas, 0, 0, compressedCanvas.width, compressedCanvas.height);
-      return {
-        background: compressedCanvas.toDataURL('image/jpeg', 0.66),
-        thumbnailBoxes,
-        sketchBox: sketch ? { image: sketch, x: 40, y: imageY + 12, width: 1160, height: 760 } : null
-      };
-    }
-
-    async function renderHighResolutionSketch(record) {
-      if (!record.canvas_json || !window.fabric) return null;
-      const element = document.createElement('canvas');
-      const staticCanvas = new fabric.StaticCanvas(element, { width: 760, height: 480, backgroundColor: '#090d16' });
-      try {
-        const dataUrl = await new Promise((resolve, reject) => {
-          staticCanvas.loadFromJSON(record.canvas_json, () => {
-            try {
-              staticCanvas.renderAll();
-              // Fabric rerenders vectors, text and embedded photos at 3× rather than
-              // enlarging the 760×480 thumbnail saved with older records.
-              resolve(staticCanvas.toDataURL({ format: 'png', multiplier: 3 }));
-            } catch (error) { reject(error); }
-          });
-        });
-        return await imageFromDataUrl(dataUrl);
-      } catch (error) {
-        console.info('High-resolution sketch rendering unavailable.', error);
-        return null;
-      } finally {
-        staticCanvas.dispose();
-      }
-    }
-
-    function imageFromDataUrl(dataUrl) {
-      return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = reject;
-        image.src = dataUrl;
-      });
-    }
-
-    function drawPdfSectionTitle(ctx, title, y) {
-      ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(title, 40, y);
-      return y + 14;
-    }
-
-    function drawPdfHeaderMeta(ctx, record) {
-      const values = [
-        ['Operator', record.operator],
-        ['Show Title', record.show_title],
-        ['Date & Time', record.shoot_datetime],
-        ['GPS', record.gps_location]
-      ];
-      const width = 270; const x = 1200 - width; const labelWidth = 88;
-      ctx.font = 'bold 11px sans-serif';
-      values.forEach(([label, value], index) => {
-        const y = 26 + index * 20;
-        ctx.fillStyle = '#94a3b8'; ctx.fillText(label, x, y);
-        ctx.fillStyle = '#334155'; ctx.font = '12px sans-serif';
-        const text = wrapPdfText(ctx, String(value || '-'), width - labelWidth).slice(0, 1)[0] || '-';
-        ctx.fillText(text, x + labelWidth, y);
-        ctx.font = 'bold 11px sans-serif';
-      });
-    }
-
-    function drawPdfTable(ctx, y, rows, columns) {
-      const x = 40; const width = 1160; const cellWidth = width / columns; const cellHeight = 54;
-      rows.forEach(row => {
-        row.forEach((cell, index) => {
-          const cellX = x + index * cellWidth;
-          ctx.fillStyle = '#f8fafc'; ctx.fillRect(cellX, y, cellWidth, cellHeight);
-          ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.strokeRect(cellX, y, cellWidth, cellHeight);
-          ctx.fillStyle = '#64748b'; ctx.font = 'bold 12px sans-serif'; ctx.fillText(cell.label, cellX + 8, y + 16);
-          ctx.fillStyle = '#0f172a'; ctx.font = '15px sans-serif';
-          const lines = wrapPdfText(ctx, String(cell.value || '-'), cellWidth - 16).slice(0, 2);
-          lines.forEach((line, lineIndex) => ctx.fillText(line, cellX + 8, y + 35 + lineIndex * 15));
-        });
-        y += cellHeight;
-      });
-      return y;
-    }
-
-    function drawPdfCameraTable(ctx, y, camera, number) {
-      ctx.fillStyle = '#334155'; ctx.fillRect(40, y, 1160, 28);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 50, y + 19);
-      y += 28;
-      y = drawPdfTable(ctx, y, [[
-        { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }, { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }
-      ]], 6);
-      return drawPdfTable(ctx, y, [[
-        { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }, { label: 'Chart', value: camera.flag_chart || 'NO' }, { label: 'Clean Plate', value: camera.flag_cleanplate || 'NO' }, { label: 'VFX Ref.', value: camera.flag_reference || 'NO' }
-      ]], 7);
-    }
-
-    function wrapPdfText(ctx, text, maxWidth) {
-      return text.split('\n').flatMap(paragraph => { const lines = []; let line = ''; for (const char of paragraph) { if (ctx.measureText(line + char).width > maxWidth && line) { lines.push(line); line = char; } else line += char; } if (line) lines.push(line); return lines; });
-    }
-
-    function drawImageContain(ctx, image, x, y, width, height) {
-      const ratio = Math.min(width / image.width, height / image.height); const w = image.width * ratio; const h = image.height * ratio;
-      ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
-    }
-
-    async function syncData() {
-      if (!navigator.onLine) return alert("You are currently offline.");
-
-      const WORKER_URL = '/api/sync';
-      const unsynced = await db.sheets.where('synced').equals(0).toArray();
-
-      if (unsynced.length === 0) return alert("No unsynced records.");
-
-      const syncBtn = document.getElementById('syncBtn');
-      syncBtn.disabled = true;
-      syncBtn.innerText = "Syncing...";
-
-      let successCount = 0;
-      for (const item of unsynced) {
-        try {
-          // Image blobs and Fabric JSON can exceed mobile request limits. Keep them in
-          // IndexedDB and JSON backup; FlowPT receives the structured shot metadata.
-          const payload = { ...item, asset_status: item.images?.length ? 'local_only' : 'none' };
-          delete payload.images;
-          delete payload.canvas_json;
-
-          const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          if (res.ok) {
-            await db.sheets.update(item.id, { synced: 1, synced_at: new Date().toISOString(), syncError: '' });
-            successCount++;
-          } else {
-            await db.sheets.update(item.id, { syncError: `HTTP ${res.status}` });
-          }
-        } catch (err) {
-          console.error("Sync Error:", err);
-          await db.sheets.update(item.id, { syncError: String(err.message || err) });
-        }
-      }
-
-      alert(`${successCount} records synced to FlowPT.`);
-      syncBtn.disabled = false;
-      syncBtn.innerText = "Sync to FlowPT";
-      renderList();
-    }
-
-    async function exportBackupJSON() {
-      const records = await getRecordsForHistoryAction();
-      if (!records.length) return alert('No records to back up.');
-      const portableRecords = await Promise.all(records.map(async ({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({
-        ...record,
-        asset_status: images?.length || shot_thumbnail || shot_thumbnails?.length ? 'included' : 'none',
-        assets: {
-          images: await Promise.all((images || []).map(blobToBase64)),
-          shot_thumbnail: shot_thumbnail ? await blobToBase64(shot_thumbnail) : null,
-          shot_thumbnails: await Promise.all((shot_thumbnails || []).map(blobToBase64))
-        }
-      })));
-      const backup = { app: 'VFX_Sheet', format: 'vfx-sheet-record-backup', version: 2, exported_at: new Date().toISOString(), records: portableRecords };
-      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url; a.download = `VFX_Sheet_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-      alert(`${records.length} records backed up. 写真・サムネイル・Fabricスケッチデータを含むフルバックアップです。`);
-    }
-
-    async function importBackupJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      try {
-        const data = JSON.parse(await file.text());
-        if (data.app !== 'VFX_Sheet' || data.format !== 'vfx-sheet-record-backup' || !Array.isArray(data.records)) {
-          throw new Error('VFX Sheet Backup JSONファイルではありません。');
-        }
-        if (!data.records.every(record => record && typeof record === 'object')) {
-          throw new Error('バックアップ内のレコード形式が正しくありません。');
-        }
-        const includesAssets = data.records.some(record => record.assets && typeof record.assets === 'object');
-        if (!confirm(`${data.records.length}件のレコードをインポートします。\n同じUUIDのレコードはバックアップ内容で更新されます。\n${includesAssets ? '写真・サムネイルもIndexedDBへ復元します。' : '旧形式のバックアップのため、既存の写真・サムネイルは維持します。'}\n\n続行しますか？`)) return;
-
-        const restoredRecords = await Promise.all(data.records.map(async backupRecord => ({
-          record: backupRecord,
-          assets: backupRecord.assets ? await restoreBackupAssets(backupRecord.assets) : null
-        })));
-
-        let created = 0;
-        let updated = 0;
-        await db.transaction('rw', db.sheets, async () => {
-          for (const { record: backupRecord, assets } of restoredRecords) {
-            const uuid = backupRecord.uuid || newUuid();
-            const existing = await db.sheets.where('uuid').equals(uuid).first();
-            const { id: backupId, images, shot_thumbnail, shot_thumbnails, assets: ignoredAssets, ...portableRecord } = backupRecord;
-            const restoredAssetFields = assets || {
-              images: existing?.images,
-              shot_thumbnail: existing?.shot_thumbnail,
-              shot_thumbnails: existing?.shot_thumbnails
-            };
-            if (existing) {
-              await db.sheets.put({
-                ...portableRecord,
-                id: existing.id,
-                uuid,
-                ...restoredAssetFields
-              });
-              updated++;
-            } else {
-              await db.sheets.add({ ...portableRecord, uuid, ...restoredAssetFields });
-              created++;
-            }
-          }
-        });
-
-        await renderList();
-        alert(`バックアップをインポートしました。\n新規: ${created}件 / 更新: ${updated}件${includesAssets ? '\n写真・サムネイルをIndexedDBへ復元しました。' : '\n旧形式のため、写真・サムネイルは復元されません。'}`);
-      } catch (error) {
-        alert(`Backup Import Error: ${error.message}`);
-      } finally {
-        event.target.value = '';
-      }
-    }
-
-    async function restoreBackupAssets(assets) {
-      if (!Array.isArray(assets.images) || !Array.isArray(assets.shot_thumbnails)) {
-        throw new Error('バックアップ内の画像データ形式が正しくありません。');
-      }
-      return {
-        images: await Promise.all(assets.images.map(dataUrlToBlob)),
-        shot_thumbnail: assets.shot_thumbnail ? await dataUrlToBlob(assets.shot_thumbnail) : undefined,
-        shot_thumbnails: await Promise.all(assets.shot_thumbnails.map(dataUrlToBlob))
-      };
-    }
-
-    async function dataUrlToBlob(dataUrl) {
-      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
-        throw new Error('バックアップ内の画像データが正しくありません。');
-      }
-      const response = await fetch(dataUrl);
-      if (!response.ok) throw new Error('画像データを復元できませんでした。');
-      return response.blob();
-    }
-
-    function blobToBase64(blob) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    function updateOnlineStatus() {
-      const dot = document.getElementById('statusDot');
-      const text = document.getElementById('statusText');
-      if (navigator.onLine) {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-        text.innerText = "Online";
-      } else {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
-        text.innerText = "Offline";
-      }
-    }
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.error('Service Worker registration failed:', error)));
-    }
-  </script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
