@@ -1,5 +1,10 @@
 // Reset a new record editor to the configured sheet defaults.
-async function resetFormToDefault() {
+import { db } from './database.js';
+import { state } from './state.js';
+import { getInitialSettingEnabledFields } from './default-settings.js';
+import { createEmptyCameraItem } from './camera-model.js';
+
+export async function resetFormToDefault() {
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   document.getElementById('shoot_datetime').value = now.toISOString().slice(0, 16);
@@ -18,7 +23,7 @@ async function resetFormToDefault() {
     if (enabled.gps_location) document.getElementById('gps_location').value = values.gps_location || '';
     if (enabled.notes) document.getElementById('notes').value = values.notes || '';
     if (enabled.shot_thumbnails) {
-      pendingShotThumbnails = [...(values.shot_thumbnails || [])];
+      state.pendingShotThumbnails = [...(values.shot_thumbnails || [])];
       renderShotThumbnailPreviews();
     }
     document.getElementById('hdri_captured').checked = enabled.hdri && (values.hdri_captured || false);
@@ -31,7 +36,7 @@ async function resetFormToDefault() {
     const isCameraFieldEnabled = (index, key) => hasCameraSpecificSettings ? Boolean(values.enabled_fields[`camera_${index}_${key}`]) : Boolean(enabled[key]);
     const selectedCameras = (values.cameras || []).map((camera, index) => ({ camera, index })).filter(({ index }) => cameraFields.some(key => isCameraFieldEnabled(index, key)));
     if (selectedCameras.length) {
-      cameraListState = selectedCameras.map(({ camera, index }) => {
+      state.cameraListState = selectedCameras.map(({ camera, index }) => {
         const fallback = createEmptyCameraItem(camera.label || String.fromCharCode(65 + index));
         const result = { ...fallback, ...camera };
         cameraFields.forEach(key => {
@@ -44,14 +49,16 @@ async function resetFormToDefault() {
         });
         return result;
       });
-    } else cameraListState = [createEmptyCameraItem('A')];
+    } else state.cameraListState = [createEmptyCameraItem('A')];
 
     if (enabled.sketch && values.canvas_json && fCanvas) fCanvas.loadFromJSON(values.canvas_json, () => { fCanvas.renderAll(); setCanvasMode('select'); });
   } else {
-    cameraListState = [createEmptyCameraItem('A')];
+    state.cameraListState = [createEmptyCameraItem('A')];
     document.getElementById('hdri_captured').checked = false;
     toggleHdriWeather(false);
   }
-  activeCamIndex = 0;
+  state.activeCamIndex = 0;
   renderCameraTabs();
 }
+
+Object.assign(globalThis, { resetFormToDefault });
