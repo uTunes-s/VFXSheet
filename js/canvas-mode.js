@@ -24,4 +24,3 @@ export function setCanvasMode(mode) {
   }
 }
 
-Object.assign(globalThis, { setCanvasMode });

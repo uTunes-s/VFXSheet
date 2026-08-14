@@ -39,4 +39,3 @@ export async function renderRecordPdfPage(record) {
   return { background: compressedCanvas.toDataURL('image/jpeg', 0.66), thumbnailBoxes, sketchBox: sketch ? { image: sketch, x: 40, y: imageY + 12, width: 1160, height: 760 } : null };
 }
 
-Object.assign(globalThis, { renderRecordPdfPage });

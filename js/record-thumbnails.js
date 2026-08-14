@@ -8,4 +8,3 @@ export function changeRecordThumbnail(button, direction) {
   images[nextIndex]?.classList.remove('hidden');
 }
 
-Object.assign(globalThis, { changeRecordThumbnail });

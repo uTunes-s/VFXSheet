@@ -1,5 +1,4 @@
-// Shared application state. The global property bridge keeps remaining classic
-// feature scripts working while feature groups migrate to direct imports.
+// Shared application state for ES module consumers.
 export const state = {
   currentEditingId: null,
   isEditingInModal: false,
@@ -27,10 +26,3 @@ export const initialSettingItems = [
   ['hdri', 'HDRI Setup'], ['notes', 'Notes'], ['shot_thumbnails', 'Shot Data Thumbnail'], ['sketch', 'Sketch'],
   ['camera_preset', 'Camera Model'], ['lens_preset', 'Lens Model'], ['focal_length', 'Focal Length'], ['t_stop', 'Aperture'], ['clip_name', 'Clip Name'], ['lut_info', 'LUT Info'], ['cramerawork_preset', 'Movement'], ['height_value', 'Lens Height'], ['distance_value', 'Target Distance'], ['tilt_value', 'Tilt Angle'], ['reference_flags', 'Reference Checklist']
 ];
-
-Object.keys(state).forEach(key => Object.defineProperty(globalThis, key, {
-  configurable: true,
-  get: () => state[key],
-  set: value => { state[key] = value; }
-}));
-globalThis.initialSettingItems = initialSettingItems;

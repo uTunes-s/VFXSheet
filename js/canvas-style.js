@@ -24,4 +24,3 @@ export function setCanvasBrushSize(type, value) {
   if (state.fCanvas && state.canvasMode === type) state.fCanvas.freeDrawingBrush.width = size;
 }
 
-Object.assign(globalThis, { setCanvasColor, setCanvasBrushSize });

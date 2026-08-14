@@ -69,4 +69,3 @@ export async function openAddDefaultsEditor() {
   document.getElementById('submitBtnContainer').innerHTML = '';
 }
 
-Object.assign(globalThis, { saveCurrentAsDefaultSettings, openAddDefaultsEditor });

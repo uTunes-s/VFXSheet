@@ -45,4 +45,3 @@ export async function deleteRecord(id) {
   renderList();
 }
 
-Object.assign(globalThis, { updateHistorySelectionControls, toggleRecordSelection, toggleSelectAllRecords, getRecordsForHistoryAction, deleteSelectedRecords, deleteRecord });

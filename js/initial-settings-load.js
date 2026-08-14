@@ -34,4 +34,3 @@ export async function loadDefaultSettings() {
   alert('Default settings loaded!');
 }
 
-Object.assign(globalThis, { loadDefaultSettings });

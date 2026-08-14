@@ -29,4 +29,3 @@ export async function renderList() {
   list.innerHTML = cards.join('');
 }
 
-Object.assign(globalThis, { renderList });

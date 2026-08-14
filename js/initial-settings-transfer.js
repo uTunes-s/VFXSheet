@@ -57,4 +57,3 @@ export async function renderAddDefaultsSummary() {
   summary.innerHTML = `<span class="text-emerald-400">Configured</span><span class="text-slate-500"> — ${fields.join(' / ') || 'No general information'} / Cameras: ${cameras} / Applied fields: ${enabledCount}</span>`;
 }
 
-Object.assign(globalThis, { exportSheetInitialSettings, selectSheetInitialSettingsImport, importSheetInitialSettings, resetAddDefaults, renderAddDefaultsSummary });

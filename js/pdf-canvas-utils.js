@@ -87,4 +87,3 @@ export function drawImageContain(ctx, image, x, y, width, height) {
   ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
 }
 
-Object.assign(globalThis, { renderHighResolutionSketch, imageFromDataUrl, drawPdfSectionTitle, drawPdfHeaderMeta, drawPdfTable, drawPdfCameraTable, wrapPdfText, drawImageContain });

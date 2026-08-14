@@ -27,4 +27,3 @@ export function addFreeImageToCanvas(event) {
   event.target.value = '';
 }
 
-Object.assign(globalThis, { addFreeImageToCanvas });

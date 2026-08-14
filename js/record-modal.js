@@ -93,4 +93,3 @@ export function restoreRecordDraft(draft) {
   if (draft.canvasJson && state.fCanvas) state.fCanvas.loadFromJSON(draft.canvasJson, () => { state.fCanvas.renderAll(); setCanvasMode('select'); });
 }
 
-Object.assign(globalThis, { openNewRecordModal, openEditRecordModal, closeEditRecordModal, captureRecordDraft, restoreRecordDraft });

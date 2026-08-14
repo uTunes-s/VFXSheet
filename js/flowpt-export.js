@@ -87,4 +87,3 @@ export async function exportToCSV() {
   }
 }
 
-Object.assign(globalThis, { exportToCSV });

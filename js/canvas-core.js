@@ -84,4 +84,3 @@ export function configureCanvasImageCropControl(object) {
   state.fCanvas.requestRenderAll();
 }
 
-Object.assign(globalThis, { initFabricCanvas, renderCanvasControlIcon, renderCropControlIcon, getOwnCanvasControls, configureCanvasImageCropControl });

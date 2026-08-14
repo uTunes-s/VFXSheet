@@ -33,4 +33,3 @@ export function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
   doc.addImage(source.toDataURL('image/jpeg', 0.88), 'JPEG', (x + (width - imageWidth) / 2) / 1240 * 210, (y + (height - imageHeight) / 2) / 1754 * 297, imageWidth / 1240 * 210, imageHeight / 1754 * 297, undefined, 'FAST');
 }
 
-Object.assign(globalThis, { createShootingDataPdf, addHighResolutionPdfImage });

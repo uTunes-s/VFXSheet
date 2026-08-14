@@ -20,4 +20,3 @@ export function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, character => replacements[character]);
 }
 
-Object.assign(globalThis, { newUuid, incrementTrailingNumber, preventFormEnterSubmit, escapeHtml });

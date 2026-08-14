@@ -32,4 +32,3 @@ export function getDefaultSettingsChangeSummary(currentValues, newValues, includ
   return changedFields.length ? changedFields.join('\n') : 'No changes';
 }
 
-Object.assign(globalThis, { getCurrentDefaultSettingsValues, getDefaultSettingsChangeSummary });

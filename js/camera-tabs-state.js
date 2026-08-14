@@ -58,4 +58,3 @@ export function saveActiveTabState() {
   };
 }
 
-Object.assign(globalThis, { addCameraTab, removeCameraTab, switchCameraTab, editCameraReelName, saveActiveTabState });

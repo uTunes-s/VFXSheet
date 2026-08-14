@@ -2,7 +2,6 @@
 import { newUuid } from './utils.js';
 
 export const db = new Dexie('VfxSheetDB');
-globalThis.db = db;
 
 db.version(11).stores({
   sheets: '++id, uuid, operator, show_title, scene, shot, synced, created_at',

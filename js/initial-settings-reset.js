@@ -65,4 +65,3 @@ export async function resetFormToDefault() {
   renderCameraTabs();
 }
 
-Object.assign(globalThis, { resetFormToDefault });

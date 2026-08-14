@@ -51,4 +51,3 @@ export function exportCanvasToBlob() {
   return fetch(exportCanvasToDataURL()).then(response => response.blob());
 }
 
-Object.assign(globalThis, { moveSelectedLayer, addTextToNote, deleteSelected, clearNoteCanvas, exportCanvasToDataURL, exportCanvasToBlob });

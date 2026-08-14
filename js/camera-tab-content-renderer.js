@@ -27,4 +27,3 @@ export function renderCameraTabContent() {
     <div class="pt-2 border-t border-slate-800/60"><label class="form-label font-semibold text-amber-400/80 uppercase" data-initial-setting="camera_${activeCamIndex}_reference_flags">${label} Reference Checklist</label><div class="grid grid-cols-3 gap-3">${flag('flag_chart', 'Color Chart & Sphere')}${flag('flag_cleanplate', 'Clean Plate')}${flag('flag_reference', 'VFX Reference')}</div></div>`;
 }
 
-  Object.assign(globalThis, { renderCameraTabContent });

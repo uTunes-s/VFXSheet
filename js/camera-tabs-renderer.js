@@ -22,4 +22,3 @@ export function renderCameraTabs() {
   if (initialSettingStates) showInitialSettingToggles(initialSettingStates);
 }
 
-Object.assign(globalThis, { renderCameraTabs });

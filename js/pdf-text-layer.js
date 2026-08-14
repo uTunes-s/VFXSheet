@@ -45,4 +45,3 @@ export async function loadJapanesePdfFont(doc) {
   font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
 }
 
-Object.assign(globalThis, { addInvisiblePdfTextLayer, loadJapanesePdfFont });

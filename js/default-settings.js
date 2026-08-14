@@ -22,4 +22,3 @@ export function hasSavedInitialValue(values, key) {
   return Boolean(values[key]);
 }
 
-Object.assign(globalThis, { getInitialSettingEnabledFields, hasSavedInitialValue });

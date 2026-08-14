@@ -34,4 +34,3 @@ export function setWeatherValues(values) {
   });
 }
 
-Object.assign(globalThis, { switchAppPage, toggleHdriWeather, getWeatherValues, setWeatherValues });

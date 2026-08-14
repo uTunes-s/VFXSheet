@@ -20,4 +20,3 @@ export function onTabLensChange() {
   if (focal && preset.value !== '__custom__') focalInput.value = focal;
 }
 
-Object.assign(globalThis, { onTabPresetChange, onTabLensChange });

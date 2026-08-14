@@ -32,4 +32,3 @@ export async function exportToPDF() {
   }
 }
 
-Object.assign(globalThis, { exportToPDF });

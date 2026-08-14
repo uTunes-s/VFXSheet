@@ -77,4 +77,3 @@ export function clearShotThumbnail() {
   document.getElementById('shotThumbnailCameraInput').value = '';
 }
 
-Object.assign(globalThis, { addShotThumbnails, renderShotThumbnailPreviews, moveShotThumbnail, clearShotThumbnail });

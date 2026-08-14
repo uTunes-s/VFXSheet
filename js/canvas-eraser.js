@@ -66,4 +66,3 @@ export async function eraseIntersectedSketchLayers(eraserPath) {
   updateUndoRedoButtons();
 }
 
-Object.assign(globalThis, { objectsOverlap, rasterizeErasedSketchLayer, eraseIntersectedSketchLayers });

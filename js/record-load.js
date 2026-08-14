@@ -100,4 +100,3 @@ export async function loadRecordForEdit(id, duplicate = false) {
   document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-Object.assign(globalThis, { loadRecordForEdit });

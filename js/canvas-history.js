@@ -40,4 +40,3 @@ export function updateUndoRedoButtons() {
   if (redo) redo.disabled = state.historyIndex >= state.canvasHistory.length - 1;
 }
 
-Object.assign(globalThis, { saveCanvasState, undoCanvas, redoCanvas, updateUndoRedoButtons });

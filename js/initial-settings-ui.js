@@ -38,4 +38,3 @@ export function markInitialSettingEnabled(key) {
   state.initialSettingToggleStates[key] = true;
 }
 
-Object.assign(globalThis, { showInitialSettingToggles, getVisibleInitialSettingStates, markInitialSettingEnabled });

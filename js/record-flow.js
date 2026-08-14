@@ -45,4 +45,3 @@ export function prepareNextRecord() {
   clearShotThumbnail();
 }
 
-Object.assign(globalThis, { setNewRecordSubmitButton, cancelEditMode, prepareNextRecord });

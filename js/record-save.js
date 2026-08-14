@@ -83,4 +83,3 @@ export async function saveRecord(event, mode) {
   await renderList();
 }
 
-Object.assign(globalThis, { getSavedCameras, saveRecord });

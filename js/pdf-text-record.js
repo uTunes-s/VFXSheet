@@ -51,4 +51,3 @@ export async function renderTextPdfRecord(doc, record) {
   }
 }
 
-Object.assign(globalThis, { renderTextPdfRecord });
