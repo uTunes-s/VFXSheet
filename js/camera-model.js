@@ -1,5 +1,5 @@
 // Camera-tab data model and display naming helpers.
-function createEmptyCameraItem(label) {
+export function createEmptyCameraItem(label) {
   return {
     label,
     reel_name: getCameraReelPrefix(label),
@@ -22,15 +22,17 @@ function createEmptyCameraItem(label) {
   };
 }
 
-function getCameraReelPrefix(label) {
+export function getCameraReelPrefix(label) {
   const letters = String(label || '').match(/[A-Za-z]/g);
   return letters ? letters[letters.length - 1].toUpperCase() : 'A';
 }
 
-function getCameraReelName(camera) {
+export function getCameraReelName(camera) {
   return String(camera?.reel_name || camera?.label || 'A').replace(/^Cam\s*/i, '').trim().toUpperCase() || 'A';
 }
 
-function getCameraFieldLabel(camera) {
+export function getCameraFieldLabel(camera) {
   return `Cam ${getCameraReelName(camera)}`;
 }
+
+Object.assign(globalThis, { createEmptyCameraItem, getCameraReelPrefix, getCameraReelName, getCameraFieldLabel });
