@@ -17,5 +17,3 @@ export function closeMediaLightbox() {
   document.getElementById('mediaLightbox').classList.remove('flex');
   document.getElementById('mediaLightboxImage').src = '';
 }
-
-Object.assign(globalThis, { closeRecordPreview, openMediaLightbox, closeMediaLightbox });

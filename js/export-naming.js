@@ -1,4 +1,6 @@
 // Shared record media and export naming helpers.
+import { getCameraReelName } from './camera-model.js';
+
 export function getRecordShotThumbnails(record) {
   return record.shot_thumbnails || (record.shot_thumbnail ? [record.shot_thumbnail] : []);
 }

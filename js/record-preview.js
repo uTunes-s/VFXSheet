@@ -2,6 +2,8 @@
 import { db } from './database.js';
 import { escapeHtml } from './utils.js';
 import { getRecordShotThumbnails } from './export-naming.js';
+import { blobToBase64 } from './backup.js';
+import { getCameraReelName } from './camera-model.js';
 
 export async function openRecordPreview(id) {
   const record = await db.sheets.get(id);
@@ -18,5 +20,3 @@ export async function openRecordPreview(id) {
   document.getElementById('recordPreviewModal').classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
 }
-
-Object.assign(globalThis, { openRecordPreview });

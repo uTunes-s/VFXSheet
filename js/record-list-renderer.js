@@ -3,6 +3,7 @@ import { db } from './database.js';
 import { state } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getRecordShotThumbnails } from './export-naming.js';
+import { blobToBase64 } from './backup.js';
 import { updateHistorySelectionControls } from './record-selection.js';
 
 const selectedRecordIds = state.selectedRecordIds;
