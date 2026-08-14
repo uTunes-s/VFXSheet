@@ -2,6 +2,13 @@
 import { db } from './database.js';
 import { state } from './state.js';
 import { getRecordShotThumbnails } from './export-naming.js';
+import { captureRecordDraft, openEditRecordModal } from './record-modal.js';
+import { getCameraReelPrefix, createEmptyCameraItem } from './camera-model.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
+import { clearShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnails.js';
+import { toggleHdriWeather, setWeatherValues } from './form-ui.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { saveCanvasState, updateUndoRedoButtons } from './canvas-history.js';
 
 export async function loadRecordForEdit(id, duplicate = false) {
   const record = await db.sheets.get(id);
@@ -69,23 +76,23 @@ export async function loadRecordForEdit(id, duplicate = false) {
   state.pendingShotThumbnails = getRecordShotThumbnails(record);
   renderShotThumbnailPreviews();
 
-  isUndoRedo = true;
-  fCanvas.clear();
+  state.isUndoRedo = true;
+  state.fCanvas.clear();
   if (record.canvas_json) {
-    fCanvas.loadFromJSON(record.canvas_json, () => {
-      fCanvas.renderAll();
+    state.fCanvas.loadFromJSON(record.canvas_json, () => {
+      state.fCanvas.renderAll();
       setCanvasMode('select');
-      canvasHistory = [record.canvas_json];
-      historyIndex = 0;
-      isUndoRedo = false;
+      state.canvasHistory = [record.canvas_json];
+      state.historyIndex = 0;
+      state.isUndoRedo = false;
       updateUndoRedoButtons();
     });
   } else {
-    fCanvas.setBackgroundColor('#090d16', () => {
-      fCanvas.renderAll();
-      canvasHistory = [];
-      historyIndex = -1;
-      isUndoRedo = false;
+    state.fCanvas.setBackgroundColor('#090d16', () => {
+      state.fCanvas.renderAll();
+      state.canvasHistory = [];
+      state.historyIndex = -1;
+      state.isUndoRedo = false;
       saveCanvasState();
     });
   }

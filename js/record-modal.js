@@ -1,5 +1,12 @@
 // Record editor modal lifecycle.
 import { state } from './state.js';
+import { resetFormToDefault } from './initial-settings-reset.js';
+import { clearShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnails.js';
+import { clearNoteCanvas } from './canvas-actions.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { saveActiveTabState } from './camera-tabs-state.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
+import { toggleHdriWeather } from './form-ui.js';
 
 export async function openNewRecordModal() {
   state.isConfiguringAddDefaults = false;
@@ -61,7 +68,7 @@ export function captureRecordDraft() {
       ? [...element.selectedOptions].map(option => option.value)
       : element.type === 'checkbox' ? element.checked : element.value;
   });
-  return { formValues, cameras: state.cameraListState.map(camera => ({ ...camera })), activeCamIndex: state.activeCamIndex, thumbnails: [...state.pendingShotThumbnails], canvasJson: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '' };
+  return { formValues, cameras: state.cameraListState.map(camera => ({ ...camera })), activeCamIndex: state.activeCamIndex, thumbnails: [...state.pendingShotThumbnails], canvasJson: state.fCanvas ? JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '' };
 }
 
 export function restoreRecordDraft(draft) {
@@ -83,7 +90,7 @@ export function restoreRecordDraft(draft) {
   state.pendingShotThumbnails = [...draft.thumbnails];
   renderCameraTabs();
   renderShotThumbnailPreviews();
-  if (draft.canvasJson && fCanvas) fCanvas.loadFromJSON(draft.canvasJson, () => { fCanvas.renderAll(); setCanvasMode('select'); });
+  if (draft.canvasJson && state.fCanvas) state.fCanvas.loadFromJSON(draft.canvasJson, () => { state.fCanvas.renderAll(); setCanvasMode('select'); });
 }
 
 Object.assign(globalThis, { openNewRecordModal, openEditRecordModal, closeEditRecordModal, captureRecordDraft, restoreRecordDraft });

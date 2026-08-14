@@ -4,6 +4,13 @@ import { state } from './state.js';
 import { getInitialSettingEnabledFields } from './default-settings.js';
 import { getDefaultSettingsChangeSummary } from './initial-settings-comparison.js';
 import { getVisibleInitialSettingStates, showInitialSettingToggles } from './initial-settings-ui.js';
+import { saveActiveTabState } from './camera-tabs-state.js';
+import { getWeatherValues, switchAppPage } from './form-ui.js';
+import { clearShotThumbnail } from './shot-thumbnails.js';
+import { clearNoteCanvas } from './canvas-actions.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { openEditRecordModal, closeEditRecordModal } from './record-modal.js';
+import { resetFormToDefault } from './initial-settings-reset.js';
 
 export async function saveCurrentAsDefaultSettings() {
   saveActiveTabState();
@@ -21,7 +28,7 @@ export async function saveCurrentAsDefaultSettings() {
     hdri_notes: document.getElementById('hdri_notes').value,
     notes: document.getElementById('notes').value,
     shot_thumbnails: [...state.pendingShotThumbnails],
-    canvas_json: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '',
+    canvas_json: state.fCanvas ? JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '',
     cameras: state.cameraListState
   };
   defaultValues.enabled_fields = state.isConfiguringAddDefaults

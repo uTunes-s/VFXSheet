@@ -3,6 +3,10 @@ import { db } from './database.js';
 import { state } from './state.js';
 import { getInitialSettingEnabledFields } from './default-settings.js';
 import { createEmptyCameraItem } from './camera-model.js';
+import { renderShotThumbnailPreviews } from './shot-thumbnails.js';
+import { toggleHdriWeather, setWeatherValues } from './form-ui.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
 
 export async function resetFormToDefault() {
   const now = new Date();
@@ -51,7 +55,7 @@ export async function resetFormToDefault() {
       });
     } else state.cameraListState = [createEmptyCameraItem('A')];
 
-    if (enabled.sketch && values.canvas_json && fCanvas) fCanvas.loadFromJSON(values.canvas_json, () => { fCanvas.renderAll(); setCanvasMode('select'); });
+    if (enabled.sketch && values.canvas_json && state.fCanvas) state.fCanvas.loadFromJSON(values.canvas_json, () => { state.fCanvas.renderAll(); setCanvasMode('select'); });
   } else {
     state.cameraListState = [createEmptyCameraItem('A')];
     document.getElementById('hdri_captured').checked = false;

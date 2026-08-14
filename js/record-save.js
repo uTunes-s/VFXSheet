@@ -2,6 +2,13 @@
 import { db } from './database.js';
 import { state } from './state.js';
 import { newUuid } from './utils.js';
+import { getCameraReelPrefix } from './camera-model.js';
+import { saveActiveTabState } from './camera-tabs-state.js';
+import { getWeatherValues } from './form-ui.js';
+import { exportCanvasToBlob } from './canvas-actions.js';
+import { closeEditRecordModal } from './record-modal.js';
+import { prepareNextRecord } from './record-flow.js';
+import { renderList } from './record-list-renderer.js';
 
 export function getSavedCameras() {
   return state.cameraListState.map(camera => ({
@@ -48,7 +55,7 @@ export async function saveRecord(event, mode) {
     hdri_weather: isHdri ? getWeatherValues() : [], hdri_notes: isHdri ? field('hdri_notes') : '',
     cameras: getSavedCameras(), notes: field('notes'), images: [canvasBlob],
     shot_thumbnails: currentThumbnails,
-    canvas_json: JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])),
+    canvas_json: JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])),
     canvas_version: 5, uuid: isUpdate ? existingRecord.uuid : newUuid(),
     synced: 0, syncError: '', created_at: new Date().toISOString()
   };
