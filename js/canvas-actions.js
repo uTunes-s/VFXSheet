@@ -1,5 +1,7 @@
 // Canvas toolbar actions and serialization helpers.
-function moveSelectedLayer(direction) {
+import { state } from './state.js';
+
+export function moveSelectedLayer(direction) {
   const active = fCanvas?.getActiveObject();
   if (!active) return alert('Select a sketch object first.');
   if (direction === 'front') fCanvas.bringForward(active);
@@ -10,12 +12,12 @@ function moveSelectedLayer(direction) {
   saveCanvasState();
 }
 
-function addTextToNote() {
+export function addTextToNote() {
   const text = new fabric.IText('Text...', {
     left: 100,
     top: 100,
     fontFamily: 'sans-serif',
-    fill: currentDrawingColor,
+    fill: state.currentDrawingColor,
     fontSize: 18
   });
   fCanvas.add(text);
@@ -23,7 +25,7 @@ function addTextToNote() {
   setCanvasMode('select');
 }
 
-function deleteSelected() {
+export function deleteSelected() {
   const activeObjects = fCanvas.getActiveObjects();
   if (!activeObjects.length) return;
   activeObjects.forEach(object => fCanvas.remove(object));
@@ -31,7 +33,7 @@ function deleteSelected() {
   fCanvas.requestRenderAll();
 }
 
-function clearNoteCanvas() {
+export function clearNoteCanvas() {
   fCanvas.clear();
   fCanvas.setBackgroundColor('#090d16', () => {
     fCanvas.renderAll();
@@ -41,10 +43,12 @@ function clearNoteCanvas() {
   });
 }
 
-function exportCanvasToDataURL() {
+export function exportCanvasToDataURL() {
   return fCanvas.toDataURL({ format: 'png', multiplier: 1 });
 }
 
-function exportCanvasToBlob() {
+export function exportCanvasToBlob() {
   return fetch(exportCanvasToDataURL()).then(response => response.blob());
 }
+
+Object.assign(globalThis, { moveSelectedLayer, addTextToNote, deleteSelected, clearNoteCanvas, exportCanvasToDataURL, exportCanvasToBlob });

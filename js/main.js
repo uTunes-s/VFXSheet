@@ -18,7 +18,7 @@ const CLASSIC_ASSETS = [
   '../vendor/jspdf.plugin.autotable.min.js',
   '../vendor/japanese-pdf-font.js',
   './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
-  './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
+  './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js'
 ];
 
 function loadClassicScript(source) {
@@ -67,6 +67,7 @@ await import('./shot-thumbnails.js');
 await import('./gps.js');
 await import('./media-modals.js');
 await import('./record-thumbnails.js');
+await import('./canvas-actions.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
