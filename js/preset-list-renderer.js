@@ -1,5 +1,13 @@
 // Preset manager list rendering for cameras, lenses, and movements.
-async function renderPresetModalLists() {
+import { db } from './database.js';
+import { defaultCameras } from './preset-catalog-cameras.js';
+import { defaultLenses } from './preset-catalog-lenses.js';
+import { defaultMovements, presetCategories } from './preset-catalog-meta.js';
+import { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
+import { openLensSeries } from './preset-store.js';
+import { escapeHtml } from './utils.js';
+
+export async function renderPresetModalLists() {
   const camRecord = await db.presets.get('camera');
   const lensRecord = await db.presets.get('lens');
   const movementRecord = await db.presets.get('movement');
@@ -34,3 +42,5 @@ async function renderPresetModalLists() {
   document.getElementById('movementPresetList').innerHTML = normalizeMovementPresets(movementRecord?.list || []).map((item, index) => `<li class="flex justify-between items-center gap-2 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800"><label class="flex min-w-0 items-center gap-2 cursor-pointer">${presetControl('movement', index, item.enabled)}<span class="text-slate-200 truncate">${escapeHtml(item.name)}</span></label>${defaultMovements.some(defaultItem => defaultItem.name === item.name) ? '<span class="text-[10px] text-slate-600">catalogue</span>' : removeControl('movement', index)}</li>`).join('');
   document.querySelectorAll('#lensPresetList input[data-indeterminate="true"]').forEach(input => { input.indeterminate = true; });
 }
+
+globalThis.renderPresetModalLists = renderPresetModalLists;
