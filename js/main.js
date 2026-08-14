@@ -30,6 +30,8 @@ function loadVendorScript(source) {
 
 for (const source of VENDOR_ASSETS) await loadVendorScript(source);
 await import('./database.js');
+const { initTheme } = await import('./theme.js');
+const { initRecordListPreferences } = await import('./record-list-filters.js');
 const { initPresets } = await import('./preset-store.js');
 await import('./preset-actions.js');
 await import('./preset-modal.js');
@@ -83,6 +85,8 @@ const { initEventDelegation } = await import('./event-delegation.js');
 const { resetFormToDefault } = await import('./initial-settings-reset.js');
 const { renderList } = await import('./record-list-renderer.js');
 
+initTheme();
+initRecordListPreferences();
 initEventDelegation();
 await initPresets();
 await resetFormToDefault();

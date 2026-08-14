@@ -1,8 +1,11 @@
 // Shared application state for ES module consumers.
 export const state = {
+  currentTheme: 'dark',
   currentEditingId: null,
   isEditingInModal: false,
   selectedRecordIds: new Set(),
+  recordListFilters: { show_title: [], operator: [], location: [], episode: [], scene: [], camera: [], synced: [], dateFrom: '', dateTo: '' },
+  recordListSort: { field: 'created_at', direction: 'desc' },
   japanesePdfFontPromise: null,
   recordDraftBeforeHistoryEdit: null,
   isConfiguringAddDefaults: false,

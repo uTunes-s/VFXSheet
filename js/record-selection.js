@@ -4,14 +4,16 @@ import { state } from './state.js';
 import { renderList } from './record-list-renderer.js';
 import { closeEditRecordModal } from './record-modal.js';
 import { cancelEditMode } from './record-flow.js';
+import { getVisibleRecords } from './record-list-filters.js';
 
 export function updateHistorySelectionControls(records = []) {
   const selectedCount = state.selectedRecordIds.size;
+  const selectedVisibleCount = records.filter(record => state.selectedRecordIds.has(record.id)).length;
   const deleteButton = document.getElementById('deleteSelectedBtn');
   const selectAllButton = document.getElementById('selectAllRecordsBtn');
   deleteButton.disabled = selectedCount === 0;
   deleteButton.innerText = `Delete Selected (${selectedCount})`;
-  selectAllButton.innerText = records.length && selectedCount === records.length ? 'Clear Selection' : 'Select All';
+  selectAllButton.innerText = records.length && selectedVisibleCount === records.length ? 'Clear Visible Selection' : 'Select All Visible';
 }
 
 export function toggleRecordSelection(id, isSelected) {
@@ -21,15 +23,16 @@ export function toggleRecordSelection(id, isSelected) {
 }
 
 export async function toggleSelectAllRecords() {
-  const records = await db.sheets.toArray();
-  if (records.length && state.selectedRecordIds.size === records.length) state.selectedRecordIds.clear();
+  const records = getVisibleRecords(await db.sheets.toArray());
+  const allVisibleSelected = records.length && records.every(record => state.selectedRecordIds.has(record.id));
+  if (allVisibleSelected) records.forEach(record => state.selectedRecordIds.delete(record.id));
   else records.forEach(record => state.selectedRecordIds.add(record.id));
   renderList();
 }
 
 export async function getRecordsForHistoryAction() {
   const records = await db.sheets.reverse().toArray();
-  return state.selectedRecordIds.size ? records.filter(record => state.selectedRecordIds.has(record.id)) : records;
+  return state.selectedRecordIds.size ? records.filter(record => state.selectedRecordIds.has(record.id)) : getVisibleRecords(records);
 }
 
 export async function deleteSelectedRecords() {

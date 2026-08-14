@@ -2,11 +2,10 @@
 import { db } from './database.js';
 import { newUuid } from './utils.js';
 import { downloadExportBlob } from './media-utils.js';
-import { getRecordsForHistoryAction } from './record-selection.js';
 import { renderList } from './record-list-renderer.js';
 
 export async function exportBackupJSON() {
-  const records = await getRecordsForHistoryAction();
+  const records = await db.sheets.toArray();
   if (!records.length) return alert('No records to back up.');
   const portableRecords = await Promise.all(records.map(async ({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({
     ...record,

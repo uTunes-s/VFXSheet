@@ -1,9 +1,6 @@
 .env
-.netlify/
 README.md
 
 # Local-only deployment and integration configuration.
 .env.example
 _headers
-netlify.toml
-netlify/

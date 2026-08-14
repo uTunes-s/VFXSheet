@@ -19,6 +19,7 @@ import { exportToCSV } from './flowpt-export.js';
 import { exportToPDF } from './pdf-print-export.js';
 import { exportBackupJSON, importBackupJSON } from './backup.js';
 import { syncData } from './sync.js';
+import { loadFlowPtProjects, markFlowPtConnectionTestSucceeded, saveFlowPtConnectionFromForm, saveSelectedFlowPtProject, setFlowPtEnabled } from './flowpt-settings.js';
 import { exportSheetInitialSettings, selectSheetInitialSettingsImport } from './initial-settings-transfer.js';
 import { closeRecordPreview, closeMediaLightbox, openMediaLightbox } from './media-modals.js';
 import { exportFullPresetsJSON, importFullPresetsJSON } from './preset-transfer.js';
@@ -27,8 +28,35 @@ import { openRecordPreview } from './record-preview.js';
 import { loadRecordForEdit } from './record-load.js';
 import { changeRecordThumbnail } from './record-thumbnails.js';
 import { onTabPresetChange, onTabLensChange } from './camera-tabs-interactions.js';
+import { setTheme, toggleTheme } from './theme.js';
+import { clearRecordListFilters, toggleRecordListFilterOption, updateRecordListFilter, updateRecordListSort } from './record-list-filters.js';
+import { renderList } from './record-list-renderer.js';
   const number = value => Number.parseInt(value, 10);
+  const toggleRecordListPopover = name => {
+    const filterPopover = document.getElementById('recordFilterPopover');
+    const sortPopover = document.getElementById('recordSortPopover');
+    const filterButton = document.getElementById('recordFilterBtn');
+    const sortButton = document.getElementById('recordSortBtn');
+    const isFilter = name === 'filter';
+    const target = isFilter ? filterPopover : sortPopover;
+    const targetButton = isFilter ? filterButton : sortButton;
+    const other = isFilter ? sortPopover : filterPopover;
+    const otherButton = isFilter ? sortButton : filterButton;
+    const willOpen = target.classList.contains('hidden');
+    target.classList.toggle('hidden', !willOpen);
+    targetButton.setAttribute('aria-expanded', String(willOpen));
+    other.classList.add('hidden');
+    otherButton.setAttribute('aria-expanded', 'false');
+  };
   const actions = {
+    'toggle-theme': () => toggleTheme(),
+    'set-theme': element => setTheme(element.dataset.theme),
+    'toggle-record-filter-popover': () => toggleRecordListPopover('filter'),
+    'toggle-record-sort-popover': () => toggleRecordListPopover('sort'),
+    'toggle-record-filter-option': element => { toggleRecordListFilterOption(element.dataset.filter, element.value, element.checked); renderList(); },
+    'set-record-filter': element => { updateRecordListFilter(element.dataset.filter, element.multiple ? [...element.selectedOptions].map(option => option.value) : element.value); renderList(); },
+    'set-record-sort': element => { updateRecordListSort(element.value); renderList(); },
+    'clear-record-filters': () => { clearRecordListFilters(); renderList(); },
     'open-defaults-editor': () => openAddDefaultsEditor(),
     'save-record': (element, event) => saveRecord(event, element.dataset.mode || (state.currentEditingId ? 'update' : 'new')),
     'prevent-enter-submit': (_, event) => preventFormEnterSubmit(event),
@@ -58,6 +86,44 @@ import { onTabPresetChange, onTabLensChange } from './camera-tabs-interactions.j
     'export-backup': () => exportBackupJSON(),
     'import-backup': (_, event) => importBackupJSON(event),
     'sync-data': () => syncData(),
+    'toggle-flowpt-enabled': async element => {
+      try {
+        await setFlowPtEnabled(element.checked);
+      } catch (error) {
+        alert(`Flow Production Tracking Settings Error: ${error.message || error}`);
+      }
+    },
+    'select-flowpt-project': async () => {
+      try {
+        await saveSelectedFlowPtProject();
+      } catch (error) {
+        alert(`Flow Production Tracking Project Error: ${error.message || error}`);
+      }
+    },
+    'save-flowpt-connection': async () => {
+      try {
+        await saveFlowPtConnectionFromForm();
+        alert('Flow Production Tracking connection settings saved on this device.');
+      } catch (error) {
+        alert(`Flow Production Tracking Settings Error: ${error.message || error}`);
+      }
+    },
+    'test-flowpt-connection': async element => {
+      const originalLabel = element.textContent;
+      element.disabled = true;
+      element.textContent = 'Testing…';
+      try {
+        const { token, projects } = await loadFlowPtProjects();
+        markFlowPtConnectionTestSucceeded();
+        alert(`Flow Production Tracking connection succeeded. ${projects.length} accessible Project(s) loaded. Select the sync target Project below; it is saved automatically. Access token expires in ${token.expires_in || 'an unknown number of'} seconds.`);
+      } catch (error) {
+        console.error('Flow Production Tracking connection test failed:', error);
+        alert(`Flow Production Tracking Connection Error: ${error.message || error}`);
+      } finally {
+        element.disabled = false;
+        element.textContent = originalLabel;
+      }
+    },
     'switch-page': element => switchAppPage(element.dataset.page),
     'export-sheet-defaults': () => exportSheetInitialSettings(),
     'import-sheet-defaults': () => selectSheetInitialSettingsImport(),
@@ -108,7 +174,7 @@ import { onTabPresetChange, onTabLensChange } from './camera-tabs-interactions.j
     if (!element) return;
     const action = actions[element.dataset.action];
     if (!action) return;
-    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'set-canvas-color', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series']);
+    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'set-canvas-color', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
     const inputActions = new Set(['set-brush-size']);
     const toggleActions = new Set(['set-lens-series-open']);
     if (event.type === 'submit' && element.dataset.action !== 'save-record') return;

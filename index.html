@@ -265,16 +265,38 @@
           <button id="exportPdfBtn" type="button" data-action="export-pdf" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📄 PDF
           </button>
-          <button id="exportBackupBtn" data-action="export-backup" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
-            💾 Full Backup JSON
-          </button>
-          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" data-action="import-backup">
-          <button type="button" data-action="open-file-input" data-input-id="importBackupInput" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
-            📥 Import Full Backup
-          </button>
           <button id="syncBtn" data-action="sync-data" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             Sync to FlowPT
           </button>
+        </div>
+      </div>
+
+      <div class="record-list-tools relative flex items-center justify-end gap-2">
+        <span id="filteredCount" class="mr-auto text-xs text-slate-400" aria-live="polite"></span>
+        <button id="recordFilterBtn" type="button" data-action="toggle-record-filter-popover" aria-controls="recordFilterPopover" aria-expanded="false" class="relative rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700" title="Filter records">
+          <span aria-hidden="true">⚲</span><span class="sr-only">Filter records</span><span id="recordFilterActiveIndicator" class="hidden absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-slate-950"></span>
+        </button>
+        <button id="recordSortBtn" type="button" data-action="toggle-record-sort-popover" aria-controls="recordSortPopover" aria-expanded="false" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700" title="Sort records">
+          <span aria-hidden="true">↕</span><span class="sr-only">Sort records</span>
+        </button>
+
+        <div id="recordFilterPopover" class="record-list-popover hidden absolute right-0 top-full z-30 mt-2 w-full max-w-md rounded-xl border border-slate-700 bg-slate-950 p-4 shadow-2xl" role="dialog" aria-label="Filter records">
+          <div class="mb-3 flex items-center justify-between"><h3 class="text-sm font-bold text-slate-200">Filter records</h3><button type="button" data-action="toggle-record-filter-popover" class="text-slate-400 hover:text-slate-200" aria-label="Close filters">✕</button></div>
+          <div class="space-y-3">
+            <p class="text-[11px] text-slate-500">Select one or more saved values. Selected filters remain checked in each list.</p>
+            <div class="grid grid-cols-2 gap-2"><div><span class="form-label">Show title</span><div id="recordShowTitleFilter" class="record-filter-options"></div></div><div><span class="form-label">Operator</span><div id="recordOperatorFilter" class="record-filter-options"></div></div></div>
+            <div class="grid grid-cols-2 gap-2"><div><span class="form-label">Location</span><div id="recordLocationFilter" class="record-filter-options"></div></div><div><span class="form-label">Episode</span><div id="recordEpisodeFilter" class="record-filter-options"></div></div></div>
+            <div class="grid grid-cols-2 gap-2"><div><span class="form-label">Scene</span><div id="recordSceneFilter" class="record-filter-options"></div></div><div><span class="form-label">Camera</span><div id="recordCameraFilter" class="record-filter-options"></div></div></div>
+            <div><span class="form-label">Sync status</span><div id="recordSyncedFilter" class="record-filter-options"></div></div>
+            <div class="grid grid-cols-2 gap-2"><div><label class="form-label" for="recordDateFromFilter">Shoot date from</label><input id="recordDateFromFilter" type="date" data-action="set-record-filter" data-filter="dateFrom" class="form-input text-xs"></div><div><label class="form-label" for="recordDateToFilter">Shoot date to</label><input id="recordDateToFilter" type="date" data-action="set-record-filter" data-filter="dateTo" class="form-input text-xs"></div></div>
+            <button type="button" data-action="clear-record-filters" class="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-700">Clear filters</button>
+          </div>
+        </div>
+
+        <div id="recordSortPopover" class="record-list-popover hidden absolute right-0 top-full z-30 mt-2 w-full max-w-sm rounded-xl border border-slate-700 bg-slate-950 p-4 shadow-2xl" role="dialog" aria-label="Sort records">
+          <div class="mb-3 flex items-center justify-between"><h3 class="text-sm font-bold text-slate-200">Sort records</h3><button type="button" data-action="toggle-record-sort-popover" class="text-slate-400 hover:text-slate-200" aria-label="Close sorting">✕</button></div>
+          <label class="form-label" for="recordSortSelect">Order</label>
+          <select id="recordSortSelect" data-action="set-record-sort" class="form-select text-xs"><option value="created_at:desc">Created: newest first</option><option value="created_at:asc">Created: oldest first</option><option value="shoot_datetime:desc">Shoot date: newest first</option><option value="shoot_datetime:asc">Shoot date: oldest first</option><option value="show_title:asc">Show title: A–Z</option><option value="operator:asc">Operator: A–Z</option><option value="location:asc">Location: A–Z</option><option value="scene_shot:asc">Scene / shot: ascending</option></select>
         </div>
       </div>
 
@@ -336,6 +358,56 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="font-bold text-amber-400 text-sm">Presets & Global Config Management</h3>
         <button type="button" data-action="close-preset-modal" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
+        <div>
+          <span class="text-xs font-bold text-slate-200 block">Appearance</span>
+          <span class="text-[11px] text-slate-500">Choose the application color theme.</span>
+        </div>
+        <div class="theme-mode-options shrink-0" role="group" aria-label="Color theme">
+          <button id="themeLightBtn" type="button" data-action="set-theme" data-theme="light" aria-pressed="false" class="theme-mode-option">☀️ <span>Light</span></button>
+          <button id="themeDarkBtn" type="button" data-action="set-theme" data-theme="dark" aria-pressed="false" class="theme-mode-option">🌙 <span>Dark</span></button>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <span class="block text-xs font-bold text-slate-200">Flow Production Tracking REST API</span>
+            <span class="text-[11px] text-slate-500">Enable direct synchronization with a dedicated API Script.</span>
+          </div>
+          <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+            <input id="flowPtEnabled" type="checkbox" class="peer sr-only" data-action="toggle-flowpt-enabled" aria-label="Enable Flow Production Tracking REST API">
+            <span class="h-6 w-11 rounded-full bg-slate-700 transition peer-checked:bg-sky-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5"></span>
+          </label>
+        </div>
+        <div id="flowPtConnectionSettings" class="hidden space-y-3">
+          <span class="block text-[11px] text-slate-500">Its key remains on this device and is never included in exported configuration JSON.</span>
+          <div class="grid gap-2 sm:grid-cols-2">
+          <label class="text-[11px] text-slate-400 sm:col-span-2">Site URL<input id="flowPtSiteUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://your-site.shotgrid.autodesk.com" class="form-input mt-1 text-xs" required></label>
+          <label class="text-[11px] text-slate-400">API Script Name<input id="flowPtScriptName" type="text" autocomplete="off" placeholder="VFX Sheet Uploader" class="form-input mt-1 text-xs" required></label>
+          <label class="text-[11px] text-slate-400">API Script Key<input id="flowPtScriptKey" type="password" autocomplete="new-password" placeholder="Enter to save or replace" class="form-input mt-1 text-xs" required></label>
+          <label class="text-[11px] text-slate-400 sm:col-span-2">Sync Target Project<select id="flowPtProjectId" class="form-input mt-1 text-xs" data-action="select-flowpt-project" disabled><option value="">Save and test the connection to load Projects</option></select></label>
+          </div>
+          <p id="flowPtConnectionStatus" class="text-[11px] leading-4 text-slate-500" aria-live="polite"></p>
+          <div class="flex flex-wrap gap-2 border-t border-slate-900 pt-2">
+            <button type="button" data-action="save-flowpt-connection" class="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-500">Save Connection</button>
+            <button type="button" data-action="test-flowpt-connection" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Test Connection</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-3">
+        <div>
+          <span class="text-xs font-bold text-slate-200 block">Record Archive / Restore</span>
+          <span class="text-[11px] text-slate-500">Archive all locally saved records, thumbnails, and settings to JSON, or restore them from an archive.</span>
+        </div>
+        <div class="flex gap-2 border-t border-slate-900 pt-2">
+          <button id="exportBackupBtn" type="button" data-action="export-backup" class="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">🗄️ Archive Records</button>
+          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" data-action="import-backup">
+          <button type="button" data-action="open-file-input" data-input-id="importBackupInput" class="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">♻️ Restore Archive</button>
+        </div>
       </div>
 
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">

@@ -10,7 +10,8 @@ import { renderPresetModalLists } from './preset-list-renderer.js';
 
 export async function exportFullPresetsJSON() {
   saveActiveTabState();
-  const allPresets = await db.presets.toArray();
+  // Connection credentials must never be copied into shareable configuration files.
+  const allPresets = (await db.presets.toArray()).filter(preset => preset.type !== 'flowpt_connection');
   const exportData = {
     app: 'VFX_Sheet',
     version: 10,
@@ -38,7 +39,9 @@ export async function importFullPresetsJSON(event) {
     try {
       const data = JSON.parse(loadEvent.target.result);
       if (data.app !== 'VFX_Sheet' || !data.presets) throw new Error('Invalid preset JSON file format.');
-      for (const preset of data.presets) await db.presets.put(preset);
+      for (const preset of data.presets) {
+        if (preset.type !== 'flowpt_connection') await db.presets.put(preset);
+      }
       if (data.current_defaults) await db.presets.put({ type: 'user_defaults', values: data.current_defaults });
       await initPresets();
       await loadDefaultSettings();
