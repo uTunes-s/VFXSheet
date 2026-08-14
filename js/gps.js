@@ -1,5 +1,5 @@
 // GPS capture with an optional best-effort reverse-geocoding lookup.
-function getGPSLocation() {
+export function getGPSLocation() {
   const gpsBtn = document.getElementById('gpsBtn');
   const gpsInput = document.getElementById('gps_location');
 
@@ -53,3 +53,5 @@ function getGPSLocation() {
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
+
+Object.assign(globalThis, { getGPSLocation });

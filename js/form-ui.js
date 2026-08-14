@@ -1,5 +1,7 @@
 // Form page navigation and HDRI-weather controls.
-function switchAppPage(page) {
+import { renderList } from './record-list-renderer.js';
+
+export function switchAppPage(page) {
   const isRecordPage = page === 'record';
   document.getElementById('recordPage').classList.toggle('hidden', !isRecordPage);
   document.getElementById('historyPage').classList.toggle('hidden', isRecordPage);
@@ -17,17 +19,19 @@ function switchAppPage(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function toggleHdriWeather(isCaptured) {
+export function toggleHdriWeather(isCaptured) {
   document.getElementById('weatherContainer').classList.toggle('hidden', !isCaptured);
 }
 
-function getWeatherValues() {
+export function getWeatherValues() {
   return [...document.getElementById('hdri_weather').selectedOptions].map(option => option.value);
 }
 
-function setWeatherValues(values) {
+export function setWeatherValues(values) {
   const selected = new Set(Array.isArray(values) ? values : String(values || '').split(', ').filter(Boolean));
   [...document.getElementById('hdri_weather').options].forEach(option => {
     option.selected = selected.has(option.value);
   });
 }
+
+Object.assign(globalThis, { switchAppPage, toggleHdriWeather, getWeatherValues, setWeatherValues });

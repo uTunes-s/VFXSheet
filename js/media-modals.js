@@ -1,10 +1,10 @@
 // Record-preview and image lightbox modal controls.
-function closeRecordPreview() {
+export function closeRecordPreview() {
   document.getElementById('recordPreviewModal').classList.add('hidden');
   document.body.classList.remove('overflow-hidden');
 }
 
-function openMediaLightbox(source, alt = 'Expanded preview') {
+export function openMediaLightbox(source, alt = 'Expanded preview') {
   const image = document.getElementById('mediaLightboxImage');
   image.src = source;
   image.alt = alt;
@@ -12,8 +12,10 @@ function openMediaLightbox(source, alt = 'Expanded preview') {
   document.getElementById('mediaLightbox').classList.add('flex');
 }
 
-function closeMediaLightbox() {
+export function closeMediaLightbox() {
   document.getElementById('mediaLightbox').classList.add('hidden');
   document.getElementById('mediaLightbox').classList.remove('flex');
   document.getElementById('mediaLightboxImage').src = '';
 }
+
+Object.assign(globalThis, { closeRecordPreview, openMediaLightbox, closeMediaLightbox });

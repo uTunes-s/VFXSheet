@@ -1,5 +1,5 @@
 // Thumbnail carousel behavior for record cards.
-function changeRecordThumbnail(button, direction) {
+export function changeRecordThumbnail(button, direction) {
   const container = button.parentElement;
   const images = [...container.querySelectorAll('.record-thumbnail-image')];
   const currentIndex = images.findIndex(image => !image.classList.contains('hidden'));
@@ -7,3 +7,5 @@ function changeRecordThumbnail(button, direction) {
   images[currentIndex]?.classList.add('hidden');
   images[nextIndex]?.classList.remove('hidden');
 }
+
+Object.assign(globalThis, { changeRecordThumbnail });
