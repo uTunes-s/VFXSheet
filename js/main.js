@@ -16,8 +16,7 @@ const CLASSIC_ASSETS = [
   '../vendor/fabric.min.js',
   '../vendor/jspdf.umd.min.js',
   '../vendor/jspdf.plugin.autotable.min.js',
-  '../vendor/japanese-pdf-font.js',
-  './pdf-print-record.js', './pdf-print-export.js', './pdf-text-record.js'
+  '../vendor/japanese-pdf-font.js'
 ];
 
 function loadClassicScript(source) {
@@ -78,6 +77,9 @@ await import('./pdf-text-layer.js');
 await import('./pdf-page-renderer.js');
 await import('./shooting-data-pdf.js');
 await import('./flowpt-export.js');
+await import('./pdf-text-record.js');
+await import('./pdf-print-record.js');
+await import('./pdf-print-export.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();

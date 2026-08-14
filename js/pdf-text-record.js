@@ -1,5 +1,12 @@
 // Text-first jsPDF record rendering with Japanese font support.
-async function renderTextPdfRecord(doc, record) {
+import { loadJapanesePdfFont } from './pdf-text-layer.js';
+import { getCameraFieldLabel } from './camera-model.js';
+import { getRecordShotThumbnails } from './export-naming.js';
+import { blobToBase64 } from './backup.js';
+import { imageFromBlob } from './media-utils.js';
+import { renderHighResolutionSketch } from './pdf-canvas-utils.js';
+
+export async function renderTextPdfRecord(doc, record) {
   await loadJapanesePdfFont(doc);
   const margin = 12;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -43,3 +50,5 @@ async function renderTextPdfRecord(doc, record) {
     }
   }
 }
+
+Object.assign(globalThis, { renderTextPdfRecord });

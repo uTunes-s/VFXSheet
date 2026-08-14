@@ -1,5 +1,8 @@
 // Browser print-window PDF export orchestration.
-async function exportToPDF() {
+import { getRecordsForHistoryAction } from './record-selection.js';
+import { renderPrintableTextPdfRecord } from './pdf-print-record.js';
+
+export async function exportToPDF() {
   const button = document.getElementById('exportPdfBtn');
   const originalLabel = button.innerHTML;
   const printWindow = window.open('', '_blank');
@@ -28,3 +31,5 @@ async function exportToPDF() {
     button.innerHTML = originalLabel;
   }
 }
+
+Object.assign(globalThis, { exportToPDF });
