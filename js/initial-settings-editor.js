@@ -1,5 +1,11 @@
 // Sheet-default editor open and save workflows.
-async function saveCurrentAsDefaultSettings() {
+import { db } from './database.js';
+import { state } from './state.js';
+import { getInitialSettingEnabledFields } from './default-settings.js';
+import { getDefaultSettingsChangeSummary } from './initial-settings-comparison.js';
+import { getVisibleInitialSettingStates, showInitialSettingToggles } from './initial-settings-ui.js';
+
+export async function saveCurrentAsDefaultSettings() {
   saveActiveTabState();
   const defaultValues = {
     operator: document.getElementById('operator').value,
@@ -14,11 +20,11 @@ async function saveCurrentAsDefaultSettings() {
     hdri_weather: getWeatherValues(),
     hdri_notes: document.getElementById('hdri_notes').value,
     notes: document.getElementById('notes').value,
-    shot_thumbnails: [...pendingShotThumbnails],
+    shot_thumbnails: [...state.pendingShotThumbnails],
     canvas_json: fCanvas ? JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '',
-    cameras: cameraListState
+    cameras: state.cameraListState
   };
-  defaultValues.enabled_fields = isConfiguringAddDefaults
+  defaultValues.enabled_fields = state.isConfiguringAddDefaults
     ? getVisibleInitialSettingStates()
     : getInitialSettingEnabledFields((await db.presets.get('user_defaults'))?.values);
 
@@ -28,17 +34,17 @@ async function saveCurrentAsDefaultSettings() {
   await db.presets.put({ type: 'user_defaults', values: defaultValues });
   await renderAddDefaultsSummary();
   alert('Sheet defaults saved.');
-  if (isConfiguringAddDefaults) {
+  if (state.isConfiguringAddDefaults) {
     closeEditRecordModal();
     switchAppPage('history');
   }
 }
 
-async function openAddDefaultsEditor() {
-  isConfiguringAddDefaults = true;
+export async function openAddDefaultsEditor() {
+  state.isConfiguringAddDefaults = true;
   document.getElementById('editRecordModal').classList.add('initial-settings-modal');
-  currentEditingId = null;
-  recordDraftBeforeHistoryEdit = null;
+  state.currentEditingId = null;
+  state.recordDraftBeforeHistoryEdit = null;
   openEditRecordModal(false);
   document.getElementById('editRecordModalTitle').innerText = 'Sheet Defaults';
   document.getElementById('initialSettingsModalActions').classList.remove('hidden');
@@ -51,7 +57,9 @@ async function openAddDefaultsEditor() {
   await resetFormToDefault();
   setCanvasMode('draw');
   const savedValues = (await db.presets.get('user_defaults'))?.values || {};
-  initialSettingToggleStates = { ...getInitialSettingEnabledFields(savedValues), ...(savedValues.enabled_fields || {}) };
-  showInitialSettingToggles(initialSettingToggleStates);
+  state.initialSettingToggleStates = { ...getInitialSettingEnabledFields(savedValues), ...(savedValues.enabled_fields || {}) };
+  showInitialSettingToggles(state.initialSettingToggleStates);
   document.getElementById('submitBtnContainer').innerHTML = '';
 }
+
+Object.assign(globalThis, { saveCurrentAsDefaultSettings, openAddDefaultsEditor });
