@@ -174,14 +174,14 @@ import { renderList } from './record-list-renderer.js';
     if (!element) return;
     const action = actions[element.dataset.action];
     if (!action) return;
-    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'set-canvas-color', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
+    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
     const inputActions = new Set(['set-brush-size']);
     const toggleActions = new Set(['set-lens-series-open']);
     if (event.type === 'submit' && element.dataset.action !== 'save-record') return;
-    if (event.type === 'change' && !changeActions.has(element.dataset.action)) return;
+    if (event.type === 'change' && !changeActions.has(element.dataset.action) && element.dataset.action !== 'set-canvas-color') return;
     if (event.type === 'input' && !inputActions.has(element.dataset.action)) return;
     if (event.type === 'toggle' && !toggleActions.has(element.dataset.action)) return;
-    if (event.type === 'click' && (changeActions.has(element.dataset.action) || inputActions.has(element.dataset.action) || toggleActions.has(element.dataset.action) || element.dataset.action === 'save-record')) return;
+    if (event.type === 'click' && (changeActions.has(element.dataset.action) || inputActions.has(element.dataset.action) || toggleActions.has(element.dataset.action) || element.dataset.action === 'save-record' || (element.dataset.action === 'set-canvas-color' && element.matches('input')))) return;
     if (event.type === 'click' && element.disabled) return;
     action(element, event);
   }

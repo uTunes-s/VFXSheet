@@ -18,8 +18,17 @@ export async function imageFromBlob(blob) {
   try {
     return await new Promise((resolve, reject) => {
       const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = reject;
+      image.onload = async () => {
+        try {
+          // Safari/iPadOS can still lazily decode Blob-backed images after
+          // `load`; wait for decoding before the temporary URL is revoked.
+          if (typeof image.decode === 'function') await image.decode();
+          resolve(image);
+        } catch (error) {
+          reject(new Error(`Could not decode image data: ${error?.message || 'unknown image decoding error'}`));
+        }
+      };
+      image.onerror = () => reject(new Error('Could not load image data from local storage.'));
       image.src = url;
     });
   } finally {

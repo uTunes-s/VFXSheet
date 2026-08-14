@@ -6,6 +6,12 @@ export function setCanvasColor(color) {
   state.currentDrawingColor = color;
   state.fCanvas.freeDrawingBrush.color = color;
   document.getElementById('customCanvasColor').value = color;
+  document.querySelectorAll('[data-action="set-canvas-color"][data-color]').forEach(button => {
+    const selected = button.dataset.color.toLowerCase() === color.toLowerCase();
+    button.setAttribute('aria-pressed', String(selected));
+    button.classList.toggle('ring-2', selected);
+    button.classList.toggle('ring-white', selected);
+  });
   const activeObject = state.fCanvas.getActiveObject();
   if (activeObject?.type !== 'i-text') return;
   activeObject.set('fill', color);
