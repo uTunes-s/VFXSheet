@@ -26,5 +26,3 @@ export async function imageFromBlob(blob) {
     URL.revokeObjectURL(url);
   }
 }
-
-Object.assign(globalThis, { downloadExportBlob, imageFromBlob });
