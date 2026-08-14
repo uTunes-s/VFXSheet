@@ -34,7 +34,7 @@
         <p class="text-xs text-slate-400">Multi-Cam VFX Field Production Logger</p>
       </div>
       <div class="flex items-center gap-2">
-        <button type="button" onclick="openAddDefaultsEditor()" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/40 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1" title="Configure defaults for new sheets">
+        <button type="button" data-action="open-defaults-editor" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/40 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1" title="Configure defaults for new sheets">
           ⚙️ Sheet Defaults
         </button>
         <div id="netStatus" class="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
@@ -46,7 +46,7 @@
 
     <!-- Record Sheet Page -->
     <section id="recordPage" class="hidden">
-    <form id="vfxForm" onsubmit="saveRecord(event, currentEditingId ? 'update' : 'new')" onkeydown="preventFormEnterSubmit(event)" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+    <form id="vfxForm" data-action="save-record" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
       
       <!-- Edit Mode Banner -->
       <div id="editModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center">
@@ -95,7 +95,7 @@
             <label class="form-label" data-initial-setting="gps_location">GPS Location / Place</label>
             <div class="flex flex-wrap sm:flex-nowrap gap-2">
               <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-[120px]" readonly>
-              <button type="button" onclick="getGPSLocation()" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
+              <button type="button" data-action="get-gps" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
                 📍 Get GPS
               </button>
             </div>
@@ -109,12 +109,12 @@
       <div class="space-y-3">
         <div class="flex justify-between items-center">
           <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">2. Multi-Camera Setup</h2>
-          <button type="button" onclick="openPresetModal()" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
+          <button type="button" data-action="open-preset-modal" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
         </div>
 
         <!-- Camera Tabs Header -->
         <div class="flex items-center gap-2 overflow-x-auto pb-1" id="cameraTabHeader">
-          <button type="button" onclick="addCameraTab()" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
+          <button type="button" data-action="add-camera" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
             ➕ Add Camera
           </button>
         </div>
@@ -133,7 +133,7 @@
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
           <div class="flex items-center gap-3">
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="hdri_captured" onchange="toggleHdriWeather(this.checked)" class="sr-only peer">
+              <input type="checkbox" id="hdri_captured" data-action="toggle-hdri" class="sr-only peer">
               <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
             <span class="text-sm font-bold text-slate-200">HDRI Captured</span>
@@ -176,11 +176,11 @@
             <label class="form-label" data-initial-setting="shot_thumbnails">Shot Data Thumbnail</label>
             <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
           </div>
-          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" onchange="addShotThumbnails(event)">
-          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addShotThumbnails(event)">
-          <button type="button" onclick="document.getElementById('shotThumbnailLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
-          <button type="button" onclick="document.getElementById('shotThumbnailCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
-          <button type="button" onclick="clearShotThumbnail()" class="text-xs text-rose-300 px-2 py-2">Clear</button>
+          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" data-action="add-shot-thumbnails">
+          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-shot-thumbnails">
+          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailLibraryInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
+          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailCameraInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
+          <button type="button" data-action="clear-shot-thumbnails" class="text-xs text-rose-300 px-2 py-2">Clear</button>
           <div id="shotThumbnailPreview" class="hidden flex flex-wrap gap-2" aria-label="Shot thumbnail previews"></div>
         </div>
 
@@ -188,55 +188,55 @@
           <label class="form-label" data-initial-setting="sketch">Sketch</label>
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
-            <button type="button" onclick="setCanvasMode('draw')" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
-            <button type="button" onclick="setCanvasMode('erase')" id="btnErase" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">🧽 Eraser</button>
-            <button type="button" onclick="setCanvasMode('select')" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
-            <button type="button" onclick="addTextToNote()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="draw" id="btnDraw" class="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg">✏️ Draw</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="erase" id="btnErase" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">🧽 Eraser</button>
+            <button type="button" data-action="set-canvas-mode" data-mode="select" id="btnSelect" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">👆 Select/Move</button>
+            <button type="button" data-action="add-canvas-text" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700">📝 Add Text</button>
 
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <label for="drawBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Draw</label>
-              <input type="range" id="drawBrushSize" min="1" max="30" value="3" oninput="setCanvasBrushSize('draw', this.value)" class="w-16 accent-amber-400" aria-label="Draw brush size">
+              <input type="range" id="drawBrushSize" min="1" max="30" value="3" data-action="set-brush-size" data-brush="draw" class="w-16 accent-amber-400" aria-label="Draw brush size">
               <span id="drawBrushSizeValue" class="w-4 text-[10px] font-mono text-slate-300">3</span>
             </div>
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <label for="eraserBrushSize" class="text-[10px] font-bold uppercase text-slate-400">Erase</label>
-              <input type="range" id="eraserBrushSize" min="4" max="100" value="24" oninput="setCanvasBrushSize('erase', this.value)" class="w-16 accent-amber-400" aria-label="Eraser size">
+              <input type="range" id="eraserBrushSize" min="4" max="100" value="24" data-action="set-brush-size" data-brush="erase" class="w-16 accent-amber-400" aria-label="Eraser size">
               <span id="eraserBrushSizeValue" class="w-5 text-[10px] font-mono text-slate-300">24</span>
             </div>
 
             <!-- Undo / Redo Buttons -->
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
-              <button type="button" id="btnUndo" onclick="undoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
-              <button type="button" id="btnRedo" onclick="redoCanvas()" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
+              <button type="button" id="btnUndo" data-action="undo-canvas" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↩️ Undo</button>
+              <button type="button" id="btnRedo" data-action="redo-canvas" disabled class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed">↪️ Redo</button>
             </div>
 
             <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
               <span class="text-[10px] text-slate-400 uppercase font-bold">Layer:</span>
-              <button type="button" onclick="moveSelectedLayer('front')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring forward">↑</button>
-              <button type="button" onclick="moveSelectedLayer('back')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send backward">↓</button>
-              <button type="button" onclick="moveSelectedLayer('top')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring to front">⇈</button>
-              <button type="button" onclick="moveSelectedLayer('bottom')" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send to back">⇊</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="front" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring forward">↑</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="back" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send backward">↓</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="top" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Bring to front">⇈</button>
+              <button type="button" data-action="move-canvas-layer" data-direction="bottom" class="bg-slate-800 text-xs px-2 py-1.5 rounded border border-slate-700" title="Send to back">⇊</button>
             </div>
 
             <!-- Color Palette -->
             <div class="flex items-center gap-1.5 border-l border-slate-800 pl-2">
               <span class="text-[10px] text-slate-400 uppercase font-bold">Color:</span>
-              <button type="button" onclick="setCanvasColor('#00ffff')" class="w-5 h-5 rounded-full bg-[#00ffff] border border-slate-600 focus:scale-110 transition-transform" title="Cyan"></button>
-              <button type="button" onclick="setCanvasColor('#f59e0b')" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-slate-600 focus:scale-110 transition-transform" title="Amber"></button>
-              <button type="button" onclick="setCanvasColor('#f43f5e')" class="w-5 h-5 rounded-full bg-[#f43f5e] border border-slate-600 focus:scale-110 transition-transform" title="Rose"></button>
-              <button type="button" onclick="setCanvasColor('#84cc16')" class="w-5 h-5 rounded-full bg-[#84cc16] border border-slate-600 focus:scale-110 transition-transform" title="Lime"></button>
-              <button type="button" onclick="setCanvasColor('#ffffff')" class="w-5 h-5 rounded-full bg-[#ffffff] border border-slate-600 focus:scale-110 transition-transform" title="White"></button>
-              <input type="color" id="customCanvasColor" value="#00ffff" onchange="setCanvasColor(this.value)" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
+              <button type="button" data-action="set-canvas-color" data-color="#00ffff" class="w-5 h-5 rounded-full bg-[#00ffff] border border-slate-600 focus:scale-110 transition-transform" title="Cyan"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#f59e0b" class="w-5 h-5 rounded-full bg-[#f59e0b] border border-slate-600 focus:scale-110 transition-transform" title="Amber"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#f43f5e" class="w-5 h-5 rounded-full bg-[#f43f5e] border border-slate-600 focus:scale-110 transition-transform" title="Rose"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#84cc16" class="w-5 h-5 rounded-full bg-[#84cc16] border border-slate-600 focus:scale-110 transition-transform" title="Lime"></button>
+              <button type="button" data-action="set-canvas-color" data-color="#ffffff" class="w-5 h-5 rounded-full bg-[#ffffff] border border-slate-600 focus:scale-110 transition-transform" title="White"></button>
+              <input type="color" id="customCanvasColor" value="#00ffff" data-action="set-canvas-color" class="w-6 h-6 rounded border border-slate-700 bg-transparent cursor-pointer p-0" title="Custom Color">
             </div>
             
-            <input type="file" id="noteImgLibraryInput" accept="image/*" class="hidden" onchange="addFreeImageToCanvas(event)">
-            <input type="file" id="noteImgCameraInput" accept="image/*" capture="environment" class="hidden" onchange="addFreeImageToCanvas(event)">
-            <button type="button" onclick="document.getElementById('noteImgLibraryInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">🖼️ Library</button>
-            <button type="button" onclick="document.getElementById('noteImgCameraInput').click()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">📷 Camera</button>
+            <input type="file" id="noteImgLibraryInput" accept="image/*" class="hidden" data-action="add-canvas-image">
+            <input type="file" id="noteImgCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-canvas-image">
+            <button type="button" data-action="open-file-input" data-input-id="noteImgLibraryInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 ml-auto md:ml-0">🖼️ Library</button>
+            <button type="button" data-action="open-file-input" data-input-id="noteImgCameraInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">📷 Camera</button>
             
             <div class="ml-auto flex gap-2">
-              <button type="button" onclick="deleteSelected()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
-              <button type="button" onclick="clearNoteCanvas()" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Clear All</button>
+              <button type="button" data-action="delete-canvas-selection" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Delete</button>
+              <button type="button" data-action="clear-canvas" class="bg-rose-950 text-rose-300 text-xs px-2.5 py-1.5 rounded-lg border border-rose-900">Clear All</button>
             </div>
           </div>
 
@@ -260,28 +260,28 @@
       <div class="space-y-2">
         <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Record Sheets (<span id="totalCount">0</span>)</h2>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <button type="button" onclick="openNewRecordModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow">➕ Add</button>
+          <button type="button" data-action="open-new-record" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors shadow">➕ Add</button>
         <div class="flex flex-wrap justify-end gap-2">
-          <button id="selectAllRecordsBtn" type="button" onclick="toggleSelectAllRecords()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
+          <button id="selectAllRecordsBtn" type="button" data-action="toggle-select-all-records" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-slate-700">
             Select All
           </button>
-          <button id="deleteSelectedBtn" type="button" onclick="deleteSelectedRecords()" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
+          <button id="deleteSelectedBtn" type="button" data-action="delete-selected-records" disabled class="bg-rose-950 hover:bg-rose-900 text-rose-300 font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow border border-rose-900 disabled:opacity-40 disabled:cursor-not-allowed">
             Delete Selected (0)
           </button>
-          <button id="exportCsvBtn" type="button" onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+          <button id="exportCsvBtn" type="button" data-action="export-csv" class="bg-emerald-700 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📦 ZIP
           </button>
-          <button id="exportPdfBtn" type="button" onclick="exportToPDF()" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
+          <button id="exportPdfBtn" type="button" data-action="export-pdf" class="bg-rose-700 hover:bg-rose-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow flex items-center gap-1">
             📄 PDF
           </button>
-          <button id="exportBackupBtn" onclick="exportBackupJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <button id="exportBackupBtn" data-action="export-backup" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             💾 Full Backup JSON
           </button>
-          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" onchange="importBackupJSON(event)">
-          <button type="button" onclick="document.getElementById('importBackupInput').click()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <input type="file" id="importBackupInput" accept=".json,application/json" class="hidden" data-action="import-backup">
+          <button type="button" data-action="open-file-input" data-input-id="importBackupInput" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             📥 Import Full Backup
           </button>
-          <button id="syncBtn" onclick="syncData()" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
+          <button id="syncBtn" data-action="sync-data" class="hidden bg-sky-600 hover:bg-sky-500 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors shadow">
             Sync to FlowPT
           </button>
         </div>
@@ -295,10 +295,10 @@
 
   <nav class="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700 bg-slate-950/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur" aria-label="Main navigation">
     <div class="mx-auto grid max-w-md grid-cols-2 gap-2">
-      <button type="button" id="historyNavBtn" onclick="switchAppPage('history')" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
+      <button type="button" id="historyNavBtn" data-action="switch-page" data-page="history" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-amber-400" aria-current="page">
         <span class="text-xl leading-5">📚</span><span>Record Sheets <span id="historyNavCount">(0)</span></span>
       </button>
-      <button type="button" onclick="openPresetModal()" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
+      <button type="button" data-action="open-preset-modal" class="flex flex-col items-center rounded-lg py-1 text-xs font-bold text-slate-400 hover:text-slate-100">
         <span class="text-xl leading-5">⚙️</span><span>Settings</span>
       </button>
     </div>
@@ -310,15 +310,15 @@
         <h2 id="editRecordModalTitle" class="text-sm font-bold text-amber-400">Edit VFX Sheet</h2>
         <div class="flex items-center gap-2">
           <div id="initialSettingsModalActions" class="hidden items-center gap-2">
-            <button type="button" onclick="exportSheetInitialSettings()" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Export</button>
-            <button type="button" onclick="selectSheetInitialSettingsImport()" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Import</button>
-            <button type="button" onclick="saveCurrentAsDefaultSettings()" class="rounded-lg bg-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-900 hover:bg-white">Save</button>
+            <button type="button" data-action="export-sheet-defaults" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Export</button>
+            <button type="button" data-action="import-sheet-defaults" class="rounded-lg border border-neutral-500 bg-neutral-700 px-3 py-1.5 text-xs font-bold text-neutral-100 hover:bg-neutral-600">Import</button>
+            <button type="button" data-action="save-sheet-defaults" class="rounded-lg bg-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-900 hover:bg-white">Save</button>
           </div>
           <div id="editRecordModalActions" class="hidden items-center gap-2">
-            <button type="button" onclick="saveRecord(event, 'new')" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
-            <button type="button" onclick="saveRecord(event, 'update')" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
+            <button type="button" data-action="save-new-record" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
+            <button type="button" data-action="save-existing-record" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
           </div>
-          <button type="button" onclick="closeEditRecordModal()" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+          <button type="button" data-action="close-edit-modal" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
         </div>
       </div>
       <div id="editRecordModalContent" class="flex-1 overflow-y-auto p-3 md:p-5"></div>
@@ -329,13 +329,13 @@
     <div class="mx-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl">
       <div class="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
         <div class="flex min-w-0 flex-1 items-center gap-4 overflow-hidden"><h2 id="recordPreviewModalTitle" class="shrink-0 truncate text-sm font-bold text-amber-400">VFX Sheet Preview</h2><div id="recordPreviewModalMeta" class="shrink-0 text-[10px] leading-4 text-slate-400"></div></div>
-        <button type="button" onclick="closeRecordPreview()" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
+        <button type="button" data-action="close-preview-modal" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
       </div>
       <div id="recordPreviewModalContent" class="flex-1 overflow-y-auto p-3 md:p-4"></div>
     </div>
   </div>
 
-  <div id="mediaLightbox" class="fixed inset-0 z-[70] hidden cursor-zoom-out items-center justify-center bg-black/95 p-4" role="dialog" aria-label="Expanded image" onclick="closeMediaLightbox()">
+  <div id="mediaLightbox" class="fixed inset-0 z-[70] hidden cursor-zoom-out items-center justify-center bg-black/95 p-4" role="dialog" aria-label="Expanded image" data-action="close-media-lightbox">
     <img id="mediaLightboxImage" src="" alt="Expanded preview" class="max-h-full max-w-full rounded-lg object-contain">
   </div>
 
@@ -344,7 +344,7 @@
     <div class="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl p-5 space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="font-bold text-amber-400 text-sm">Presets & Global Config Management</h3>
-        <button type="button" onclick="closePresetModal()" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
+        <button type="button" data-action="close-preset-modal" class="text-slate-400 hover:text-slate-200 text-lg">✕</button>
       </div>
 
       <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-3">
@@ -353,11 +353,11 @@
           <span class="text-[11px] text-slate-500">Share camera, lens, and camera movement presets as JSON.</span>
         </div>
         <div class="flex gap-2 pt-1 border-t border-slate-900">
-          <button type="button" onclick="exportFullPresetsJSON()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+          <button type="button" data-action="export-presets" class="bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
             📤 Export Config JSON
           </button>
-          <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importFullPresetsJSON(event)">
-          <button type="button" onclick="document.getElementById('importJsonInput').click()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
+          <input type="file" id="importJsonInput" accept=".json" class="hidden" data-action="import-presets">
+          <button type="button" data-action="open-file-input" data-input-id="importJsonInput" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 flex-1 flex items-center justify-center gap-1">
             📥 Import Config JSON
           </button>
         </div>
@@ -368,7 +368,7 @@
           <label class="form-label text-amber-300 font-bold">Available Cameras</label>
           <div class="flex gap-2">
             <input type="text" id="newCameraInput" placeholder="e.g. RED V-Raptor" class="form-input text-xs">
-            <button type="button" onclick="addPresetItem('camera')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+            <button type="button" data-action="add-preset" data-preset-type="camera" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
           </div>
           <ul id="cameraPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
@@ -379,7 +379,7 @@
             <input type="text" id="newLensNameInput" placeholder="e.g. Cooke S4/i 25mm" class="form-input text-xs">
             <div class="flex gap-2">
               <input type="text" id="newLensFocalInput" placeholder="Focal Length (e.g. 25mm)" class="form-input text-xs">
-              <button type="button" onclick="addPresetItem('lens')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+              <button type="button" data-action="add-preset" data-preset-type="lens" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
             </div>
           </div>
           <ul id="lensPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
@@ -389,15 +389,15 @@
           <label class="form-label text-amber-300 font-bold">Available Camera Movements</label>
           <div class="flex gap-2">
             <input type="text" id="newMovementInput" placeholder="e.g. Motion Control" class="form-input text-xs">
-            <button type="button" onclick="addPresetItem('movement')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
+            <button type="button" data-action="add-preset" data-preset-type="movement" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs whitespace-nowrap">Add</button>
           </div>
           <ul id="movementPresetList" class="space-y-1 bg-slate-950 p-2 rounded-lg border border-slate-800 max-h-48 overflow-y-auto text-xs"></ul>
         </div>
       </div>
 
       <div class="border-t border-slate-800 pt-3 flex justify-end gap-2">
-        <button type="button" onclick="resetPresetsToDefault()" class="text-xs text-rose-400 hover:text-rose-300 mr-auto">Reset All to System Default</button>
-        <button type="button" onclick="closePresetModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs border border-slate-700">Close</button>
+        <button type="button" data-action="reset-presets" class="text-xs text-rose-400 hover:text-rose-300 mr-auto">Reset All to System Default</button>
+        <button type="button" data-action="close-preset-modal" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs border border-slate-700">Close</button>
       </div>
     </div>
   </div>
@@ -406,6 +406,7 @@
   <script src="js/utils.js"></script>
   <script src="js/database.js"></script>
   <script src="js/default-settings.js"></script>
+  <script src="js/event-delegation.js"></script>
   <script src="js/form-ui.js"></script>
   <script src="js/shot-thumbnails.js"></script>
   <script src="js/gps.js"></script>

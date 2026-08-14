@@ -2,6 +2,7 @@
 // This remains a classic script temporarily because the feature bundle is still
 // being migrated from global functions to ES module exports.
 document.addEventListener('DOMContentLoaded', async () => {
+  initEventDelegation();
   await initPresets();
   await resetFormToDefault();
   initFabricCanvas();
