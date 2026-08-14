@@ -39,6 +39,12 @@ async function openAddDefaultsEditor() {
   document.getElementById('editRecordModal').classList.add('initial-settings-modal');
   currentEditingId = null;
   recordDraftBeforeHistoryEdit = null;
+  openEditRecordModal(false);
+  document.getElementById('editRecordModalTitle').innerText = 'Sheet Defaults';
+  document.getElementById('initialSettingsModalActions').classList.remove('hidden');
+  document.getElementById('initialSettingsModalActions').classList.add('flex');
+  document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
+
   document.getElementById('vfxForm').reset();
   clearShotThumbnail();
   clearNoteCanvas();
@@ -48,9 +54,4 @@ async function openAddDefaultsEditor() {
   initialSettingToggleStates = { ...getInitialSettingEnabledFields(savedValues), ...(savedValues.enabled_fields || {}) };
   showInitialSettingToggles(initialSettingToggleStates);
   document.getElementById('submitBtnContainer').innerHTML = '';
-  openEditRecordModal(false);
-  document.getElementById('editRecordModalTitle').innerText = 'Sheet Defaults';
-  document.getElementById('initialSettingsModalActions').classList.remove('hidden');
-  document.getElementById('initialSettingsModalActions').classList.add('flex');
-  document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
 }
