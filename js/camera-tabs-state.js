@@ -1,6 +1,7 @@
 // Camera tab lifecycle and form-to-state synchronization.
 import { state } from './state.js';
 import { createEmptyCameraItem, getCameraReelName } from './camera-model.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
 
 export function addCameraTab() {
   saveActiveTabState();

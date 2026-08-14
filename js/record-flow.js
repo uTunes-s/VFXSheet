@@ -1,6 +1,13 @@
 // Editor reset and next-record preparation.
 import { state } from './state.js';
 import { incrementTrailingNumber } from './utils.js';
+import { resetFormToDefault } from './initial-settings-reset.js';
+import { clearShotThumbnail } from './shot-thumbnails.js';
+import { clearNoteCanvas } from './canvas-actions.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { saveActiveTabState } from './camera-tabs-state.js';
+import { getCameraReelPrefix } from './camera-model.js';
+import { renderCameraTabs } from './camera-tabs-renderer.js';
 
 export function setNewRecordSubmitButton() {
   document.getElementById('submitBtnContainer').innerHTML = '<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>';

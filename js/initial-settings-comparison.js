@@ -1,5 +1,7 @@
 // Compare the active form with saved sheet default settings.
 import { state } from './state.js';
+import { saveActiveTabState } from './camera-tabs-state.js';
+import { getWeatherValues } from './form-ui.js';
 
 export function getCurrentDefaultSettingsValues() {
   saveActiveTabState();

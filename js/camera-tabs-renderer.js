@@ -1,6 +1,8 @@
 // Camera tab header rendering. The tab form renderer remains globally available.
 import { state } from './state.js';
 import { getCameraReelName } from './camera-model.js';
+import { getVisibleInitialSettingStates, showInitialSettingToggles } from './initial-settings-ui.js';
+import { renderCameraTabContent } from './camera-tab-content-renderer.js';
 
 export function renderCameraTabs() {
   const initialSettingStates = state.isConfiguringAddDefaults ? getVisibleInitialSettingStates() : null;
