@@ -559,36 +559,6 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-    function renderCameraTabs() {
-      const initialSettingStates = isConfiguringAddDefaults ? getVisibleInitialSettingStates() : null;
-      const header = document.getElementById('cameraTabHeader');
-      const addBtn = header.querySelector('button[onclick="addCameraTab()"]');
-      
-      const existingTabs = header.querySelectorAll('.cam-tab-btn');
-      existingTabs.forEach(el => el.remove());
-
-      cameraListState.forEach((cam, idx) => {
-        const isActive = idx === activeCamIndex;
-        const tabBtn = document.createElement('div');
-        tabBtn.className = `cam-tab-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors border ${
-          isActive 
-            ? 'bg-amber-500 text-slate-950 border-amber-400' 
-            : 'bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800'
-        }`;
-        tabBtn.onclick = () => switchCameraTab(idx);
-
-        tabBtn.innerHTML = `
-          <span>${getCameraReelName(cam)}</span>
-          <button type="button" onclick="editCameraReelName(${idx}, event)" class="rounded border border-current/30 px-1 text-[10px] hover:bg-black/10">Edit</button>
-          ${cameraListState.length > 1 ? `<button type="button" onclick="removeCameraTab(${idx}, event)" class="hover:text-rose-300 font-bold ml-1">✕</button>` : ''}
-        `;
-        header.insertBefore(tabBtn, addBtn);
-      });
-
-      renderCameraTabContent();
-      if (initialSettingStates) showInitialSettingToggles(initialSettingStates);
-    }
-
     function renderCameraTabContent() {
       const container = document.getElementById('cameraTabContents');
       const cam = cameraListState[activeCamIndex];
@@ -909,6 +879,7 @@
   <script src="js/initial-settings-reset.js"></script>
   <script src="js/initial-settings-editor.js"></script>
   <script src="js/preset-list-renderer.js"></script>
+  <script src="js/camera-tabs-renderer.js"></script>
   <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-text-record.js"></script>
   <script src="js/pdf-page-renderer.js"></script>
