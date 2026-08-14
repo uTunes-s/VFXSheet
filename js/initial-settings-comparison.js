@@ -1,5 +1,7 @@
 // Compare the active form with saved sheet default settings.
-function getCurrentDefaultSettingsValues() {
+import { state } from './state.js';
+
+export function getCurrentDefaultSettingsValues() {
   saveActiveTabState();
   return {
     operator: document.getElementById('operator').value,
@@ -8,11 +10,11 @@ function getCurrentDefaultSettingsValues() {
     hdri_captured: document.getElementById('hdri_captured').checked,
     hdri_weather: getWeatherValues(),
     hdri_notes: document.getElementById('hdri_notes').value,
-    cameras: cameraListState
+    cameras: state.cameraListState
   };
 }
 
-function getDefaultSettingsChangeSummary(currentValues, newValues, includeUnchanged = false) {
+export function getDefaultSettingsChangeSummary(currentValues, newValues, includeUnchanged = false) {
   const fields = [
     ['operator', 'Operator'],
     ['show_title', 'Show / Title'],
@@ -27,3 +29,5 @@ function getDefaultSettingsChangeSummary(currentValues, newValues, includeUnchan
     .map(([, label]) => `• ${label}`);
   return changedFields.length ? changedFields.join('\n') : 'No changes';
 }
+
+Object.assign(globalThis, { getCurrentDefaultSettingsValues, getDefaultSettingsChangeSummary });
