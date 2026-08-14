@@ -65,6 +65,45 @@
     'move-shot-thumbnail': element => moveShotThumbnail(number(element.dataset.thumbnailIndex), number(element.dataset.direction))
   };
 
+  function migrateInlineAction(element, attribute, expression) {
+    const set = (action, values = {}) => {
+      element.dataset.action = action;
+      Object.entries(values).forEach(([key, value]) => { element.dataset[key] = value; });
+      element.removeAttribute(attribute);
+    };
+    let match;
+    if (attribute === 'onchange') {
+      if ((match = expression.match(/^toggleRecordSelection\((\d+), this\.checked\)$/))) return set('toggle-record-selection', { recordId: match[1] });
+      if ((match = expression.match(/^onTabPresetChange\('([^']+)'\)$/))) return set('tab-preset-change', { presetType: match[1] });
+      if (expression === 'onTabLensChange()') return set('tab-lens-change');
+      if ((match = expression.match(/^togglePresetItem\('([^']+)', (\d+), this\.checked\)$/))) return set('toggle-preset-item', { presetType: match[1], presetIndex: match[2] });
+      if ((match = expression.match(/^toggleLensSeries\('([^']+)', this\.checked\)$/))) return set('toggle-lens-series', { lensSeries: match[1] });
+    }
+    if (attribute === 'ontoggle' && (match = expression.match(/^setLensSeriesOpen\('([^']+)', this\.open\)$/))) return set('set-lens-series-open', { lensSeries: match[1] });
+    if (attribute === 'onclick') {
+      if (expression === 'event.stopPropagation()') {
+        element.removeAttribute(attribute);
+        return;
+      }
+      if ((match = expression.match(/^openRecordPreview\((\d+)\)$/))) return set('open-record-preview', { recordId: match[1] });
+      if ((match = expression.match(/^event\.stopPropagation\(\); loadRecordForEdit\((\d+)(?:, (true))?\)$/))) return set('load-record', { recordId: match[1], duplicate: String(Boolean(match[2])) });
+      if ((match = expression.match(/^event\.stopPropagation\(\); deleteRecord\((\d+)\)$/))) return set('delete-record', { recordId: match[1] });
+      if ((match = expression.match(/^event\.stopPropagation\(\); changeRecordThumbnail\(this, (-?\d+)\)$/))) return set('change-record-thumbnail', { direction: match[1] });
+      if ((match = expression.match(/^editCameraReelName\((\d+), event\)$/))) return set('edit-camera-reel-name', { cameraIndex: match[1] });
+      if ((match = expression.match(/^removeCameraTab\((\d+), event\)$/))) return set('remove-camera', { cameraIndex: match[1] });
+      if ((match = expression.match(/^removePresetItem\('([^']+)', (\d+)\)$/))) return set('remove-preset-item', { presetType: match[1], presetIndex: match[2] });
+      if (expression === 'openMediaLightbox(this.src, this.alt)') return set('open-media-lightbox');
+    }
+  }
+
+  function migrateInlineActions(root) {
+    if (!(root instanceof Element)) return;
+    const elements = [root, ...root.querySelectorAll('*')];
+    elements.forEach(element => ['onclick', 'onchange', 'oninput', 'onsubmit', 'onkeydown', 'ontoggle'].forEach(attribute => {
+      if (element.hasAttribute(attribute)) migrateInlineAction(element, attribute, element.getAttribute(attribute));
+    }));
+  }
+
   function route(event) {
     if (event.type === 'keydown') {
       if (event.target.closest?.('#vfxForm')) preventFormEnterSubmit(event);
@@ -90,6 +129,8 @@
     if (document.documentElement.dataset.eventDelegationReady) return;
     document.documentElement.dataset.eventDelegationReady = 'true';
     ['click', 'change', 'input', 'submit', 'keydown', 'toggle'].forEach(type => document.addEventListener(type, route));
+    migrateInlineActions(document.body);
+    new MutationObserver(records => records.forEach(record => record.addedNodes.forEach(migrateInlineActions))).observe(document.body, { childList: true, subtree: true });
   }
 
   window.initEventDelegation = initEventDelegation;
