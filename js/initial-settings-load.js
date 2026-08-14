@@ -1,5 +1,8 @@
 // Load saved sheet defaults into the current editor form.
-async function loadDefaultSettings() {
+import { db } from './database.js';
+import { state } from './state.js';
+
+export async function loadDefaultSettings() {
   const defaultSettings = await db.presets.get('user_defaults');
   if (!defaultSettings || !defaultSettings.values) {
     alert('No saved default settings found.');
@@ -22,8 +25,10 @@ async function loadDefaultSettings() {
   setWeatherValues(values.hdri_weather || ['Sunny']);
   document.getElementById('hdri_notes').value = values.hdri_notes || '';
 
-  if (values.cameras && values.cameras.length > 0) cameraListState = values.cameras.map(camera => ({ ...camera }));
-  activeCamIndex = 0;
+  if (values.cameras && values.cameras.length > 0) state.cameraListState = values.cameras.map(camera => ({ ...camera }));
+  state.activeCamIndex = 0;
   renderCameraTabs();
   alert('Default settings loaded!');
 }
+
+Object.assign(globalThis, { loadDefaultSettings });
