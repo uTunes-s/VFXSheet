@@ -63,4 +63,3 @@ export async function createThumbnailCollage(thumbnailBlobs) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
 }
 
-Object.assign(globalThis, { createThumbnailCollage });

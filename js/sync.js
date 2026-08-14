@@ -46,4 +46,3 @@ export async function syncData() {
   renderList();
 }
 
-Object.assign(globalThis, { syncData });

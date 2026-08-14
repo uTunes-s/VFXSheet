@@ -54,4 +54,3 @@ export function getGPSLocation() {
   );
 }
 
-Object.assign(globalThis, { getGPSLocation });
