@@ -1,5 +1,12 @@
 // FlowPT-compatible CSV, thumbnail, and per-camera PDF ZIP export.
-async function exportToCSV() {
+import { getRecordsForHistoryAction } from './record-selection.js';
+import { getRecordShotThumbnails, getShootingDataName, getShootingDataExportFilename, formatFlowPtId } from './export-naming.js';
+import { createThumbnailCollage } from './thumbnail-collage.js';
+import { createShootingDataPdf } from './shooting-data-pdf.js';
+import { createZip } from './zip-utils.js';
+import { downloadExportBlob } from './media-utils.js';
+
+export async function exportToCSV() {
   const button = document.getElementById('exportCsvBtn');
   const originalLabel = button.innerHTML;
   button.disabled = true;
@@ -79,3 +86,5 @@ async function exportToCSV() {
     button.innerHTML = originalLabel;
   }
 }
+
+Object.assign(globalThis, { exportToCSV });

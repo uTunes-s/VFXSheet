@@ -1,5 +1,8 @@
 // Japanese PDF font setup and invisible searchable text layer generation.
-async function addInvisiblePdfTextLayer(doc, record) {
+import { state } from './state.js';
+import { getCameraFieldLabel } from './camera-model.js';
+
+export async function addInvisiblePdfTextLayer(doc, record) {
   await loadJapanesePdfFont(doc);
   const cameraText = (record.cameras || []).map(camera => [
     getCameraFieldLabel(camera), camera.camera, camera.lens, camera.focal_length,
@@ -25,12 +28,12 @@ async function addInvisiblePdfTextLayer(doc, record) {
   });
 }
 
-async function loadJapanesePdfFont(doc) {
-  if (!japanesePdfFontPromise) {
+export async function loadJapanesePdfFont(doc) {
+  if (!state.japanesePdfFontPromise) {
     if (!window.VFX_JAPANESE_PDF_FONT_BASE64) throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
-    japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
+    state.japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
   }
-  const fontData = await japanesePdfFontPromise;
+  const fontData = await state.japanesePdfFontPromise;
   if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
     doc.addFileToVFS('DroidSansJapanese.ttf', fontData);
     doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
@@ -41,3 +44,5 @@ async function loadJapanesePdfFont(doc) {
   font.metadata.Unicode.widths = font.metadata.Unicode.widths || { 0: 1000 };
   font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
 }
+
+Object.assign(globalThis, { addInvisiblePdfTextLayer, loadJapanesePdfFont });

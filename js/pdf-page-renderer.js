@@ -1,5 +1,9 @@
 // Raster report page renderer used by camera-specific PDF exports.
-async function renderRecordPdfPage(record) {
+import { getRecordShotThumbnails } from './export-naming.js';
+import { imageFromBlob } from './media-utils.js';
+import { renderHighResolutionSketch, drawPdfHeaderMeta, drawPdfSectionTitle, drawPdfTable, drawPdfCameraTable, drawImageContain } from './pdf-canvas-utils.js';
+
+export async function renderRecordPdfPage(record) {
   const canvas = document.createElement('canvas'); canvas.width = 2480; canvas.height = 3508;
   const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(2, 2);
@@ -34,3 +38,5 @@ async function renderRecordPdfPage(record) {
   compressedCanvas.getContext('2d').drawImage(canvas, 0, 0, compressedCanvas.width, compressedCanvas.height);
   return { background: compressedCanvas.toDataURL('image/jpeg', 0.66), thumbnailBoxes, sketchBox: sketch ? { image: sketch, x: 40, y: imageY + 12, width: 1160, height: 760 } : null };
 }
+
+Object.assign(globalThis, { renderRecordPdfPage });

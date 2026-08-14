@@ -1,5 +1,8 @@
 // Per-camera FlowPT shooting-data PDF generation.
-async function createShootingDataPdf(record, camera) {
+import { renderRecordPdfPage } from './pdf-page-renderer.js';
+import { addInvisiblePdfTextLayer } from './pdf-text-layer.js';
+
+export async function createShootingDataPdf(record, camera) {
   if (!window.jspdf?.jsPDF) throw new Error('PDF export library is unavailable. Please reload the app once while online.');
   const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   // One FlowPT Shooting Data item corresponds to one camera/reel. Render the
@@ -15,7 +18,7 @@ async function createShootingDataPdf(record, camera) {
   return new Uint8Array(doc.output('arraybuffer'));
 }
 
-function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
+export function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
   if (!image) return;
   const ratio = Math.min(width / image.width, height / image.height);
   const imageWidth = image.width * ratio;
@@ -29,3 +32,5 @@ function addHighResolutionPdfImage(doc, { image, x, y, width, height }) {
   // renderRecordPdfPage uses a 1240 × 1754 logical A4 layout.
   doc.addImage(source.toDataURL('image/jpeg', 0.88), 'JPEG', (x + (width - imageWidth) / 2) / 1240 * 210, (y + (height - imageHeight) / 2) / 1754 * 297, imageWidth / 1240 * 210, imageHeight / 1754 * 297, undefined, 'FAST');
 }
+
+Object.assign(globalThis, { createShootingDataPdf, addHighResolutionPdfImage });

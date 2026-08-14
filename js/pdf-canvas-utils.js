@@ -1,5 +1,5 @@
 // Raster PDF page drawing helpers and high-resolution Fabric sketch rendering.
-async function renderHighResolutionSketch(record) {
+export async function renderHighResolutionSketch(record) {
   if (!record.canvas_json || !window.fabric) return null;
   const element = document.createElement('canvas');
   const staticCanvas = new fabric.StaticCanvas(element, { width: 760, height: 480, backgroundColor: '#090d16' });
@@ -21,7 +21,7 @@ async function renderHighResolutionSketch(record) {
   }
 }
 
-function imageFromDataUrl(dataUrl) {
+export function imageFromDataUrl(dataUrl) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
@@ -30,12 +30,12 @@ function imageFromDataUrl(dataUrl) {
   });
 }
 
-function drawPdfSectionTitle(ctx, title, y) {
+export function drawPdfSectionTitle(ctx, title, y) {
   ctx.fillStyle = '#b45309'; ctx.font = 'bold 18px sans-serif'; ctx.fillText(title, 40, y);
   return y + 14;
 }
 
-function drawPdfHeaderMeta(ctx, record) {
+export function drawPdfHeaderMeta(ctx, record) {
   const values = [['Operator', record.operator], ['Show Title', record.show_title], ['Date & Time', record.shoot_datetime], ['GPS', record.gps_location]];
   const width = 270; const x = 1200 - width; const labelWidth = 88;
   ctx.font = 'bold 11px sans-serif';
@@ -49,7 +49,7 @@ function drawPdfHeaderMeta(ctx, record) {
   });
 }
 
-function drawPdfTable(ctx, y, rows, columns) {
+export function drawPdfTable(ctx, y, rows, columns) {
   const x = 40; const width = 1160; const cellWidth = width / columns; const cellHeight = 54;
   rows.forEach(row => {
     row.forEach((cell, index) => {
@@ -66,7 +66,7 @@ function drawPdfTable(ctx, y, rows, columns) {
   return y;
 }
 
-function drawPdfCameraTable(ctx, y, camera, number) {
+export function drawPdfCameraTable(ctx, y, camera, number) {
   ctx.fillStyle = '#334155'; ctx.fillRect(40, y, 1160, 28);
   ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 50, y + 19);
   y += 28;
@@ -78,11 +78,13 @@ function drawPdfCameraTable(ctx, y, camera, number) {
   ]], 7);
 }
 
-function wrapPdfText(ctx, text, maxWidth) {
+export function wrapPdfText(ctx, text, maxWidth) {
   return text.split('\n').flatMap(paragraph => { const lines = []; let line = ''; for (const char of paragraph) { if (ctx.measureText(line + char).width > maxWidth && line) { lines.push(line); line = char; } else line += char; } if (line) lines.push(line); return lines; });
 }
 
-function drawImageContain(ctx, image, x, y, width, height) {
+export function drawImageContain(ctx, image, x, y, width, height) {
   const ratio = Math.min(width / image.width, height / image.height); const w = image.width * ratio; const h = image.height * ratio;
   ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
 }
+
+Object.assign(globalThis, { renderHighResolutionSketch, imageFromDataUrl, drawPdfSectionTitle, drawPdfHeaderMeta, drawPdfTable, drawPdfCameraTable, wrapPdfText, drawImageContain });
