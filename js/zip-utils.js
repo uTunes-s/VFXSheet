@@ -65,4 +65,3 @@ export function createZip(files) {
   return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
 }
 
-Object.assign(globalThis, { crc32, createZip });
