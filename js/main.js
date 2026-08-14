@@ -1,6 +1,5 @@
 // ES module application entry point. Vendor globals load before feature modules.
 import './app-shell.js';
-import { initEventDelegation } from './event-delegation.js';
 import './utils.js';
 import './state.js';
 import './media-utils.js';
@@ -80,6 +79,7 @@ await import('./flowpt-export.js');
 await import('./pdf-text-record.js');
 await import('./pdf-print-record.js');
 await import('./pdf-print-export.js');
+const { initEventDelegation } = await import('./event-delegation.js');
 
 initEventDelegation();
 await initPresets();

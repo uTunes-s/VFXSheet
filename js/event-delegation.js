@@ -1,8 +1,36 @@
 // Centralized event routing for static and dynamically rendered controls.
+import { state } from './state.js';
+import { preventFormEnterSubmit } from './utils.js';
+import { openAddDefaultsEditor, saveCurrentAsDefaultSettings } from './initial-settings-editor.js';
+import { saveRecord } from './record-save.js';
+import { getGPSLocation } from './gps.js';
+import { openPresetModal, closePresetModal } from './preset-modal.js';
+import { addCameraTab, editCameraReelName, removeCameraTab, switchCameraTab } from './camera-tabs-state.js';
+import { toggleHdriWeather, switchAppPage } from './form-ui.js';
+import { addShotThumbnails, clearShotThumbnail, moveShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnails.js';
+import { setCanvasMode } from './canvas-mode.js';
+import { setCanvasBrushSize, setCanvasColor } from './canvas-style.js';
+import { undoCanvas, redoCanvas } from './canvas-history.js';
+import { moveSelectedLayer, addTextToNote, deleteSelected, clearNoteCanvas } from './canvas-actions.js';
+import { addFreeImageToCanvas } from './canvas-images.js';
+import { openNewRecordModal, closeEditRecordModal } from './record-modal.js';
+import { toggleSelectAllRecords, deleteSelectedRecords, toggleRecordSelection, deleteRecord } from './record-selection.js';
+import { exportToCSV } from './flowpt-export.js';
+import { exportToPDF } from './pdf-print-export.js';
+import { exportBackupJSON, importBackupJSON } from './backup.js';
+import { syncData } from './sync.js';
+import { exportSheetInitialSettings, selectSheetInitialSettingsImport } from './initial-settings-transfer.js';
+import { closeRecordPreview, closeMediaLightbox, openMediaLightbox } from './media-modals.js';
+import { exportFullPresetsJSON, importFullPresetsJSON } from './preset-transfer.js';
+import { addPresetItem, resetPresetsToDefault, togglePresetItem, removePresetItem, toggleLensSeries, setLensSeriesOpen } from './preset-actions.js';
+import { openRecordPreview } from './record-preview.js';
+import { loadRecordForEdit } from './record-load.js';
+import { changeRecordThumbnail } from './record-thumbnails.js';
+import { onTabPresetChange, onTabLensChange } from './camera-tabs-interactions.js';
   const number = value => Number.parseInt(value, 10);
   const actions = {
     'open-defaults-editor': () => openAddDefaultsEditor(),
-    'save-record': (element, event) => saveRecord(event, element.dataset.mode || (currentEditingId ? 'update' : 'new')),
+    'save-record': (element, event) => saveRecord(event, element.dataset.mode || (state.currentEditingId ? 'update' : 'new')),
     'prevent-enter-submit': (_, event) => preventFormEnterSubmit(event),
     'get-gps': () => getGPSLocation(),
     'open-preset-modal': () => openPresetModal(),
@@ -59,7 +87,7 @@
     'set-lens-series-open': element => setLensSeriesOpen(element.dataset.lensSeries, element.open),
     'open-media-lightbox': element => openMediaLightbox(element.currentSrc || element.src, element.alt),
     'remove-shot-thumbnail': element => {
-      pendingShotThumbnails.splice(number(element.dataset.thumbnailIndex), 1);
+      state.pendingShotThumbnails.splice(number(element.dataset.thumbnailIndex), 1);
       renderShotThumbnailPreviews();
     },
     'move-shot-thumbnail': element => moveShotThumbnail(number(element.dataset.thumbnailIndex), number(element.dataset.direction)),
@@ -67,7 +95,7 @@
       event.preventDefault();
       const input = element.querySelector('input');
       input.checked = !input.checked;
-      initialSettingToggleStates[element.dataset.initialSetting] = input.checked;
+      state.initialSettingToggleStates[element.dataset.initialSetting] = input.checked;
     }
   };
 
