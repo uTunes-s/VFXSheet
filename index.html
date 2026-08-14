@@ -408,8 +408,9 @@
   <script src="js/default-settings.js"></script>
   <script>
 
-    // Camera names are curated from the Camera Database by Matchmove Machine.
-    // Keep the catalogue local so the field app remains fully usable offline.
+    // Historical catalog copies retained temporarily for rollback comparison.
+    // The active catalog is loaded from js/preset-catalog-*.js.
+    if (false) {
     const defaultCamerasLegacy = [
       { name: 'ARRI Alexa 35', category: 'Cine', enabled: false },
       { name: 'ARRI Alexa 35 Live', enabled: false },
@@ -556,6 +557,8 @@
       { name: 'iPhone 17 Pro Ultra Wide 13mm equiv.', focal: '13mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false },
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
+
+    }
 
     // Active renderers are loaded from js/*.js. These historical copies remain
     // unreachable until they are removed in a template-by-template cleanup.
