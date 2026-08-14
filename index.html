@@ -792,7 +792,7 @@
       listEl.innerHTML = cards.join('');
     }
 
-    async function exportToPDF() {
+    async function exportToPDFLegacy() {
       const button = document.getElementById('exportPdfBtn');
       const originalLabel = button.innerHTML;
       // Open immediately from the tap event so iOS does not block the print view.
@@ -883,6 +883,7 @@
   <script src="js/record-preview.js"></script>
   <script src="js/record-list-renderer.js"></script>
   <script src="js/pdf-print-record.js"></script>
+  <script src="js/pdf-print-export.js"></script>
   <script src="js/pdf-text-layer.js"></script>
   <script src="js/pdf-text-record.js"></script>
   <script src="js/pdf-page-renderer.js"></script>
