@@ -1,6 +1,8 @@
 // Drawing color and brush-size controls.
-function setCanvasColor(color) {
-  currentDrawingColor = color;
+import { state } from './state.js';
+
+export function setCanvasColor(color) {
+  state.currentDrawingColor = color;
   fCanvas.freeDrawingBrush.color = color;
   document.getElementById('customCanvasColor').value = color;
   const activeObject = fCanvas.getActiveObject();
@@ -10,7 +12,7 @@ function setCanvasColor(color) {
   saveCanvasState();
 }
 
-function setCanvasBrushSize(type, value) {
+export function setCanvasBrushSize(type, value) {
   const size = Number(value);
   if (type === 'draw') {
     drawBrushWidth = size;
@@ -21,3 +23,5 @@ function setCanvasBrushSize(type, value) {
   }
   if (fCanvas && canvasMode === type) fCanvas.freeDrawingBrush.width = size;
 }
+
+Object.assign(globalThis, { setCanvasColor, setCanvasBrushSize });
