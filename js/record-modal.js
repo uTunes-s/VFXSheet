@@ -3,15 +3,16 @@ async function openNewRecordModal() {
   isConfiguringAddDefaults = false;
   currentEditingId = null;
   recordDraftBeforeHistoryEdit = null;
+  openEditRecordModal(false);
+  document.getElementById('editRecordModalTitle').innerText = 'New VFX Sheet';
+  document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
+
   document.getElementById('vfxForm').reset();
   clearShotThumbnail();
   clearNoteCanvas();
   await resetFormToDefault();
   setCanvasMode('draw');
   document.getElementById('submitBtnContainer').innerHTML = '<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>';
-  openEditRecordModal(false);
-  document.getElementById('editRecordModalTitle').innerText = 'New VFX Sheet';
-  document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function openEditRecordModal(showActions = true) {
