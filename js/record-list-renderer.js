@@ -1,8 +1,16 @@
 // Record history card list rendering.
-async function renderList() {
+import { db } from './database.js';
+import { state } from './state.js';
+import { escapeHtml } from './utils.js';
+import { getRecordShotThumbnails } from './export-naming.js';
+import { updateHistorySelectionControls } from './record-selection.js';
+
+const selectedRecordIds = state.selectedRecordIds;
+
+export async function renderList() {
   const records = await db.sheets.reverse().toArray();
   const availableIds = new Set(records.map(record => record.id));
-  [...selectedRecordIds].forEach(id => { if (!availableIds.has(id)) selectedRecordIds.delete(id); });
+  [...state.selectedRecordIds].forEach(id => { if (!availableIds.has(id)) state.selectedRecordIds.delete(id); });
   document.getElementById('totalCount').innerText = records.length;
   document.getElementById('historyNavCount').innerText = `(${records.length})`;
   updateHistorySelectionControls(records);
@@ -19,3 +27,5 @@ async function renderList() {
   }));
   list.innerHTML = cards.join('');
 }
+
+Object.assign(globalThis, { renderList });
