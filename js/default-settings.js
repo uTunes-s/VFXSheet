@@ -1,10 +1,12 @@
 // Sheet-default predicates. Kept separate from the modal and form rendering code.
-function getInitialSettingEnabledFields(values = {}) {
+import { initialSettingItems } from './state.js';
+
+export function getInitialSettingEnabledFields(values = {}) {
   const saved = values.enabled_fields || {};
   return Object.fromEntries(initialSettingItems.map(([key]) => [key, saved[key] ?? hasSavedInitialValue(values, key)]));
 }
 
-function hasSavedInitialValue(values, key) {
+export function hasSavedInitialValue(values, key) {
   if (key === 'hdri') return Boolean(values.hdri_captured || values.hdri_notes || values.hdri_weather?.length);
   if (key === 'shot_thumbnails') return Boolean((values.shot_thumbnails || []).length);
   if (key === 'sketch') {
@@ -19,3 +21,5 @@ function hasSavedInitialValue(values, key) {
   }
   return Boolean(values[key]);
 }
+
+Object.assign(globalThis, { getInitialSettingEnabledFields, hasSavedInitialValue });

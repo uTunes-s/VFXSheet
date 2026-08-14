@@ -17,7 +17,7 @@ const CLASSIC_ASSETS = [
   '../vendor/jspdf.umd.min.js',
   '../vendor/jspdf.plugin.autotable.min.js',
   '../vendor/japanese-pdf-font.js',
-  './default-settings.js', './form-ui.js', './shot-thumbnails.js', './gps.js',
+  './form-ui.js', './shot-thumbnails.js', './gps.js',
   './media-modals.js', './record-thumbnails.js',
   './canvas-history.js', './canvas-style.js', './canvas-mode.js', './canvas-images.js', './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js', './canvas-eraser.js', './canvas-core.js', './canvas-crop.js',
   './initial-settings-ui.js', './initial-settings-transfer.js', './initial-settings-comparison.js', './initial-settings-load.js', './initial-settings-reset.js', './initial-settings-editor.js', './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js', './canvas-actions.js'
@@ -53,6 +53,7 @@ await import('./camera-tabs-state.js');
 await import('./camera-tabs-interactions.js');
 await import('./camera-tabs-renderer.js');
 await import('./camera-tab-content-renderer.js');
+await import('./default-settings.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
