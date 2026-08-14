@@ -1,11 +1,11 @@
 // Fabric.js eraser collision and raster replacement operations.
-function objectsOverlap(first, second) {
+export function objectsOverlap(first, second) {
   const a = first.getBoundingRect(true, true);
   const b = second.getBoundingRect(true, true);
   return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
 }
 
-async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
+export async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
   const rasterScale = 3;
   const layer = new fabric.StaticCanvas(document.createElement('canvas'), {
     width: fCanvas.width, height: fCanvas.height, enableRetinaScaling: false, renderOnAddRemove: false
@@ -40,7 +40,7 @@ async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
   }
 }
 
-async function eraseIntersectedSketchLayers(eraserPath) {
+export async function eraseIntersectedSketchLayers(eraserPath) {
   const targets = fCanvas.getObjects().filter(object => (object.isSketchStroke || object.isSketchRaster) && objectsOverlap(object, eraserPath));
   isUndoRedo = true;
   try {
@@ -62,3 +62,5 @@ async function eraseIntersectedSketchLayers(eraserPath) {
   canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
   updateUndoRedoButtons();
 }
+
+Object.assign(globalThis, { objectsOverlap, rasterizeErasedSketchLayer, eraseIntersectedSketchLayers });
