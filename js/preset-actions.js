@@ -1,11 +1,18 @@
 // Mutations for the preset catalog modal.
-function normalizedPresetList(type, list) {
+import { db } from './database.js';
+import { defaultCameras } from './preset-catalog-cameras.js';
+import { defaultLenses } from './preset-catalog-lenses.js';
+import { defaultMovements } from './preset-catalog-meta.js';
+import { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
+import { initPresets, openLensSeries } from './preset-store.js';
+
+export function normalizedPresetList(type, list) {
   if (type === 'camera') return normalizeCameraPresets(list);
   if (type === 'lens') return normalizeLensPresets(list);
   return normalizeMovementPresets(list);
 }
 
-async function addPresetItem(type) {
+export async function addPresetItem(type) {
   const configs = {
     camera: { input: 'newCameraInput', field: 'name', duplicate: 'This camera model is already registered.', item: value => ({ name: value, category: 'Custom', enabled: true }) },
     lens: { input: 'newLensNameInput', field: 'name', duplicate: 'This lens model is already registered.', item: value => ({ name: value, focal: document.getElementById('newLensFocalInput').value.trim(), category: 'Custom', enabled: true }) },
@@ -26,7 +33,7 @@ async function addPresetItem(type) {
   renderPresetModalLists();
 }
 
-async function togglePresetItem(type, index, enabled) {
+export async function togglePresetItem(type, index, enabled) {
   const record = await db.presets.get(type);
   record.list = normalizedPresetList(type, record.list);
   if (!record.list[index]) return;
@@ -36,12 +43,12 @@ async function togglePresetItem(type, index, enabled) {
   renderPresetModalLists();
 }
 
-function setLensSeriesOpen(series, isOpen) {
+export function setLensSeriesOpen(series, isOpen) {
   if (isOpen) openLensSeries.add(series);
   else openLensSeries.delete(series);
 }
 
-async function toggleLensSeries(series, enabled) {
+export async function toggleLensSeries(series, enabled) {
   const record = await db.presets.get('lens');
   record.list = normalizeLensPresets(record.list).map(lens => getLensSeries(lens) === series ? { ...lens, enabled } : lens);
   await db.presets.put(record);
@@ -49,7 +56,7 @@ async function toggleLensSeries(series, enabled) {
   renderPresetModalLists();
 }
 
-async function removePresetItem(type, index) {
+export async function removePresetItem(type, index) {
   const record = await db.presets.get(type);
   record.list = normalizedPresetList(type, record.list);
   record.list.splice(index, 1);
@@ -58,7 +65,7 @@ async function removePresetItem(type, index) {
   renderPresetModalLists();
 }
 
-async function resetPresetsToDefault() {
+export async function resetPresetsToDefault() {
   if (!confirm('Reset all presets to default?')) return;
   await db.presets.put({ type: 'camera', list: defaultCameras });
   await db.presets.put({ type: 'lens', list: defaultLenses });
@@ -67,3 +74,5 @@ async function resetPresetsToDefault() {
   await initPresets();
   renderPresetModalLists();
 }
+
+Object.assign(globalThis, { normalizedPresetList, addPresetItem, togglePresetItem, setLensSeriesOpen, toggleLensSeries, removePresetItem, resetPresetsToDefault });
