@@ -10,6 +10,13 @@ export const state = {
   initialSettingToggleStates: {},
   cameraListState: [],
   activeCamIndex: 0,
+  fCanvas: null,
+  canvasHistory: [],
+  historyIndex: -1,
+  isUndoRedo: false,
+  canvasMode: 'draw',
+  drawBrushWidth: 3,
+  eraserBrushWidth: 24,
   currentDrawingColor: '#00ffff',
   pendingShotThumbnails: []
 };
