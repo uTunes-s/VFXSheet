@@ -11,6 +11,7 @@ import { clearNoteCanvas } from './canvas-actions.js';
 import { setCanvasMode } from './canvas-mode.js';
 import { openEditRecordModal, closeEditRecordModal } from './record-modal.js';
 import { resetFormToDefault } from './initial-settings-reset.js';
+import { renderAddDefaultsSummary } from './initial-settings-transfer.js';
 
 export async function saveCurrentAsDefaultSettings() {
   saveActiveTabState();

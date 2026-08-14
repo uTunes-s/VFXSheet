@@ -7,6 +7,7 @@ import { setCanvasMode } from './canvas-mode.js';
 import { saveActiveTabState } from './camera-tabs-state.js';
 import { renderCameraTabs } from './camera-tabs-renderer.js';
 import { toggleHdriWeather } from './form-ui.js';
+import { cancelEditMode } from './record-flow.js';
 
 export async function openNewRecordModal() {
   state.isConfiguringAddDefaults = false;

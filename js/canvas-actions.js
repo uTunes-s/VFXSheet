@@ -1,5 +1,7 @@
 // Canvas toolbar actions and serialization helpers.
 import { state } from './state.js';
+import { saveCanvasState } from './canvas-history.js';
+import { setCanvasMode } from './canvas-mode.js';
 
 export function moveSelectedLayer(direction) {
   const active = state.fCanvas?.getActiveObject();

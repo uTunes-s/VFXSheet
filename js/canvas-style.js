@@ -1,5 +1,6 @@
 // Drawing color and brush-size controls.
 import { state } from './state.js';
+import { saveCanvasState } from './canvas-history.js';
 
 export function setCanvasColor(color) {
   state.currentDrawingColor = color;

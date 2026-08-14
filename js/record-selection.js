@@ -1,6 +1,9 @@
 // Record history selection and deletion controls.
 import { db } from './database.js';
 import { state } from './state.js';
+import { renderList } from './record-list-renderer.js';
+import { closeEditRecordModal } from './record-modal.js';
+import { cancelEditMode } from './record-flow.js';
 
 export function updateHistorySelectionControls(records = []) {
   const selectedCount = state.selectedRecordIds.size;
