@@ -1,5 +1,5 @@
 // Canvas undo/redo history management.
-function saveCanvasState() {
+export function saveCanvasState() {
   const json = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
   if (historyIndex < canvasHistory.length - 1) {
     canvasHistory = canvasHistory.slice(0, historyIndex + 1);
@@ -9,7 +9,7 @@ function saveCanvasState() {
   updateUndoRedoButtons();
 }
 
-function undoCanvas() {
+export function undoCanvas() {
   if (historyIndex <= 0) return;
   isUndoRedo = true;
   historyIndex--;
@@ -20,7 +20,7 @@ function undoCanvas() {
   });
 }
 
-function redoCanvas() {
+export function redoCanvas() {
   if (historyIndex >= canvasHistory.length - 1) return;
   isUndoRedo = true;
   historyIndex++;
@@ -31,9 +31,11 @@ function redoCanvas() {
   });
 }
 
-function updateUndoRedoButtons() {
+export function updateUndoRedoButtons() {
   const undo = document.getElementById('btnUndo');
   const redo = document.getElementById('btnRedo');
   if (undo) undo.disabled = historyIndex <= 0;
   if (redo) redo.disabled = historyIndex >= canvasHistory.length - 1;
 }
+
+Object.assign(globalThis, { saveCanvasState, undoCanvas, redoCanvas, updateUndoRedoButtons });
