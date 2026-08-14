@@ -1,5 +1,4 @@
 // Centralized event routing for static and dynamically rendered controls.
-(function () {
   const number = value => Number.parseInt(value, 10);
   const actions = {
     'open-defaults-editor': () => openAddDefaultsEditor(),
@@ -93,11 +92,10 @@
     action(element, event);
   }
 
-  function initEventDelegation() {
-    if (document.documentElement.dataset.eventDelegationReady) return;
-    document.documentElement.dataset.eventDelegationReady = 'true';
-    ['click', 'change', 'input', 'submit', 'keydown', 'toggle'].forEach(type => document.addEventListener(type, route));
-  }
+export function initEventDelegation() {
+  if (document.documentElement.dataset.eventDelegationReady) return;
+  document.documentElement.dataset.eventDelegationReady = 'true';
+  ['click', 'change', 'input', 'submit', 'keydown', 'toggle'].forEach(type => document.addEventListener(type, route));
+}
+// Module API ends here.
 
-  window.initEventDelegation = initEventDelegation;
-})();
