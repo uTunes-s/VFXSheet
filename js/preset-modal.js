@@ -12,4 +12,5 @@ export function closePresetModal() {
   document.getElementById('presetModal').classList.add('hidden');
 }
 
-Object.assign(globalThis, { openPresetModal, closePresetModal });
+// Public APIs are exposed only through named ES module exports.
+

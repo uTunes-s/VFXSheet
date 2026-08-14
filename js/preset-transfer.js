@@ -52,4 +52,5 @@ export async function importFullPresetsJSON(event) {
   event.target.value = '';
 }
 
-Object.assign(globalThis, { exportFullPresetsJSON, importFullPresetsJSON });
+// Public APIs are exposed only through named ES module exports.
+

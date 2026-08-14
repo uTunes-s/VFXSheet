@@ -14,4 +14,3 @@ export const defaultLenses = [
 	['Leica DG Vario-Elmarit 8-18mm F2.8-4.0', '8-18mm', 'Photo', 'Micro Four Thirds'], ['Leica DG Vario-Elmarit 12-60mm F2.8-4.0', '12-60mm', 'Photo', 'Micro Four Thirds'], ['Leica DG Vario-Summilux 10-25mm F1.7', '10-25mm', 'Photo', 'Micro Four Thirds'], ['Leica DG Vario-Summilux 25-50mm F1.7', '25-50mm', 'Photo', 'Micro Four Thirds'], ['Olympus M.Zuiko 12-40mm F2.8 PRO II', '12-40mm', 'Photo', 'Micro Four Thirds'],
 	['iPhone 17 Pro Main Camera 24mm equiv.', '24mm equiv.', 'Phone', 'iPhone 17 Pro'], ['iPhone 17 Pro Ultra Wide 13mm equiv.', '13mm equiv.', 'Phone', 'iPhone 17 Pro'], ['iPhone 17 Pro Telephoto 120mm equiv.', '120mm equiv.', 'Phone', 'iPhone 17 Pro']
 ].map(([name, focal, category, series = '', enabled = false]) => ({ name, focal, category, ...(series ? { series } : {}), enabled }));
-globalThis.defaultLenses = defaultLenses;

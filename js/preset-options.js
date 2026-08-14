@@ -10,4 +10,5 @@ export function renderPresetOptions(items, selectedName, includeFocal = false) {
   }).join('');
 }
 
-globalThis.renderPresetOptions = renderPresetOptions;
+// Public APIs are exposed only through named ES module exports.
+

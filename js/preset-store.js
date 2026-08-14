@@ -53,10 +53,5 @@ export async function initPresets() {
   renderCameraTabs();
 }
 
-Object.defineProperties(globalThis, {
-  cachedCamPresets: { configurable: true, get: () => cachedCamPresets },
-  cachedLensPresets: { configurable: true, get: () => cachedLensPresets },
-  cachedMovementPresets: { configurable: true, get: () => cachedMovementPresets },
-  openLensSeries: { configurable: true, get: () => openLensSeries }
-});
-globalThis.initPresets = initPresets;
+// Public APIs are exposed only through named ES module exports.
+

@@ -43,4 +43,5 @@ export async function renderPresetModalLists() {
   document.querySelectorAll('#lensPresetList input[data-indeterminate="true"]').forEach(input => { input.indeterminate = true; });
 }
 
-globalThis.renderPresetModalLists = renderPresetModalLists;
+// Public APIs are exposed only through named ES module exports.
+

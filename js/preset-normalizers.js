@@ -73,4 +73,5 @@ export function normalizeMovementPresets(list = []) {
   return [...byName.values()];
 }
 
-Object.assign(globalThis, { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets });
+// Public APIs are exposed only through named ES module exports.
+

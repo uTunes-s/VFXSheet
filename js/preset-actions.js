@@ -34,6 +34,7 @@ export async function addPresetItem(type) {
   renderPresetModalLists();
 }
 
+// Public APIs are exposed only through named ES module exports.
 export async function togglePresetItem(type, index, enabled) {
   const record = await db.presets.get(type);
   record.list = normalizedPresetList(type, record.list);
@@ -76,4 +77,3 @@ export async function resetPresetsToDefault() {
   renderPresetModalLists();
 }
 
-Object.assign(globalThis, { normalizedPresetList, addPresetItem, togglePresetItem, setLensSeriesOpen, toggleLensSeries, removePresetItem, resetPresetsToDefault });
