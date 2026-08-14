@@ -1,6 +1,7 @@
 // Fabric image crop mode, source overlays, and crop application.
 import { getOwnCanvasControls, renderCanvasControlIcon, renderCropControlIcon, configureCanvasImageCropControl } from './canvas-core.js';
 import { saveCanvasState } from './canvas-history.js';
+import { state } from './state.js';
 
 export function enterCanvasImageCropMode(image) {
   if (!image || image.angle) return alert('Reset the image rotation to 0° before cropping.');
@@ -37,17 +38,17 @@ export function enterCanvasImageCropMode(image) {
   image.evented = false;
   const overlays = Array.from({ length: 4 }, () => new fabric.Rect({ fill: 'rgba(2, 6, 23, 0.68)', selectable: false, evented: false, excludeFromExport: true, isCropOverlay: true }));
   frame.cropOverlays = overlays;
-  const imageIndex = fCanvas.getObjects().indexOf(image);
-  fCanvas.add(sourcePreview);
-  fCanvas.moveTo(sourcePreview, imageIndex);
-  fCanvas.add(...overlays, frame);
+  const imageIndex = state.fCanvas.getObjects().indexOf(image);
+  state.fCanvas.add(sourcePreview);
+  state.fCanvas.moveTo(sourcePreview, imageIndex);
+  state.fCanvas.add(...overlays, frame);
   const refreshOverlays = () => updateCanvasCropOverlays(frame);
   frame.on('moving', refreshOverlays);
   frame.on('scaling', refreshOverlays);
   frame.on('modified', refreshOverlays);
   updateCanvasCropOverlays(frame);
-  fCanvas.setActiveObject(frame);
-  fCanvas.requestRenderAll();
+  state.fCanvas.setActiveObject(frame);
+  state.fCanvas.requestRenderAll();
 }
 
 export function updateCanvasCropOverlays(frame) {
@@ -68,9 +69,9 @@ export function updateCanvasCropOverlays(frame) {
     [right, top, Math.max(0, sourceRight - right), Math.max(0, bottom - top)]
   ];
   frame.cropOverlays.forEach((overlay, index) => overlay.set({ left: rectangles[index][0], top: rectangles[index][1], width: rectangles[index][2], height: rectangles[index][3] }));
-  frame.cropOverlays.forEach(overlay => fCanvas.moveTo(overlay, fCanvas.getObjects().indexOf(frame) - 1));
+  frame.cropOverlays.forEach(overlay => state.fCanvas.moveTo(overlay, state.fCanvas.getObjects().indexOf(frame) - 1));
   frame.setCoords();
-  fCanvas.requestRenderAll();
+  state.fCanvas.requestRenderAll();
 }
 
 export function applyCanvasImageCrop(frame) {
@@ -87,11 +88,11 @@ export function applyCanvasImageCrop(frame) {
   const scaleY = image.scaleY;
   image.set({ cropX: (left - imageBounds.left) / scaleX, cropY: (top - imageBounds.top) / scaleY, width: (right - left) / scaleX, height: (bottom - top) / scaleY, left, top, selectable: true, evented: true });
   image.setCoords();
-  fCanvas.discardActiveObject();
-  [...(frame.cropOverlays || []), frame.cropSourcePreview, frame].filter(Boolean).forEach(object => fCanvas.remove(object));
+  state.fCanvas.discardActiveObject();
+  [...(frame.cropOverlays || []), frame.cropSourcePreview, frame].filter(Boolean).forEach(object => state.fCanvas.remove(object));
   configureCanvasImageCropControl(image);
-  fCanvas.setActiveObject(image);
-  fCanvas.requestRenderAll();
+  state.fCanvas.setActiveObject(image);
+  state.fCanvas.requestRenderAll();
   saveCanvasState();
 }
 

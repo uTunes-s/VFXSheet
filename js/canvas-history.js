@@ -1,32 +1,34 @@
 // Canvas undo/redo history management.
+import { state } from './state.js';
+
 export function saveCanvasState() {
-  const json = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
-  if (historyIndex < canvasHistory.length - 1) {
-    canvasHistory = canvasHistory.slice(0, historyIndex + 1);
+  const json = JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
+  if (state.historyIndex < state.canvasHistory.length - 1) {
+    state.canvasHistory = state.canvasHistory.slice(0, state.historyIndex + 1);
   }
-  canvasHistory.push(json);
-  historyIndex = canvasHistory.length - 1;
+  state.canvasHistory.push(json);
+  state.historyIndex = state.canvasHistory.length - 1;
   updateUndoRedoButtons();
 }
 
 export function undoCanvas() {
-  if (historyIndex <= 0) return;
-  isUndoRedo = true;
-  historyIndex--;
-  fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
-    fCanvas.renderAll();
-    isUndoRedo = false;
+  if (state.historyIndex <= 0) return;
+  state.isUndoRedo = true;
+  state.historyIndex--;
+  state.fCanvas.loadFromJSON(state.canvasHistory[state.historyIndex], () => {
+    state.fCanvas.renderAll();
+    state.isUndoRedo = false;
     updateUndoRedoButtons();
   });
 }
 
 export function redoCanvas() {
-  if (historyIndex >= canvasHistory.length - 1) return;
-  isUndoRedo = true;
-  historyIndex++;
-  fCanvas.loadFromJSON(canvasHistory[historyIndex], () => {
-    fCanvas.renderAll();
-    isUndoRedo = false;
+  if (state.historyIndex >= state.canvasHistory.length - 1) return;
+  state.isUndoRedo = true;
+  state.historyIndex++;
+  state.fCanvas.loadFromJSON(state.canvasHistory[state.historyIndex], () => {
+    state.fCanvas.renderAll();
+    state.isUndoRedo = false;
     updateUndoRedoButtons();
   });
 }
@@ -34,8 +36,8 @@ export function redoCanvas() {
 export function updateUndoRedoButtons() {
   const undo = document.getElementById('btnUndo');
   const redo = document.getElementById('btnRedo');
-  if (undo) undo.disabled = historyIndex <= 0;
-  if (redo) redo.disabled = historyIndex >= canvasHistory.length - 1;
+  if (undo) undo.disabled = state.historyIndex <= 0;
+  if (redo) redo.disabled = state.historyIndex >= state.canvasHistory.length - 1;
 }
 
 Object.assign(globalThis, { saveCanvasState, undoCanvas, redoCanvas, updateUndoRedoButtons });

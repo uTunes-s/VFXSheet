@@ -7,19 +7,19 @@ export function setCanvasMode(mode) {
   const erase = document.getElementById('btnErase');
   const active = 'bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg';
   const inactive = 'bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700';
-  canvasMode = mode;
+  state.canvasMode = mode;
   if (mode === 'draw') {
-    fCanvas.isDrawingMode = true;
-    fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
-    fCanvas.freeDrawingBrush.width = drawBrushWidth;
+    state.fCanvas.isDrawingMode = true;
+    state.fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
+    state.fCanvas.freeDrawingBrush.width = state.drawBrushWidth;
     draw.className = active; select.className = inactive; erase.className = inactive;
   } else if (mode === 'erase') {
-    fCanvas.isDrawingMode = true;
-    fCanvas.freeDrawingBrush.color = 'rgba(0, 0, 0, 1)';
-    fCanvas.freeDrawingBrush.width = eraserBrushWidth;
+    state.fCanvas.isDrawingMode = true;
+    state.fCanvas.freeDrawingBrush.color = 'rgba(0, 0, 0, 1)';
+    state.fCanvas.freeDrawingBrush.width = state.eraserBrushWidth;
     erase.className = active; draw.className = inactive; select.className = inactive;
   } else {
-    fCanvas.isDrawingMode = false;
+    state.fCanvas.isDrawingMode = false;
     select.className = active; draw.className = inactive; erase.className = inactive;
   }
 }

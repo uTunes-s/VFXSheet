@@ -6,38 +6,38 @@ import { eraseIntersectedSketchLayers } from './canvas-eraser.js';
 import { enterCanvasImageCropMode } from './canvas-crop.js';
 
 export function initFabricCanvas() {
-  fCanvas = new fabric.Canvas('noteCanvas', {
+  state.fCanvas = new fabric.Canvas('noteCanvas', {
     isDrawingMode: true,
     backgroundColor: '#090d16',
     preserveObjectStacking: true
   });
-  fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
-  fCanvas.freeDrawingBrush.width = drawBrushWidth;
-  fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
+  state.fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
+  state.fCanvas.freeDrawingBrush.width = state.drawBrushWidth;
+  state.fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
-  fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
+  state.fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
     if (event.pointerType !== 'touch') return;
     event.stopImmediatePropagation();
-    fCanvas.isDrawingMode = false;
+    state.fCanvas.isDrawingMode = false;
   }, true);
 
   saveCanvasState();
-  fCanvas.on('object:added', () => { if (!isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
-  fCanvas.on('object:modified', () => { if (!isUndoRedo) saveCanvasState(); });
-  fCanvas.on('object:removed', () => { if (!isUndoRedo) saveCanvasState(); });
-  fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
-  fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
-  fCanvas.on('path:created', event => {
-    event.path.isSketchStroke = canvasMode === 'draw';
-    event.path.selectable = canvasMode === 'draw';
-    event.path.evented = canvasMode === 'draw';
-    event.path.globalCompositeOperation = canvasMode === 'erase' ? 'destination-out' : 'source-over';
-    if (canvasMode === 'erase') {
+  state.fCanvas.on('object:added', () => { if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
+  state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) saveCanvasState(); });
+  state.fCanvas.on('object:removed', () => { if (!state.isUndoRedo) saveCanvasState(); });
+  state.fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
+  state.fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
+  state.fCanvas.on('path:created', event => {
+    event.path.isSketchStroke = state.canvasMode === 'draw';
+    event.path.selectable = state.canvasMode === 'draw';
+    event.path.evented = state.canvasMode === 'draw';
+    event.path.globalCompositeOperation = state.canvasMode === 'erase' ? 'destination-out' : 'source-over';
+    if (state.canvasMode === 'erase') {
       eraseIntersectedSketchLayers(event.path);
       return;
     }
-    fCanvas.requestRenderAll();
-    canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
+    state.fCanvas.requestRenderAll();
+    state.canvasHistory[state.historyIndex] = JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
   });
 }
 
@@ -81,7 +81,7 @@ export function configureCanvasImageCropControl(object) {
     mouseUpHandler: (_, transform) => { enterCanvasImageCropMode(transform.target); return true; },
     render: (ctx, left, top) => renderCropControlIcon(ctx, left, top)
   });
-  fCanvas.requestRenderAll();
+  state.fCanvas.requestRenderAll();
 }
 
 Object.assign(globalThis, { initFabricCanvas, renderCanvasControlIcon, renderCropControlIcon, getOwnCanvasControls, configureCanvasImageCropControl });

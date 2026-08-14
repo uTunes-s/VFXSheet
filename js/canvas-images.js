@@ -1,4 +1,8 @@
 // Add user-selected images to the Fabric canvas.
+import { state } from './state.js';
+import { configureCanvasImageCropControl } from './canvas-core.js';
+import { setCanvasMode } from './canvas-mode.js';
+
 export function addFreeImageToCanvas(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -13,9 +17,9 @@ export function addFreeImageToCanvas(event) {
         cornerSize: 10,
         transparentCorners: false
       });
-      fCanvas.add(image);
+      state.fCanvas.add(image);
       configureCanvasImageCropControl(image);
-      fCanvas.setActiveObject(image);
+      state.fCanvas.setActiveObject(image);
       setCanvasMode('select');
     });
   };

@@ -1,4 +1,7 @@
 // Fabric.js eraser collision and raster replacement operations.
+import { state } from './state.js';
+import { updateUndoRedoButtons } from './canvas-history.js';
+
 export function objectsOverlap(first, second) {
   const a = first.getBoundingRect(true, true);
   const b = second.getBoundingRect(true, true);
@@ -8,7 +11,7 @@ export function objectsOverlap(first, second) {
 export async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
   const rasterScale = 3;
   const layer = new fabric.StaticCanvas(document.createElement('canvas'), {
-    width: fCanvas.width, height: fCanvas.height, enableRetinaScaling: false, renderOnAddRemove: false
+    width: state.fCanvas.width, height: state.fCanvas.height, enableRetinaScaling: false, renderOnAddRemove: false
   });
   try {
     const [sketchClone, eraserClone] = await Promise.all([sketchLayer, eraserPath].map(object => new Promise(resolve => object.clone(resolve, ['isSketchStroke', 'isSketchRaster']))));
@@ -41,25 +44,25 @@ export async function rasterizeErasedSketchLayer(sketchLayer, eraserPath) {
 }
 
 export async function eraseIntersectedSketchLayers(eraserPath) {
-  const targets = fCanvas.getObjects().filter(object => (object.isSketchStroke || object.isSketchRaster) && objectsOverlap(object, eraserPath));
-  isUndoRedo = true;
+  const targets = state.fCanvas.getObjects().filter(object => (object.isSketchStroke || object.isSketchRaster) && objectsOverlap(object, eraserPath));
+  state.isUndoRedo = true;
   try {
-    fCanvas.remove(eraserPath);
+    state.fCanvas.remove(eraserPath);
     for (const target of targets) {
-      const index = fCanvas.getObjects().indexOf(target);
+      const index = state.fCanvas.getObjects().indexOf(target);
       if (index < 0) continue;
       const replacement = await rasterizeErasedSketchLayer(target, eraserPath);
-      fCanvas.remove(target);
+      state.fCanvas.remove(target);
       if (replacement) {
-        fCanvas.add(replacement);
-        fCanvas.moveTo(replacement, index);
+        state.fCanvas.add(replacement);
+        state.fCanvas.moveTo(replacement, index);
       }
     }
   } finally {
-    isUndoRedo = false;
+    state.isUndoRedo = false;
   }
-  fCanvas.requestRenderAll();
-  canvasHistory[historyIndex] = JSON.stringify(fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
+  state.fCanvas.requestRenderAll();
+  state.canvasHistory[state.historyIndex] = JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
   updateUndoRedoButtons();
 }
 
