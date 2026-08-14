@@ -1,5 +1,10 @@
 // Import and export the complete preset catalog and current defaults.
-async function exportFullPresetsJSON() {
+import { db } from './database.js';
+import { state } from './state.js';
+import { downloadExportBlob } from './media-utils.js';
+import { initPresets } from './preset-store.js';
+
+export async function exportFullPresetsJSON() {
   saveActiveTabState();
   const allPresets = await db.presets.toArray();
   const exportData = {
@@ -14,13 +19,13 @@ async function exportFullPresetsJSON() {
       hdri_captured: document.getElementById('hdri_captured').checked,
       hdri_weather: getWeatherValues(),
       hdri_notes: document.getElementById('hdri_notes').value,
-      cameras: cameraListState
+      cameras: state.cameraListState
     }
   };
   downloadExportBlob(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }), `VFX_Sheet_Presets_${new Date().toISOString().slice(0, 10)}.json`);
 }
 
-async function importFullPresetsJSON(event) {
+export async function importFullPresetsJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -42,3 +47,5 @@ async function importFullPresetsJSON(event) {
   reader.readAsText(file);
   event.target.value = '';
 }
+
+Object.assign(globalThis, { exportFullPresetsJSON, importFullPresetsJSON });
