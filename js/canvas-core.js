@@ -1,11 +1,17 @@
 // Fabric canvas initialization and image crop-control registration.
-function initFabricCanvas() {
+import { state } from './state.js';
+import { saveCanvasState } from './canvas-history.js';
+import { markInitialSettingEnabled } from './initial-settings-ui.js';
+import { eraseIntersectedSketchLayers } from './canvas-eraser.js';
+import { enterCanvasImageCropMode } from './canvas-crop.js';
+
+export function initFabricCanvas() {
   fCanvas = new fabric.Canvas('noteCanvas', {
     isDrawingMode: true,
     backgroundColor: '#090d16',
     preserveObjectStacking: true
   });
-  fCanvas.freeDrawingBrush.color = currentDrawingColor;
+  fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
   fCanvas.freeDrawingBrush.width = drawBrushWidth;
   fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
@@ -35,7 +41,7 @@ function initFabricCanvas() {
   });
 }
 
-function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
+export function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject, text, color) {
   context.save();
   context.translate(left, top);
   context.fillStyle = color;
@@ -45,7 +51,7 @@ function renderCanvasControlIcon(context, left, top, styleOverride, fabricObject
   context.restore();
 }
 
-function renderCropControlIcon(context, left, top) {
+export function renderCropControlIcon(context, left, top) {
   context.save();
   context.translate(left, top);
   context.strokeStyle = '#fbbf24'; context.lineWidth = 1.4; context.lineCap = 'round'; context.lineJoin = 'round';
@@ -59,12 +65,12 @@ function renderCropControlIcon(context, left, top) {
   context.restore();
 }
 
-function getOwnCanvasControls(object) {
+export function getOwnCanvasControls(object) {
   if (!Object.prototype.hasOwnProperty.call(object, 'controls')) object.controls = { ...(object.controls || {}) };
   return object.controls;
 }
 
-function configureCanvasImageCropControl(object) {
+export function configureCanvasImageCropControl(object) {
   if (!object || object.type !== 'image' || object.isSketchRaster || object.isCropFrame || !window.fabric?.Control) return;
   object.set({ snapAngle: 45, snapThreshold: 8 });
   const controls = getOwnCanvasControls(object);
@@ -77,3 +83,5 @@ function configureCanvasImageCropControl(object) {
   });
   fCanvas.requestRenderAll();
 }
+
+Object.assign(globalThis, { initFabricCanvas, renderCanvasControlIcon, renderCropControlIcon, getOwnCanvasControls, configureCanvasImageCropControl });

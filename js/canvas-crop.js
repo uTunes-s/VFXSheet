@@ -1,5 +1,8 @@
 // Fabric image crop mode, source overlays, and crop application.
-function enterCanvasImageCropMode(image) {
+import { getOwnCanvasControls, renderCanvasControlIcon, renderCropControlIcon, configureCanvasImageCropControl } from './canvas-core.js';
+import { saveCanvasState } from './canvas-history.js';
+
+export function enterCanvasImageCropMode(image) {
   if (!image || image.angle) return alert('Reset the image rotation to 0° before cropping.');
   const bounds = image.getBoundingRect(true, true);
   const sourceWidth = image._element?.naturalWidth || image._element?.width || image.width;
@@ -47,7 +50,7 @@ function enterCanvasImageCropMode(image) {
   fCanvas.requestRenderAll();
 }
 
-function updateCanvasCropOverlays(frame) {
+export function updateCanvasCropOverlays(frame) {
   const bounds = frame.getBoundingRect(true, true);
   const source = frame.cropSourceBounds;
   const sourceLeft = source.left;
@@ -70,7 +73,7 @@ function updateCanvasCropOverlays(frame) {
   fCanvas.requestRenderAll();
 }
 
-function applyCanvasImageCrop(frame) {
+export function applyCanvasImageCrop(frame) {
   const image = frame?.cropTarget;
   if (!image) return;
   const imageBounds = frame.cropSourceBounds;
@@ -91,3 +94,5 @@ function applyCanvasImageCrop(frame) {
   fCanvas.requestRenderAll();
   saveCanvasState();
 }
+
+Object.assign(globalThis, { enterCanvasImageCropMode, updateCanvasCropOverlays, applyCanvasImageCrop });
