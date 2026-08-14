@@ -100,5 +100,3 @@ export function blobToBase64(blob) {
     reader.readAsDataURL(blob);
   });
 }
-
-Object.assign(globalThis, { exportBackupJSON, importBackupJSON, restoreBackupAssets, dataUrlToBlob, blobToBase64 });
