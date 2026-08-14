@@ -559,7 +559,10 @@
       { name: 'iPhone 17 Pro Telephoto 120mm equiv.', focal: '120mm equiv.', category: 'Phone', series: 'iPhone 17 Pro', enabled: false }
     ];
 
-     function renderCameraTabContentLegacy() {
+    // Active renderers are loaded from js/*.js. These historical copies remain
+    // unreachable until they are removed in a template-by-template cleanup.
+    if (false) {
+    function renderCameraTabContentLegacy() {
       const container = document.getElementById('cameraTabContents');
       const cam = cameraListState[activeCamIndex];
       if (!cam) return;
@@ -836,6 +839,7 @@
         <h2>3. HDRI Setup</h2><table><tr><th>Captured</th><td>${value(record.hdri_captured)}</td><th>Weather</th><td>${value(Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather)}</td><th>Notes / EV</th><td>${value(record.hdri_notes)}</td></tr></table>
         <h2>4. VFX Field Notes</h2><table><tr><td><pre>${value(record.notes)}</pre></td></tr></table>
         ${thumbnailUrls.length ? `<h2>Shot Thumbnails</h2><div class="images">${thumbnailUrls.map(url => `<img class="thumb" src="${url}" alt="Shot thumbnail">`).join('')}</div>` : ''}${sketchUrl ? `<h2>Field Sketch</h2><img class="sketch" src="${sketchUrl}" alt="Field sketch">` : ''}</section>`;
+    }
     }
 
   </script>
