@@ -1,5 +1,7 @@
 // Canvas draw, erase, and selection mode controls.
-function setCanvasMode(mode) {
+import { state } from './state.js';
+
+export function setCanvasMode(mode) {
   const draw = document.getElementById('btnDraw');
   const select = document.getElementById('btnSelect');
   const erase = document.getElementById('btnErase');
@@ -8,7 +10,7 @@ function setCanvasMode(mode) {
   canvasMode = mode;
   if (mode === 'draw') {
     fCanvas.isDrawingMode = true;
-    fCanvas.freeDrawingBrush.color = currentDrawingColor;
+    fCanvas.freeDrawingBrush.color = state.currentDrawingColor;
     fCanvas.freeDrawingBrush.width = drawBrushWidth;
     draw.className = active; select.className = inactive; erase.className = inactive;
   } else if (mode === 'erase') {
@@ -21,3 +23,5 @@ function setCanvasMode(mode) {
     select.className = active; draw.className = inactive; erase.className = inactive;
   }
 }
+
+Object.assign(globalThis, { setCanvasMode });
