@@ -1,5 +1,8 @@
 // Sends unsynced metadata to the configured FlowPT endpoint.
-async function syncData() {
+import { db } from './database.js';
+import { renderList } from './record-list-renderer.js';
+
+export async function syncData() {
   if (!navigator.onLine) return alert('You are currently offline.');
 
   const workerUrl = '/api/sync';
@@ -42,3 +45,5 @@ async function syncData() {
   syncBtn.innerText = 'Sync to FlowPT';
   renderList();
 }
+
+Object.assign(globalThis, { syncData });

@@ -1,5 +1,11 @@
 // Portable VFX Sheet backup import/export with embedded Blob assets.
-async function exportBackupJSON() {
+import { db } from './database.js';
+import { newUuid } from './utils.js';
+import { downloadExportBlob } from './media-utils.js';
+import { getRecordsForHistoryAction } from './record-selection.js';
+import { renderList } from './record-list-renderer.js';
+
+export async function exportBackupJSON() {
   const records = await getRecordsForHistoryAction();
   if (!records.length) return alert('No records to back up.');
   const portableRecords = await Promise.all(records.map(async ({ images, shot_thumbnail, shot_thumbnails, ...record }) => ({
@@ -16,7 +22,7 @@ async function exportBackupJSON() {
   alert(`${records.length} records backed up. This is a full backup that includes photos, thumbnails, and Fabric sketch data.`);
 }
 
-async function importBackupJSON(event) {
+export async function importBackupJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -67,7 +73,7 @@ async function importBackupJSON(event) {
   }
 }
 
-async function restoreBackupAssets(assets) {
+export async function restoreBackupAssets(assets) {
   if (!Array.isArray(assets.images) || !Array.isArray(assets.shot_thumbnails)) {
     throw new Error('The image data format in the backup is invalid.');
   }
@@ -78,7 +84,7 @@ async function restoreBackupAssets(assets) {
   };
 }
 
-async function dataUrlToBlob(dataUrl) {
+export async function dataUrlToBlob(dataUrl) {
   if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) {
     throw new Error('The image data in the backup is invalid.');
   }
@@ -87,10 +93,12 @@ async function dataUrlToBlob(dataUrl) {
   return response.blob();
 }
 
-function blobToBase64(blob) {
+export function blobToBase64(blob) {
   return new Promise(resolve => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result);
     reader.readAsDataURL(blob);
   });
 }
+
+Object.assign(globalThis, { exportBackupJSON, importBackupJSON, restoreBackupAssets, dataUrlToBlob, blobToBase64 });

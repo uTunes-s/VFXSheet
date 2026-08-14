@@ -1,5 +1,7 @@
 // Creates an uncropped, near-16:9 JPEG collage from shot thumbnails.
-async function createThumbnailCollage(thumbnailBlobs) {
+import { imageFromBlob } from './media-utils.js';
+
+export async function createThumbnailCollage(thumbnailBlobs) {
   const images = (await Promise.all(thumbnailBlobs.map(imageFromBlob))).filter(Boolean);
   if (!images.length) return null;
 
@@ -60,3 +62,5 @@ async function createThumbnailCollage(thumbnailBlobs) {
 
   return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
 }
+
+Object.assign(globalThis, { createThumbnailCollage });

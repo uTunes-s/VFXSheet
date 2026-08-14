@@ -3,6 +3,7 @@ import { db } from './database.js';
 import { downloadExportBlob } from './media-utils.js';
 import { escapeHtml } from './utils.js';
 import { getInitialSettingEnabledFields } from './default-settings.js';
+import { blobToBase64, dataUrlToBlob } from './backup.js';
 
 export async function exportSheetInitialSettings() {
   const values = (await db.presets.get('user_defaults'))?.values;

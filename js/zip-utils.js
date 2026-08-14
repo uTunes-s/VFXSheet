@@ -1,5 +1,5 @@
 // Minimal store-only ZIP archive creation for FlowPT exports.
-function crc32(bytes) {
+export function crc32(bytes) {
   let crc = 0xffffffff;
   for (const byte of bytes) {
     crc ^= byte;
@@ -8,7 +8,7 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-function createZip(files) {
+export function createZip(files) {
   const encoder = new TextEncoder();
   const now = new Date();
   const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | Math.floor(now.getSeconds() / 2);
@@ -64,3 +64,5 @@ function createZip(files) {
   endView.setUint32(16, offset, true);
   return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
 }
+
+Object.assign(globalThis, { crc32, createZip });

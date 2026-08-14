@@ -17,7 +17,7 @@ const CLASSIC_ASSETS = [
   '../vendor/jspdf.umd.min.js',
   '../vendor/jspdf.plugin.autotable.min.js',
   '../vendor/japanese-pdf-font.js',
-  './thumbnail-collage.js', './zip-utils.js', './shooting-data-pdf.js', './flowpt-export.js', './backup.js', './sync.js',
+  './shooting-data-pdf.js', './flowpt-export.js',
   './pdf-print-record.js', './pdf-print-export.js', './pdf-text-layer.js', './pdf-text-record.js', './pdf-page-renderer.js', './pdf-canvas-utils.js'
 ];
 
@@ -70,6 +70,10 @@ await import('./record-thumbnails.js');
 await import('./canvas-actions.js');
 await import('./canvas-eraser.js');
 await import('./canvas-core.js');
+await import('./zip-utils.js');
+await import('./thumbnail-collage.js');
+await import('./backup.js');
+await import('./sync.js');
 for (const source of CLASSIC_ASSETS) await loadClassicScript(source);
 
 initEventDelegation();
