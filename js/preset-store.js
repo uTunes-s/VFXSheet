@@ -1,10 +1,16 @@
 // Persistent preset catalog initialization and enabled-preset caches.
-let cachedCamPresets = [];
-let cachedLensPresets = [];
-let cachedMovementPresets = [];
-let openLensSeries = new Set();
+import { db } from './database.js';
+import { defaultCameras } from './preset-catalog-cameras.js';
+import { defaultLenses } from './preset-catalog-lenses.js';
+import { defaultMovements } from './preset-catalog-meta.js';
+import { normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
 
-async function initPresets() {
+export let cachedCamPresets = [];
+export let cachedLensPresets = [];
+export let cachedMovementPresets = [];
+export const openLensSeries = new Set();
+
+export async function initPresets() {
   let cameraRecord = await db.presets.get('camera');
   if (!cameraRecord) {
     cameraRecord = { type: 'camera', list: defaultCameras };
@@ -45,3 +51,11 @@ async function initPresets() {
   cachedMovementPresets = normalizeMovementPresets((await db.presets.get('movement')).list).filter(item => item.enabled);
   renderCameraTabs();
 }
+
+Object.defineProperties(globalThis, {
+  cachedCamPresets: { configurable: true, get: () => cachedCamPresets },
+  cachedLensPresets: { configurable: true, get: () => cachedLensPresets },
+  cachedMovementPresets: { configurable: true, get: () => cachedMovementPresets },
+  openLensSeries: { configurable: true, get: () => openLensSeries }
+});
+globalThis.initPresets = initPresets;

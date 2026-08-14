@@ -1,4 +1,8 @@
 // Normalization and ordering rules for camera, lens, and movement presets.
+import { defaultCameras } from './preset-catalog-cameras.js';
+import { defaultLenses } from './preset-catalog-lenses.js';
+import { defaultMovements, presetCategories } from './preset-catalog-meta.js';
+
 const retiredCameraPresetNames = new Set([
   'Freefly Ember S35', 'Freefly Wave 4K', 'Sony Venice 6K FF35',
   'Sony Venice II 6K', 'Sony Venice II 8.6K'
@@ -11,7 +15,7 @@ const sonyVeniceCameraOrder = [
   'Sony Venice II S35 5.4K 16:9'
 ];
 
-function getLensSeries(lens) {
+export function getLensSeries(lens) {
   if (lens.series) return lens.series;
   const name = lens.name || '';
   const prefixes = [
@@ -26,7 +30,7 @@ function getLensSeries(lens) {
   return prefixes.find(([prefix]) => name.startsWith(prefix))?.[1] || name.split(' ').slice(0, 2).join(' ');
 }
 
-function normalizeCameraPresets(list = []) {
+export function normalizeCameraPresets(list = []) {
   const byName = new Map();
   [...defaultCameras, ...list].forEach(item => {
     const normalized = typeof item === 'string'
@@ -44,7 +48,7 @@ function normalizeCameraPresets(list = []) {
   });
 }
 
-function normalizeLensPresets(list = []) {
+export function normalizeLensPresets(list = []) {
   const byName = new Map();
   [...defaultLenses, ...list].forEach(item => {
     const normalized = { name: item.name, focal: item.focal || '', category: item.category || 'Cine', series: getLensSeries(item), enabled: item.enabled !== false };
@@ -60,7 +64,7 @@ function normalizeLensPresets(list = []) {
   );
 }
 
-function normalizeMovementPresets(list = []) {
+export function normalizeMovementPresets(list = []) {
   const byName = new Map();
   [...defaultMovements, ...list].forEach(item => {
     const normalized = typeof item === 'string' ? { name: item, enabled: true } : { name: item.name, enabled: item.enabled !== false };
@@ -68,3 +72,5 @@ function normalizeMovementPresets(list = []) {
   });
   return [...byName.values()];
 }
+
+Object.assign(globalThis, { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets });
