@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v166';
+const CACHE_NAME = 'vfx-sheet-v167';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -6,6 +6,7 @@ const APP_SHELL = [
   './js/app-shell.js',
   './js/main.js',
   './js/state.js',
+  './js/theme.js',
   './js/utils.js',
   './js/database.js',
   './js/default-settings.js',
@@ -63,6 +64,7 @@ const APP_SHELL = [
   './js/record-preview.js',
   './js/pdf-print-record.js',
   './js/record-list-renderer.js',
+  './js/record-list-filters.js',
   './js/pdf-print-export.js',
   './js/canvas-actions.js',
   './manifest.webmanifest',
@@ -87,6 +89,14 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).then(response => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+      return response;
+    }).catch(() => caches.match('./index.html')));
+    return;
+  }
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
     const copy = response.clone();
     if (new URL(event.request.url).origin === self.location.origin) caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
