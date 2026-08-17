@@ -22,6 +22,7 @@ export async function openNewRecordModal() {
   clearNoteCanvas();
   await resetFormToDefault();
   setCanvasMode('draw');
+  state.isEditorDirty = false;
   document.getElementById('submitBtnContainer').innerHTML = '<button type="submit" id="mainSubmitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold py-4 rounded-xl text-base transition-colors shadow-lg">Save VFX Sheet (IndexedDB)</button>';
 }
 
@@ -33,11 +34,13 @@ export function openEditRecordModal(showActions = true) {
   document.getElementById('editRecordModalActions').classList.toggle('hidden', !showActions);
   document.getElementById('editRecordModalActions').classList.toggle('flex', showActions);
   state.isEditingInModal = true;
+  state.isEditorDirty = false;
   document.body.classList.add('overflow-hidden');
 }
 
-export function closeEditRecordModal() {
+export function closeEditRecordModal(discardChanges = false) {
   if (!state.isEditingInModal) return;
+  if (!discardChanges && state.isEditorDirty && !confirm('保存していない変更があります。保存せずに閉じますか？')) return;
   const form = document.getElementById('vfxForm');
   form.classList.remove('configuring-initial-settings');
   form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
@@ -49,6 +52,7 @@ export function closeEditRecordModal() {
     document.getElementById(id).classList.remove('flex');
   }
   state.isEditingInModal = false;
+  state.isEditorDirty = false;
   document.body.classList.remove('overflow-hidden');
   document.getElementById('editRecordModalTitle').innerText = 'Edit VFX Sheet';
   state.isConfiguringAddDefaults = false;

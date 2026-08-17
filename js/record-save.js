@@ -76,7 +76,7 @@ export async function saveRecord(event, mode) {
 
   if (state.isEditingInModal) {
     state.recordDraftBeforeHistoryEdit = null;
-    closeEditRecordModal();
+    closeEditRecordModal(true);
   } else {
     prepareNextRecord();
   }

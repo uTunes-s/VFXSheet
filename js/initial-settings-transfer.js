@@ -31,7 +31,7 @@ export async function importSheetInitialSettings(file) {
     const values = { ...data.values, shot_thumbnails: await Promise.all((data.values.shot_thumbnails || []).map(dataUrlToBlob)) };
     await db.presets.put({ type: 'user_defaults', values });
     alert('Sheet defaults imported.');
-    closeEditRecordModal();
+    closeEditRecordModal(true);
     await openAddDefaultsEditor();
   } catch (error) {
     alert(`Import failed: ${error.message}`);

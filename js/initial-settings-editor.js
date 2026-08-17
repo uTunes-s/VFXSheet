@@ -43,7 +43,7 @@ export async function saveCurrentAsDefaultSettings() {
   await renderAddDefaultsSummary();
   alert('Sheet defaults saved.');
   if (state.isConfiguringAddDefaults) {
-    closeEditRecordModal();
+    closeEditRecordModal(true);
     switchAppPage('history');
   }
 }
@@ -68,5 +68,6 @@ export async function openAddDefaultsEditor() {
   state.initialSettingToggleStates = { ...getInitialSettingEnabledFields(savedValues), ...(savedValues.enabled_fields || {}) };
   showInitialSettingToggles(state.initialSettingToggleStates);
   document.getElementById('submitBtnContainer').innerHTML = '';
+  state.isEditorDirty = false;
 }
 

@@ -16,9 +16,9 @@ export function initFabricCanvas() {
   state.fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
   saveCanvasState();
-  state.fCanvas.on('object:added', () => { if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
-  state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) saveCanvasState(); });
-  state.fCanvas.on('object:removed', () => { if (!state.isUndoRedo) saveCanvasState(); });
+  state.fCanvas.on('object:added', () => { if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); if (state.isEditingInModal) state.isEditorDirty = true; } });
+  state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) { saveCanvasState(); if (state.isEditingInModal) state.isEditorDirty = true; } });
+  state.fCanvas.on('object:removed', () => { if (!state.isUndoRedo) { saveCanvasState(); if (state.isEditingInModal) state.isEditorDirty = true; } });
   state.fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
   state.fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
   state.fCanvas.on('path:created', event => {

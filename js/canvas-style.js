@@ -18,6 +18,7 @@ export function setCanvasColor(color) {
   activeObject.set('fill', color);
   state.fCanvas.requestRenderAll();
   saveCanvasState();
+  if (state.isEditingInModal) state.isEditorDirty = true;
 }
 
 export function setCanvasBrushSize(type, value) {

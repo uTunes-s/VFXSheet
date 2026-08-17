@@ -85,6 +85,7 @@ export async function loadRecordForEdit(id, duplicate = false) {
       state.canvasHistory = [record.canvas_json];
       state.historyIndex = 0;
       state.isUndoRedo = false;
+      state.isEditorDirty = false;
       updateUndoRedoButtons();
     });
   } else {
@@ -94,6 +95,7 @@ export async function loadRecordForEdit(id, duplicate = false) {
       state.historyIndex = -1;
       state.isUndoRedo = false;
       saveCanvasState();
+      state.isEditorDirty = false;
     });
   }
 

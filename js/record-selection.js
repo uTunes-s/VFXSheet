@@ -39,7 +39,7 @@ export async function deleteSelectedRecords() {
   const ids = [...state.selectedRecordIds];
   if (!ids.length || !confirm(`Delete ${ids.length} selected record(s)? This action cannot be undone.`)) return;
   await db.sheets.bulkDelete(ids);
-  if (state.currentEditingId && ids.includes(state.currentEditingId)) closeEditRecordModal();
+  if (state.currentEditingId && ids.includes(state.currentEditingId)) closeEditRecordModal(true);
   state.selectedRecordIds.clear();
   renderList();
 }
