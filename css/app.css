@@ -70,6 +70,7 @@ html[data-theme="light"] .shadow-2xl { box-shadow: 0 12px 30px rgb(15 23 42 / 12
 .form-input:focus, .form-select:focus, textarea:focus { border-color: #fbbf24; outline: none; }
 .form-input::placeholder, textarea::placeholder { color: #475569; }
 option { background-color: #020617; color: #f1f5f9; }
+.canvas-toolbar-icon { width: 1rem; height: 1rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 html[data-theme="light"] .form-label { color: #475569; }
 html[data-theme="light"] .form-input,
 html[data-theme="light"] .form-select,
