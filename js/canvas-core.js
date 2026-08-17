@@ -4,6 +4,7 @@ import { saveCanvasState } from './canvas-history.js';
 import { markInitialSettingEnabled } from './initial-settings-ui.js';
 import { eraseIntersectedSketchLayers } from './canvas-eraser.js';
 import { enterCanvasImageCropMode } from './canvas-crop.js';
+import { openNativeTextEditor } from './canvas-text.js';
 
 export function initFabricCanvas() {
   state.fCanvas = new fabric.Canvas('noteCanvas', {
@@ -16,7 +17,7 @@ export function initFabricCanvas() {
   state.fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
   saveCanvasState();
-  state.fCanvas.on('object:added', () => { if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); if (state.isEditingInModal) state.isEditorDirty = true; } });
+  state.fCanvas.on('object:added', event => { if (['i-text', 'textbox'].includes(event.target?.type)) event.target.set('editable', false); if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); if (state.isEditingInModal) state.isEditorDirty = true; } });
   state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) { saveCanvasState(); if (state.isEditingInModal) state.isEditorDirty = true; } });
   state.fCanvas.on('object:removed', () => { if (!state.isUndoRedo) { saveCanvasState(); if (state.isEditingInModal) state.isEditorDirty = true; } });
   state.fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
@@ -32,6 +33,12 @@ export function initFabricCanvas() {
     }
     state.fCanvas.requestRenderAll();
     state.canvasHistory[state.historyIndex] = JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster']));
+  });
+  state.fCanvas.on('mouse:dblclick', event => {
+    const target = event.target;
+    if (!['i-text', 'textbox'].includes(target?.type)) return;
+    event.e?.preventDefault();
+    openNativeTextEditor({ x: target.left, y: target.top }, target);
   });
 }
 

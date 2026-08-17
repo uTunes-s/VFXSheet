@@ -72,6 +72,7 @@ html[data-theme="light"] .shadow-2xl { box-shadow: 0 12px 30px rgb(15 23 42 / 12
 option { background-color: #020617; color: #f1f5f9; }
 .canvas-toolbar-button { width: 2rem; height: 2rem; }
 .canvas-toolbar-icon { display: block; width: 0.75rem; height: 0.75rem; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.canvas-native-text-editor { position: absolute; z-index: 10; min-height: 2rem; padding: 0.3rem 0.4rem; border: 1px solid #fbbf24; border-radius: 0.25rem; outline: none; resize: none; overflow: hidden; background: #020617; font-family: sans-serif; line-height: 1.25; }
 html[data-theme="light"] .form-label { color: #475569; }
 html[data-theme="light"] .form-input,
 html[data-theme="light"] .form-select,

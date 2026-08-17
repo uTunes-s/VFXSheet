@@ -61,6 +61,7 @@ await import('./canvas-style.js');
 await import('./canvas-history.js');
 await import('./canvas-mode.js');
 await import('./canvas-images.js');
+await import('./canvas-text.js');
 const { switchAppPage } = await import('./form-ui.js');
 await import('./shot-thumbnails.js');
 await import('./gps.js');

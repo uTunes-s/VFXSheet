@@ -2,6 +2,7 @@
 import { state } from './state.js';
 import { saveCanvasState } from './canvas-history.js';
 import { setCanvasMode } from './canvas-mode.js';
+import { openNativeTextEditor } from './canvas-text.js';
 
 export function moveSelectedLayer(direction) {
   const active = state.fCanvas?.getActiveObject();
@@ -27,18 +28,7 @@ export function addTextToNote() {
   addText?.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
   state.fCanvas.defaultCursor = 'crosshair';
   state.pendingTextPlacementHandler = event => {
-    const text = new fabric.IText('', {
-      left: event.pointer.x,
-      top: event.pointer.y,
-      fontFamily: 'sans-serif',
-      fill: state.currentDrawingColor,
-      fontSize: 18
-    });
-    state.fCanvas.add(text);
-    state.fCanvas.setActiveObject(text);
-    text.enterEditing();
-    text.hiddenTextarea?.focus();
-    state.fCanvas.requestRenderAll();
+    openNativeTextEditor(event.pointer);
   };
   state.fCanvas.on('mouse:down', state.pendingTextPlacementHandler);
 }

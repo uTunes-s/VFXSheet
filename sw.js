@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v173';
+const CACHE_NAME = 'vfx-sheet-v174';
 const APP_SHELL = [
   './index.html',
   './css/app.css',

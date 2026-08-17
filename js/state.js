@@ -23,6 +23,7 @@ export const state = {
   currentDrawingColor: '#00ffff',
   pendingTextPlacementHandler: null,
   isTextToolActive: false,
+  nativeTextEditor: null,
   pendingShotThumbnails: []
 };
 
