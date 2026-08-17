@@ -6,8 +6,8 @@ export function setCanvasMode(mode) {
   const select = document.getElementById('btnSelect');
   const erase = document.getElementById('btnErase');
   const addText = document.getElementById('btnAddText');
-  const active = 'bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg';
-  const inactive = 'bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700';
+  const active = 'canvas-toolbar-button bg-amber-500 text-slate-950 font-bold p-2 rounded-lg inline-flex items-center justify-center';
+  const inactive = 'canvas-toolbar-button bg-slate-800 hover:bg-slate-700 p-2 rounded-lg border border-slate-700 inline-flex items-center justify-center';
   if (state.pendingTextPlacementHandler) {
     state.fCanvas.off('mouse:down', state.pendingTextPlacementHandler);
     state.pendingTextPlacementHandler = null;
