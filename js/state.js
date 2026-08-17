@@ -24,6 +24,11 @@ export const state = {
   pendingTextPlacementHandler: null,
   isTextToolActive: false,
   nativeTextEditor: null,
+  drawHoldTimer: null,
+  drawHoldStart: null,
+  drawHoldHasMoved: false,
+  drawHoldShouldSimplify: false,
+  drawHoldPreview: null,
   pendingShotThumbnails: []
 };
 
