@@ -15,12 +15,6 @@ export function initFabricCanvas() {
   state.fCanvas.freeDrawingBrush.width = state.drawBrushWidth;
   state.fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
-  state.fCanvas.upperCanvasEl.addEventListener('pointerdown', event => {
-    if (event.pointerType !== 'touch') return;
-    event.stopImmediatePropagation();
-    state.fCanvas.isDrawingMode = false;
-  }, true);
-
   saveCanvasState();
   state.fCanvas.on('object:added', () => { if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); } });
   state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) saveCanvasState(); });

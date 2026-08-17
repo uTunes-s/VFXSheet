@@ -15,16 +15,26 @@ export function moveSelectedLayer(direction) {
 }
 
 export function addTextToNote() {
-  const text = new fabric.IText('Text...', {
-    left: 100,
-    top: 100,
-    fontFamily: 'sans-serif',
-    fill: state.currentDrawingColor,
-    fontSize: 18
-  });
-  state.fCanvas.add(text);
-  state.fCanvas.setActiveObject(text);
   setCanvasMode('select');
+  state.fCanvas.defaultCursor = 'crosshair';
+  state.pendingTextPlacementHandler = event => {
+    const text = new fabric.IText('', {
+      left: event.pointer.x,
+      top: event.pointer.y,
+      fontFamily: 'sans-serif',
+      fill: state.currentDrawingColor,
+      fontSize: 18
+    });
+    state.fCanvas.off('mouse:down', state.pendingTextPlacementHandler);
+    state.pendingTextPlacementHandler = null;
+    state.fCanvas.defaultCursor = 'default';
+    state.fCanvas.add(text);
+    state.fCanvas.setActiveObject(text);
+    text.enterEditing();
+    text.hiddenTextarea?.focus();
+    state.fCanvas.requestRenderAll();
+  };
+  state.fCanvas.on('mouse:down', state.pendingTextPlacementHandler);
 }
 
 export function deleteSelected() {

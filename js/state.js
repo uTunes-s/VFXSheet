@@ -20,6 +20,7 @@ export const state = {
   drawBrushWidth: 3,
   eraserBrushWidth: 24,
   currentDrawingColor: '#00ffff',
+  pendingTextPlacementHandler: null,
   pendingShotThumbnails: []
 };
 

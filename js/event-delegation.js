@@ -175,7 +175,7 @@ import { renderList } from './record-list-renderer.js';
     const action = actions[element.dataset.action];
     if (!action) return;
     const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
-    const inputActions = new Set(['set-brush-size']);
+    const inputActions = new Set(['set-brush-size', 'set-canvas-color']);
     const toggleActions = new Set(['set-lens-series-open']);
     if (event.type === 'submit' && element.dataset.action !== 'save-record') return;
     if (event.type === 'change' && !changeActions.has(element.dataset.action) && element.dataset.action !== 'set-canvas-color') return;

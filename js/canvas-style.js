@@ -4,6 +4,7 @@ import { saveCanvasState } from './canvas-history.js';
 
 export function setCanvasColor(color) {
   state.currentDrawingColor = color;
+  if (!state.fCanvas) return;
   state.fCanvas.freeDrawingBrush.color = color;
   document.getElementById('customCanvasColor').value = color;
   document.querySelectorAll('[data-action="set-canvas-color"][data-color]').forEach(button => {
