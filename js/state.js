@@ -22,6 +22,7 @@ export const state = {
   eraserBrushWidth: 24,
   currentDrawingColor: '#00ffff',
   pendingTextPlacementHandler: null,
+  isTextToolActive: false,
   pendingShotThumbnails: []
 };
 

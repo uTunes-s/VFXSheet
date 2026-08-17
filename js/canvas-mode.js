@@ -5,6 +5,7 @@ export function setCanvasMode(mode) {
   const draw = document.getElementById('btnDraw');
   const select = document.getElementById('btnSelect');
   const erase = document.getElementById('btnErase');
+  const addText = document.getElementById('btnAddText');
   const active = 'bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-lg';
   const inactive = 'bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700';
   if (state.pendingTextPlacementHandler) {
@@ -12,6 +13,10 @@ export function setCanvasMode(mode) {
     state.pendingTextPlacementHandler = null;
     state.fCanvas.defaultCursor = 'default';
   }
+  state.isTextToolActive = false;
+  addText?.setAttribute('aria-pressed', 'false');
+  addText?.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
+  addText?.classList.add('bg-slate-800', 'hover:bg-slate-700', 'border', 'border-slate-700');
   state.canvasMode = mode;
   if (mode === 'draw') {
     state.fCanvas.isDrawingMode = true;

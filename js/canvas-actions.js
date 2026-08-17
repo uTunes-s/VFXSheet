@@ -15,7 +15,16 @@ export function moveSelectedLayer(direction) {
 }
 
 export function addTextToNote() {
+  if (state.isTextToolActive) {
+    setCanvasMode('select');
+    return;
+  }
   setCanvasMode('select');
+  state.isTextToolActive = true;
+  const addText = document.getElementById('btnAddText');
+  addText?.setAttribute('aria-pressed', 'true');
+  addText?.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'border', 'border-slate-700');
+  addText?.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
   state.fCanvas.defaultCursor = 'crosshair';
   state.pendingTextPlacementHandler = event => {
     const text = new fabric.IText('', {
@@ -25,9 +34,6 @@ export function addTextToNote() {
       fill: state.currentDrawingColor,
       fontSize: 18
     });
-    state.fCanvas.off('mouse:down', state.pendingTextPlacementHandler);
-    state.pendingTextPlacementHandler = null;
-    state.fCanvas.defaultCursor = 'default';
     state.fCanvas.add(text);
     state.fCanvas.setActiveObject(text);
     text.enterEditing();

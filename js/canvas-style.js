@@ -13,12 +13,13 @@ export function setCanvasColor(color) {
     button.classList.toggle('ring-2', selected);
     button.classList.toggle('ring-white', selected);
   });
-  const activeObject = state.fCanvas.getActiveObject();
-  if (activeObject?.type !== 'i-text') return;
-  activeObject.set('fill', color);
-  state.fCanvas.requestRenderAll();
-  saveCanvasState();
-  if (state.isEditingInModal) state.isEditorDirty = true;
+  const activeObjects = state.fCanvas.getActiveObjects().filter(object => object.type === 'i-text');
+  if (activeObjects.length) {
+    activeObjects.forEach(object => object.set('fill', color));
+    state.fCanvas.requestRenderAll();
+    saveCanvasState();
+    if (state.isEditingInModal) state.isEditorDirty = true;
+  }
 }
 
 export function setCanvasBrushSize(type, value) {
