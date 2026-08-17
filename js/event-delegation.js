@@ -190,6 +190,10 @@ export function initEventDelegation() {
   if (document.documentElement.dataset.eventDelegationReady) return;
   document.documentElement.dataset.eventDelegationReady = 'true';
   ['click', 'change', 'input', 'submit', 'keydown', 'toggle'].forEach(type => document.addEventListener(type, route));
+  document.addEventListener('pointerdown', event => {
+    const swatch = event.target.closest?.('[data-action="set-canvas-color"][data-color]');
+    if (swatch) setCanvasColor(swatch.dataset.color);
+  });
   ['change', 'input'].forEach(type => document.addEventListener(type, event => {
     if (state.isEditingInModal && event.target.closest?.('#vfxForm')) state.isEditorDirty = true;
   }));
