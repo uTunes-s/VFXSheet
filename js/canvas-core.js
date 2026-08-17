@@ -6,6 +6,72 @@ import { eraseIntersectedSketchLayers } from './canvas-eraser.js';
 import { enterCanvasImageCropMode } from './canvas-crop.js';
 import { openNativeTextEditor } from './canvas-text.js';
 
+function getPathEndpoints(path) {
+  const points = path.path
+    .filter(command => command.length >= 3)
+    .map(command => ({ x: command[command.length - 2], y: command[command.length - 1] }));
+  return { points, start: points[0], end: points.at(-1) };
+}
+
+function simplifyPathPoints(points, tolerance = 2) {
+  if (points.length < 3) return points;
+  const start = points[0];
+  const end = points.at(-1);
+  const length = Math.hypot(end.x - start.x, end.y - start.y);
+  let maxDistance = 0;
+  let splitIndex = 0;
+  points.slice(1, -1).forEach((point, index) => {
+    const distance = length
+      ? Math.abs((end.y - start.y) * point.x - (end.x - start.x) * point.y + end.x * start.y - end.y * start.x) / length
+      : Math.hypot(point.x - start.x, point.y - start.y);
+    if (distance > maxDistance) {
+      maxDistance = distance;
+      splitIndex = index + 1;
+    }
+  });
+  if (maxDistance <= tolerance) return [start, end];
+  return [...simplifyPathPoints(points.slice(0, splitIndex + 1), tolerance), ...simplifyPathPoints(points.slice(splitIndex), tolerance).slice(1)];
+}
+
+function createBezierPath(points) {
+  const segments = [['M', points[0].x, points[0].y]];
+  for (let index = 0; index < points.length - 1; index++) {
+    const previous = points[Math.max(0, index - 1)];
+    const current = points[index];
+    const next = points[index + 1];
+    const following = points[Math.min(points.length - 1, index + 2)];
+    segments.push([
+      'C',
+      current.x + (next.x - previous.x) / 6,
+      current.y + (next.y - previous.y) / 6,
+      next.x - (following.x - current.x) / 6,
+      next.y - (following.y - current.y) / 6,
+      next.x,
+      next.y
+    ]);
+  }
+  return segments;
+}
+
+function simplifyHeldStroke(path) {
+  const { points, start, end } = getPathEndpoints(path);
+  if (!start || !end || points.length < 2) return;
+  const distance = Math.hypot(end.x - start.x, end.y - start.y);
+  if (distance < 8) return;
+  const deviation = Math.max(...points.map(point => Math.abs((end.y - start.y) * point.x - (end.x - start.x) * point.y + end.x * start.y - end.y * start.x) / distance));
+  if (deviation < 14) {
+    path.set({ path: [['M', start.x, start.y], ['L', end.x, end.y]] });
+  } else {
+    path.set({ path: createBezierPath(simplifyPathPoints(points)) });
+  }
+  path.setCoords();
+}
+
+function clearDrawHoldTimer() {
+  if (state.drawHoldTimer) clearTimeout(state.drawHoldTimer);
+  state.drawHoldTimer = null;
+}
+
 export function initFabricCanvas() {
   state.fCanvas = new fabric.Canvas('noteCanvas', {
     isDrawingMode: true,
@@ -16,6 +82,27 @@ export function initFabricCanvas() {
   state.fCanvas.freeDrawingBrush.width = state.drawBrushWidth;
   state.fCanvas.upperCanvasEl.style.touchAction = 'pan-y pinch-zoom';
 
+  state.fCanvas.on('mouse:down', event => {
+    state.drawHoldShouldSimplify = false;
+    if (state.canvasMode !== 'draw') return;
+    state.drawHoldStart = event.pointer;
+    state.drawHoldHasMoved = false;
+    clearDrawHoldTimer();
+  });
+  state.fCanvas.on('mouse:move', event => {
+    if (state.canvasMode !== 'draw' || !state.drawHoldStart) return;
+    const distance = Math.hypot(event.pointer.x - state.drawHoldStart.x, event.pointer.y - state.drawHoldStart.y);
+    if (distance > 8) state.drawHoldHasMoved = true;
+    if (!state.drawHoldHasMoved) return;
+    clearDrawHoldTimer();
+    state.drawHoldTimer = setTimeout(() => { state.drawHoldShouldSimplify = true; }, 600);
+  });
+  state.fCanvas.on('mouse:up', () => {
+    clearDrawHoldTimer();
+    state.drawHoldStart = null;
+    state.drawHoldHasMoved = false;
+  });
+
   saveCanvasState();
   state.fCanvas.on('object:added', event => { if (['i-text', 'textbox'].includes(event.target?.type)) event.target.set('editable', false); if (!state.isUndoRedo) { saveCanvasState(); markInitialSettingEnabled('sketch'); if (state.isEditingInModal) state.isEditorDirty = true; } });
   state.fCanvas.on('object:modified', () => { if (!state.isUndoRedo) { saveCanvasState(); if (state.isEditingInModal) state.isEditorDirty = true; } });
@@ -23,6 +110,8 @@ export function initFabricCanvas() {
   state.fCanvas.on('selection:created', event => configureCanvasImageCropControl(event.selected?.[0]));
   state.fCanvas.on('selection:updated', event => configureCanvasImageCropControl(event.selected?.[0]));
   state.fCanvas.on('path:created', event => {
+    if (state.drawHoldShouldSimplify && state.canvasMode === 'draw') simplifyHeldStroke(event.path);
+    state.drawHoldShouldSimplify = false;
     event.path.isSketchStroke = state.canvasMode === 'draw';
     event.path.selectable = state.canvasMode === 'draw';
     event.path.evented = state.canvasMode === 'draw';

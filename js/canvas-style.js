@@ -13,7 +13,7 @@ export function setCanvasColor(color) {
     button.classList.toggle('ring-2', selected);
     button.classList.toggle('ring-white', selected);
   });
-  const activeObjects = state.fCanvas.getActiveObjects().filter(object => object.type === 'i-text');
+  const activeObjects = state.fCanvas.getActiveObjects().filter(object => ['i-text', 'textbox'].includes(object.type));
   if (activeObjects.length) {
     activeObjects.forEach(object => object.set('fill', color));
     state.fCanvas.requestRenderAll();
