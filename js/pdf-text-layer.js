@@ -17,32 +17,56 @@ export async function addInvisiblePdfTextLayer(doc, record) {
     Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather,
     record.hdri_notes, cameraText, record.notes
   ].filter(Boolean).join('\n');
-  doc.setFont('DroidSansJapanese', 'normal');
   doc.setFontSize(1);
   [...allText].reduce((lines, character) => {
     const lastLine = lines[lines.length - 1];
     if (character === '\n' || [...lastLine].length >= 48) lines.push(character === '\n' ? '' : character);
     else lines[lines.length - 1] += character;
     return lines;
-  }, ['']).filter(Boolean).forEach((line, index) => {
-    doc.text(line, 2, 2 + Math.min(index, 250) * 0.01, { renderingMode: 'invisible' });
-  });
+  }, ['']).filter(Boolean).forEach((line, index) => writePdfText(doc, line, 2, 2 + Math.min(index, 250) * 0.01, { renderingMode: 'invisible' }));
 }
 
 export async function loadJapanesePdfFont(doc) {
   if (!state.japanesePdfFontPromise) {
-    if (!window.VFX_JAPANESE_PDF_FONT_BASE64) throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
-    state.japanesePdfFontPromise = Promise.resolve(window.VFX_JAPANESE_PDF_FONT_BASE64);
+    state.japanesePdfFontPromise = fetch(new URL('../vendor/DroidSansFallbackFull.ttf', import.meta.url))
+      .then(response => {
+        if (!response.ok) throw new Error('Japanese PDF font is unavailable. Please reload once while online.');
+        return response.arrayBuffer();
+      })
+      .then(buffer => {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+        return binary;
+      });
   }
   const fontData = await state.japanesePdfFontPromise;
-  if (!doc.existsFileInVFS('DroidSansJapanese.ttf')) {
-    doc.addFileToVFS('DroidSansJapanese.ttf', fontData);
-    doc.addFont('DroidSansJapanese.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
+  if (!doc.existsFileInVFS('DroidSansFallbackFull.ttf')) {
+    doc.addFileToVFS('DroidSansFallbackFull.ttf', fontData);
+    doc.addFont('DroidSansFallbackFull.ttf', 'DroidSansJapanese', 'normal', 'Identity-H');
   }
-  doc.setFont('DroidSansJapanese', 'normal');
   const font = doc.getFont('DroidSansJapanese', 'normal');
   font.metadata.Unicode = font.metadata.Unicode || { encoding: {}, kerning: {}, widths: { 0: 1000 } };
   font.metadata.Unicode.widths = font.metadata.Unicode.widths || { 0: 1000 };
   font.metadata.Unicode.kerning = font.metadata.Unicode.kerning || {};
+}
+
+export function writePdfText(doc, value, x, y, options = {}) {
+  const parts = String(value ?? '').match(/[\x00-\xff]+|[^\x00-\xff]+/g) || [];
+  let offset = 0;
+  parts.forEach(part => {
+    doc.setFont(/[^\x00-\xff]/.test(part) ? 'DroidSansJapanese' : 'helvetica', 'normal');
+    doc.text(part, x + offset, y, options);
+    offset += doc.getTextWidth(part);
+  });
+  return offset;
+}
+
+export function getPdfTextWidth(doc, value) {
+  const parts = String(value ?? '').match(/[\x00-\xff]+|[^\x00-\xff]+/g) || [];
+  return parts.reduce((width, part) => {
+    doc.setFont(/[^\x00-\xff]/.test(part) ? 'DroidSansJapanese' : 'helvetica', 'normal');
+    return width + doc.getTextWidth(part);
+  }, 0);
 }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v189';
+const CACHE_NAME = 'vfx-sheet-v201';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -77,7 +77,7 @@ const APP_SHELL = [
   './vendor/fabric.min.js',
   './vendor/jspdf.umd.min.js',
   './vendor/jspdf.plugin.autotable.min.js',
-  './vendor/japanese-pdf-font.js'
+  './vendor/DroidSansFallbackFull.ttf'
 ];
 
 self.addEventListener('install', event => {

@@ -13,8 +13,7 @@ const VENDOR_ASSETS = [
   '../vendor/dexie.js',
   '../vendor/fabric.min.js',
   '../vendor/jspdf.umd.min.js',
-  '../vendor/jspdf.plugin.autotable.min.js',
-  '../vendor/japanese-pdf-font.js'
+  '../vendor/jspdf.plugin.autotable.min.js'
 ];
 
 function loadVendorScript(source) {
