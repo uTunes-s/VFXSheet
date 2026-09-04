@@ -39,6 +39,13 @@ html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
 html[data-theme="light"] .text-slate-500,
 html[data-theme="light"] .text-slate-600 { color: #64748b !important; }
 html[data-theme="light"] .text-white { color: #ffffff !important; }
+html[data-theme="light"] .text-amber-300,
+html[data-theme="light"] .text-amber-300\/80,
+html[data-theme="light"] .text-amber-400,
+html[data-theme="light"] .text-amber-400\/80,
+html[data-theme="light"] .text-amber-400\/90 { color: #1d4ed8 !important; }
+html[data-theme="light"] .hover\:text-amber-300:hover,
+html[data-theme="light"] .hover\:text-amber-400:hover { color: #1e40af !important; }
 html[data-theme="light"] .hover\:bg-slate-800:hover { background-color: #e2e8f0 !important; }
 html[data-theme="light"] .hover\:bg-slate-700:hover { background-color: #cbd5e1 !important; }
 html[data-theme="light"] .hover\:text-slate-100:hover,
@@ -48,6 +55,14 @@ html[data-theme="light"] .border-rose-900 { border-color: #fecdd3 !important; }
 html[data-theme="light"] .text-rose-300 { color: #be123c !important; }
 html[data-theme="light"] .bg-emerald-500\/10 { background-color: #d1fae5 !important; }
 html[data-theme="light"] .bg-amber-500\/10 { background-color: #fef3c7 !important; }
+html[data-theme="light"] #vfxForm .bg-slate-950:has(#hdri_captured:checked),
+html[data-theme="light"] #vfxForm .bg-slate-900:has(#tab_flag_chart:checked),
+html[data-theme="light"] #vfxForm .bg-slate-900:has(#tab_flag_cleanplate:checked),
+html[data-theme="light"] #vfxForm .bg-slate-900:has(#tab_flag_reference:checked) { background-color: #dbeafe !important; border-color: #60a5fa !important; }
+html[data-theme="light"] #vfxForm #hdri_captured:checked + div,
+html[data-theme="light"] #vfxForm #tab_flag_chart:checked + div,
+html[data-theme="light"] #vfxForm #tab_flag_cleanplate:checked + div,
+html[data-theme="light"] #vfxForm #tab_flag_reference:checked + div { background-color: #2563eb !important; }
 html[data-theme="light"] .shadow-xl,
 html[data-theme="light"] .shadow-2xl { box-shadow: 0 12px 30px rgb(15 23 42 / 12%) !important; }
 .form-label {
@@ -125,6 +140,22 @@ html[data-theme="light"] .camera-setting-option:hover, html[data-theme="light"] 
 #editRecordModal.initial-settings-modal .configuring-initial-settings .form-input,
 #editRecordModal.initial-settings-modal .configuring-initial-settings .form-select,
 #editRecordModal.initial-settings-modal .configuring-initial-settings textarea { background: #0a0a0a; border-color: #525252; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal > div { border-color: #cbd5e1; background: #ffffff; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal > div > div:first-child { border-color: #cbd5e1; background: #f1f5f9; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal #editRecordModalTitle,
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings h2 { color: #0f172a; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings { border-color: #cbd5e1; background: #f8fafc; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings hr,
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .border-slate-800 { border-color: #cbd5e1; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-950,
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-900 { background-color: #ffffff; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .form-input,
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .form-select,
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings textarea { background: #ffffff; border-color: #cbd5e1; color: #0f172a; color-scheme: light; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-800 { background-color: #e2e8f0; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .initial-setting-control:has(input:not(:checked)) { border-color: #cbd5e1; background: #e2e8f0; color: #475569; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .initial-setting-control:has(input:checked) { border-color: #fb7185; background: #e2e8f0; color: #475569; }
+html[data-theme="light"] #editRecordModal.initial-settings-modal .configuring-initial-settings .initial-setting-control:has(input:checked) > span { background-color: #e11d48 !important; border-color: #fb7185; }
 #editRecordModal.initial-settings-modal .configuring-initial-settings .bg-slate-800 { background-color: #404040; }
 #editRecordModal.initial-settings-modal .configuring-initial-settings .initial-setting-control:has(input:checked) > span { background-color: #e11d48; border-color: #fecdd3; }
 #editRecordModal.initial-settings-modal .configuring-initial-settings #mainSubmitBtn { background: #d4d4d4; color: #171717; }
