@@ -35,7 +35,7 @@ export async function resetFormToDefault() {
     setWeatherValues(enabled.hdri ? (values.hdri_weather || []) : []);
     document.getElementById('hdri_notes').value = enabled.hdri ? (values.hdri_notes || '') : '';
 
-    const cameraFields = ['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'];
+    const cameraFields = ['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'shutter_speed', 'frame_rate', 'iso_ei', 'white_balance', 'nd_filter', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'];
     const hasCameraSpecificSettings = Object.keys(values.enabled_fields || {}).some(key => key.startsWith('camera_'));
     const isCameraFieldEnabled = (index, key) => hasCameraSpecificSettings ? Boolean(values.enabled_fields[`camera_${index}_${key}`]) : Boolean(enabled[key]);
     const selectedCameras = (values.cameras || []).map((camera, index) => ({ camera, index })).filter(({ index }) => cameraFields.some(key => isCameraFieldEnabled(index, key)));

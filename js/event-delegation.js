@@ -48,6 +48,27 @@ import { renderList } from './record-list-renderer.js';
     other.classList.add('hidden');
     otherButton.setAttribute('aria-expanded', 'false');
   };
+  const closeCameraSettingPopovers = () => {
+    document.querySelectorAll('.camera-setting-popover').forEach(popover => popover.classList.add('hidden'));
+    document.querySelectorAll('[data-action="toggle-camera-setting-popover"]').forEach(input => input.setAttribute('aria-expanded', 'false'));
+  };
+  const toggleCameraSettingPopover = input => {
+    const popover = document.getElementById(`${input.dataset.fieldKey}Popover`);
+    if (!popover) return;
+    const willOpen = popover.classList.contains('hidden');
+    closeCameraSettingPopovers();
+    popover.classList.toggle('hidden', !willOpen);
+    input.setAttribute('aria-expanded', String(willOpen));
+  };
+  const setCameraSetting = element => {
+    const key = element.dataset.fieldKey;
+    const input = document.getElementById(`tab_${key}`);
+    if (!input) return;
+    input.value = element.dataset.settingValue;
+    state.cameraListState[state.activeCamIndex][key] = element.dataset.settingValue;
+    if (state.isEditingInModal) state.isEditorDirty = true;
+    closeCameraSettingPopovers();
+  };
   const actions = {
     'toggle-theme': () => toggleTheme(),
     'set-theme': element => setTheme(element.dataset.theme),
@@ -145,6 +166,8 @@ import { renderList } from './record-list-renderer.js';
     'edit-camera-reel-name': (element, event) => editCameraReelName(number(element.dataset.cameraIndex), event),
     'remove-camera': (element, event) => removeCameraTab(number(element.dataset.cameraIndex), event),
     'switch-camera': element => switchCameraTab(number(element.dataset.cameraIndex)),
+    'toggle-camera-setting-popover': element => toggleCameraSettingPopover(element),
+    'set-camera-setting': element => setCameraSetting(element),
     'tab-preset-change': element => onTabPresetChange(element.dataset.presetType),
     'tab-lens-change': () => onTabLensChange(),
     'toggle-preset-item': element => togglePresetItem(element.dataset.presetType, number(element.dataset.presetIndex), element.checked),
@@ -167,6 +190,7 @@ import { renderList } from './record-list-renderer.js';
 
   function route(event) {
     if (event.type === 'keydown') {
+      if (event.key === 'Escape') closeCameraSettingPopovers();
       if (event.target.closest?.('#vfxForm')) preventFormEnterSubmit(event);
       return;
     }
@@ -193,6 +217,7 @@ export function initEventDelegation() {
   document.addEventListener('pointerdown', event => {
     const swatch = event.target.closest?.('[data-action="set-canvas-color"][data-color]');
     if (swatch) setCanvasColor(swatch.dataset.color);
+    if (!event.target.closest?.('.camera-setting-field')) closeCameraSettingPopovers();
   });
   ['change', 'input'].forEach(type => document.addEventListener(type, event => {
     if (state.isEditingInModal && event.target.closest?.('#vfxForm')) state.isEditorDirty = true;

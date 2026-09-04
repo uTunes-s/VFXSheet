@@ -15,7 +15,7 @@ export async function exportToCSV() {
     const records = await getRecordsForHistoryAction();
     if (!records || records.length === 0) return alert('No records to export.');
 
-    const headers = ['ID', 'UUID', 'Project', 'Shooting Data Name', 'ThumbText', 'PDF', 'Shoot Day', 'Shoot Place', 'Shoot Time', 'Description', 'Camera', 'Lens', 'Focal Length', 'F-stop', 'ClipName', 'LUT', 'Camerawork', 'Height', 'Distance', 'Angle'];
+    const headers = ['ID', 'UUID', 'Project', 'Shooting Data Name', 'ThumbText', 'PDF', 'Shoot Day', 'Shoot Place', 'Shoot Time', 'Description', 'Camera', 'Lens', 'Focal Length', 'F-stop', 'Shutter', 'Frame Rate', 'ISO/EI', 'White Balance', 'ND Filter', 'ClipName', 'LUT', 'Camerawork', 'Height', 'Distance', 'Angle'];
     const csvEscape = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const formatShootDate = value => {
       const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
@@ -49,6 +49,11 @@ export async function exportToCSV() {
           camera.lens,
           camera.focal_length,
           camera.t_stop,
+          camera.shutter_speed,
+          camera.frame_rate,
+          camera.iso_ei,
+          camera.white_balance,
+          camera.nd_filter,
           camera.clip_name,
           camera.lut_info,
           camera.cramerawork,

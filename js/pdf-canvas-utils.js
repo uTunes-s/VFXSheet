@@ -71,11 +71,11 @@ export function drawPdfCameraTable(ctx, y, camera, number) {
   ctx.fillStyle = '#ffffff'; ctx.font = 'bold 15px sans-serif'; ctx.fillText(`${camera.label || `Camera ${number}`} — Camera Setup`, 50, y + 19);
   y += 28;
   y = drawPdfTable(ctx, y, [[
-    { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }, { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }
-  ]], 6);
+    { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }, { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Shutter', value: camera.shutter_speed }, { label: 'Frame Rate', value: camera.frame_rate }, { label: 'ISO / EI', value: camera.iso_ei }, { label: 'White Balance', value: camera.white_balance }
+  ]], 8);
   return drawPdfTable(ctx, y, [[
-    { label: 'Movement', value: camera.cramerawork }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }, { label: 'Chart', value: camera.flag_chart || 'NO' }, { label: 'Clean Plate', value: camera.flag_cleanplate || 'NO' }, { label: 'VFX Ref.', value: camera.flag_reference || 'NO' }
-  ]], 7);
+    { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }, { label: 'Movement', value: camera.cramerawork }, { label: 'ND Filter', value: camera.nd_filter }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }, { label: 'Chart / Plate / Ref.', value: `Chart:${camera.flag_chart || 'NO'} Plate:${camera.flag_cleanplate || 'NO'} Ref:${camera.flag_reference || 'NO'}` }
+  ]], 8);
 }
 
 export function wrapPdfText(ctx, text, maxWidth) {

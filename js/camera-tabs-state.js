@@ -50,6 +50,8 @@ export function saveActiveTabState() {
     camera_preset: value('tab_camera_preset'), camera_custom: value('tab_camera_custom'),
     lens_preset: value('tab_lens_preset'), lens_custom: value('tab_lens_custom'),
     focal_length: value('tab_focal_length'), t_stop: value('tab_t_stop'),
+    shutter_speed: value('tab_shutter_speed'), frame_rate: value('tab_frame_rate'),
+    iso_ei: value('tab_iso_ei'), white_balance: value('tab_white_balance'), nd_filter: value('tab_nd_filter'),
     clip_name: value('tab_clip_name'), lut_info: value('tab_lut_info'),
     cramerawork_preset: document.getElementById('tab_cramerawork_preset')?.value ?? '',
     cramerawork_custom: value('tab_cramerawork_custom'), height_value: value('tab_height_value'),

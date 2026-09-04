@@ -61,7 +61,8 @@ export async function renderList() {
     const cameras = (record.cameras || []).map(camera => `
       <div class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-[10px] space-y-0.5">
         <div class="flex justify-between font-bold text-slate-200"><span>🎥 ${safe(camera.label)}: ${safe(camera.camera || '-')} (${safe(camera.lens || '-')})</span><span>Work: ${safe(camera.cramerawork || '-')}</span></div>
-        <div class="text-slate-400 flex justify-between"><span>Clip: ${safe(camera.clip_name || '-')} Aperture: ${safe(camera.t_stop || '-')}</span><span>H: ${safe(camera.height_value || '-')} D: ${safe(camera.distance_value || '-')} Tilt: ${safe(camera.tilt_value || '-')}</span></div>
+        <div class="text-slate-400 flex justify-between"><span>Clip: ${safe(camera.clip_name || '-')} Aperture: ${safe(camera.t_stop || '-')} Shutter: ${safe(camera.shutter_speed || '-')}</span><span>FPS: ${safe(camera.frame_rate || '-')} ISO/EI: ${safe(camera.iso_ei || '-')}</span></div>
+        <div class="text-slate-400 flex justify-between"><span>WB: ${safe(camera.white_balance || '-')} ND: ${safe(camera.nd_filter || '-')}</span><span>H: ${safe(camera.height_value || '-')} D: ${safe(camera.distance_value || '-')} Tilt: ${safe(camera.tilt_value || '-')}</span></div>
         <div class="text-slate-400 flex justify-between"><span>Chart: ${safe(camera.flag_chart || 'NO')} Clean: ${safe(camera.flag_cleanplate || 'NO')} Ref: ${safe(camera.flag_reference || 'NO')}</span><span>LUT: ${safe(camera.lut_info || '-')}</span></div>
       </div>`).join('');
     const badge = record.syncState === 'syncing'

@@ -13,7 +13,7 @@ export function hasSavedInitialValue(values, key) {
     try { return Boolean(JSON.parse(values.canvas_json || '{}').objects?.length); }
     catch { return false; }
   }
-  const cameraKeys = ['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'];
+  const cameraKeys = ['camera_preset', 'lens_preset', 'focal_length', 't_stop', 'shutter_speed', 'frame_rate', 'iso_ei', 'white_balance', 'nd_filter', 'clip_name', 'lut_info', 'cramerawork_preset', 'height_value', 'distance_value', 'tilt_value', 'reference_flags'];
   if (cameraKeys.includes(key)) {
     return Boolean((values.cameras || []).some(camera => key === 'reference_flags'
       ? camera.flag_chart === 'YES' || camera.flag_cleanplate === 'YES' || camera.flag_reference === 'YES'
