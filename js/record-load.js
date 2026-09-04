@@ -9,6 +9,15 @@ import { clearShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnai
 import { toggleHdriWeather, setWeatherValues } from './form-ui.js';
 import { setCanvasMode } from './canvas-mode.js';
 import { saveCanvasState, updateUndoRedoButtons } from './canvas-history.js';
+import { cachedCamPresets, cachedLensPresets, cachedMovementPresets } from './preset-store.js';
+
+function restorePresetSelection(value, isCustom, presets, fallback = '') {
+  const savedValue = value || fallback;
+  if (isCustom === true || (savedValue && !presets.some(preset => preset.name === savedValue))) {
+    return { preset: '__custom__', custom: savedValue };
+  }
+  return { preset: savedValue, custom: '' };
+}
 
 export async function loadRecordForEdit(id, duplicate = false) {
   const record = await db.sheets.get(id);
@@ -45,26 +54,31 @@ export async function loadRecordForEdit(id, duplicate = false) {
   document.getElementById('hdri_notes').value = record.hdri_notes || '';
 
   if (record.cameras && record.cameras.length > 0) {
-    state.cameraListState = record.cameras.map(c => ({
-      label: c.label,
-      reel_name: c.reel_name || getCameraReelPrefix(c.label),
-      camera_preset: c.camera || '',
-      camera_custom: '',
-      lens_preset: c.lens || '',
-      lens_custom: '',
-      focal_length: c.focal_length || '',
-      t_stop: c.t_stop || '',
-      clip_name: c.clip_name || '',
-      lut_info: c.lut_info || '',
-      cramerawork_preset: c.cramerawork || 'Fix',
-      cramerawork_custom: '',
-      height_value: c.height_value || '',
-      distance_value: c.distance_value || '',
-      tilt_value: c.tilt_value || '',
-      flag_chart: c.flag_chart || 'NO',
-      flag_cleanplate: c.flag_cleanplate || 'NO',
-      flag_reference: c.flag_reference || 'NO'
-    }));
+    state.cameraListState = record.cameras.map(c => {
+      const camera = restorePresetSelection(c.camera, c.camera_is_custom, cachedCamPresets);
+      const lens = restorePresetSelection(c.lens, c.lens_is_custom, cachedLensPresets);
+      const cramerawork = restorePresetSelection(c.cramerawork, c.cramerawork_is_custom, cachedMovementPresets, 'Fix');
+      return {
+        label: c.label,
+        reel_name: c.reel_name || getCameraReelPrefix(c.label),
+        camera_preset: camera.preset,
+        camera_custom: camera.custom,
+        lens_preset: lens.preset,
+        lens_custom: lens.custom,
+        focal_length: c.focal_length || '',
+        t_stop: c.t_stop || '',
+        clip_name: c.clip_name || '',
+        lut_info: c.lut_info || '',
+        cramerawork_preset: cramerawork.preset,
+        cramerawork_custom: cramerawork.custom,
+        height_value: c.height_value || '',
+        distance_value: c.distance_value || '',
+        tilt_value: c.tilt_value || '',
+        flag_chart: c.flag_chart || 'NO',
+        flag_cleanplate: c.flag_cleanplate || 'NO',
+        flag_reference: c.flag_reference || 'NO'
+      };
+    });
   } else {
     state.cameraListState = [createEmptyCameraItem('A')];
   }
