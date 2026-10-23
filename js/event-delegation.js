@@ -5,6 +5,7 @@ import { openAddDefaultsEditor, saveCurrentAsDefaultSettings } from './initial-s
 import { saveRecord } from './record-save.js';
 import { getGPSLocation } from './gps.js';
 import { openPresetModal, closePresetModal } from './preset-modal.js';
+import { openPresetManager, closePresetManager, setPresetManagerFilter } from './preset-manager.js';
 import { addCameraTab, editCameraReelName, removeCameraTab, switchCameraTab } from './camera-tabs-state.js';
 import { toggleHdriWeather, switchAppPage } from './form-ui.js';
 import { addShotThumbnails, clearShotThumbnail, moveShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnails.js';
@@ -23,7 +24,7 @@ import { loadFlowPtProjects, markFlowPtConnectionTestSucceeded, saveFlowPtConnec
 import { exportSheetInitialSettings, selectSheetInitialSettingsImport } from './initial-settings-transfer.js';
 import { closeRecordPreview, closeMediaLightbox, openMediaLightbox } from './media-modals.js';
 import { exportFullPresetsJSON, importFullPresetsJSON } from './preset-transfer.js';
-import { addPresetItem, resetPresetsToDefault, togglePresetItem, removePresetItem, toggleLensSeries, setLensSeriesOpen } from './preset-actions.js';
+import { addPresetItem, resetPresetsToDefault, togglePresetItem, removePresetItem, toggleLensSeries } from './preset-actions.js';
 import { openRecordPreview } from './record-preview.js';
 import { loadRecordForEdit } from './record-load.js';
 import { changeRecordThumbnail } from './record-thumbnails.js';
@@ -84,6 +85,11 @@ import { renderList } from './record-list-renderer.js';
     'get-gps': () => getGPSLocation(),
     'open-preset-modal': () => openPresetModal(),
     'close-preset-modal': () => closePresetModal(),
+    'open-preset-manager': element => openPresetManager(element.dataset.presetType),
+    'close-preset-manager': () => closePresetManager(),
+    'filter-preset-manager': element => setPresetManagerFilter(element.value),
+    'move-preset-item': element => togglePresetItem(element.dataset.presetType, number(element.dataset.presetIndex), element.dataset.enabled === 'true'),
+    'move-lens-series': element => toggleLensSeries(element.dataset.lensSeries, element.dataset.enabled === 'true'),
     'add-camera': () => addCameraTab(),
     'toggle-hdri': element => toggleHdriWeather(element.checked),
     'open-file-input': element => document.getElementById(element.dataset.inputId)?.click(),
@@ -172,8 +178,6 @@ import { renderList } from './record-list-renderer.js';
     'tab-lens-change': () => onTabLensChange(),
     'toggle-preset-item': element => togglePresetItem(element.dataset.presetType, number(element.dataset.presetIndex), element.checked),
     'remove-preset-item': element => removePresetItem(element.dataset.presetType, number(element.dataset.presetIndex)),
-    'toggle-lens-series': element => toggleLensSeries(element.dataset.lensSeries, element.checked),
-    'set-lens-series-open': element => setLensSeriesOpen(element.dataset.lensSeries, element.open),
     'open-media-lightbox': element => openMediaLightbox(element.currentSrc || element.src, element.alt),
     'remove-shot-thumbnail': element => {
       state.pendingShotThumbnails.splice(number(element.dataset.thumbnailIndex), 1);
@@ -198,9 +202,9 @@ import { renderList } from './record-list-renderer.js';
     if (!element) return;
     const action = actions[element.dataset.action];
     if (!action) return;
-    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-lens-series', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
-    const inputActions = new Set(['set-brush-size', 'set-canvas-color']);
-    const toggleActions = new Set(['set-lens-series-open']);
+    const changeActions = new Set(['toggle-hdri', 'add-shot-thumbnails', 'add-canvas-image', 'import-backup', 'import-presets', 'tab-preset-change', 'tab-lens-change', 'toggle-preset-item', 'toggle-record-filter-option', 'set-record-filter', 'set-record-sort', 'select-flowpt-project', 'toggle-flowpt-enabled']);
+    const inputActions = new Set(['set-brush-size', 'set-canvas-color', 'filter-preset-manager']);
+    const toggleActions = new Set();
     if (event.type === 'submit' && element.dataset.action !== 'save-record') return;
     if (event.type === 'change' && !changeActions.has(element.dataset.action) && element.dataset.action !== 'set-canvas-color') return;
     if (event.type === 'input' && !inputActions.has(element.dataset.action)) return;

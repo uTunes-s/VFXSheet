@@ -3,6 +3,7 @@ import { defaultCameras } from './preset-catalog-cameras.js';
 import { defaultLenses } from './preset-catalog-lenses.js';
 import { defaultMovements, presetCategories } from './preset-catalog-meta.js';
 
+const retiredLensPresetNames = new Set(['Zeiss Supreme Prime 29mm', 'Joseph Petzval 85mm f/2.2', 'Joseph Petzval Lens 55mm f/1.7', 'Joseph Petzval Lens 35mm', 'Joseph Petzval 80.5mm f/1.9']);
 const retiredCameraPresetNames = new Set([
   'Freefly Ember S35', 'Freefly Wave 4K', 'Sony Venice 6K FF35',
   'Sony Venice II 6K', 'Sony Venice II 8.6K'
@@ -52,7 +53,7 @@ export function normalizeLensPresets(list = []) {
   const byName = new Map();
   [...defaultLenses, ...list].forEach(item => {
     const normalized = { name: item.name, focal: item.focal || '', category: item.category || 'Cine', series: getLensSeries(item), enabled: item.enabled !== false };
-    if (!normalized.name) return;
+    if (!normalized.name || retiredLensPresetNames.has(normalized.name)) return;
     byName.set(normalized.name, { ...(byName.get(normalized.name) || {}), ...normalized });
   });
   const focalValue = lens => Number.parseFloat(String(lens.focal || lens.name).match(/\d+(?:\.\d+)?/)?.[0]) || Number.POSITIVE_INFINITY;

@@ -4,7 +4,7 @@ import { defaultCameras } from './preset-catalog-cameras.js';
 import { defaultLenses } from './preset-catalog-lenses.js';
 import { defaultMovements } from './preset-catalog-meta.js';
 import { getLensSeries, normalizeCameraPresets, normalizeLensPresets, normalizeMovementPresets } from './preset-normalizers.js';
-import { initPresets, openLensSeries } from './preset-store.js';
+import { initPresets } from './preset-store.js';
 import { renderPresetModalLists } from './preset-list-renderer.js';
 
 export function normalizedPresetList(type, list) {
@@ -43,11 +43,6 @@ export async function togglePresetItem(type, index, enabled) {
   await db.presets.put(record);
   await initPresets();
   renderPresetModalLists();
-}
-
-export function setLensSeriesOpen(series, isOpen) {
-  if (isOpen) openLensSeries.add(series);
-  else openLensSeries.delete(series);
 }
 
 export async function toggleLensSeries(series, enabled) {

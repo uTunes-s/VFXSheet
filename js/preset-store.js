@@ -9,7 +9,6 @@ import { renderCameraTabs } from './camera-tabs-renderer.js';
 export let cachedCamPresets = [];
 export let cachedLensPresets = [];
 export let cachedMovementPresets = [];
-export const openLensSeries = new Set();
 
 export async function initPresets() {
   let cameraRecord = await db.presets.get('camera');

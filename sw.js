@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v201';
+const CACHE_NAME = 'vfx-sheet-v202';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -21,6 +21,7 @@ const APP_SHELL = [
   './js/preset-store.js',
   './js/preset-actions.js',
   './js/preset-modal.js',
+  './js/preset-manager.js',
   './js/media-modals.js',
   './js/record-thumbnails.js',
   './js/camera-model.js',
