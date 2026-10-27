@@ -18,7 +18,7 @@ export function getGPSLocation() {
       const altitude = position.coords.altitude ? `${Math.round(position.coords.altitude)}m` : '';
       const coordinates = `${lat}, ${lng}${altitude ? ` / ${altitude}` : ''}`;
       gpsInput.value = coordinates;
-      gpsBtn.innerText = '📍 Get GPS';
+      gpsBtn.innerText = '📍 GPS';
       gpsBtn.disabled = false;
 
       if (!navigator.onLine) return;
@@ -41,13 +41,13 @@ export function getGPSLocation() {
       } catch (error) {
         console.info('Place-name lookup unavailable; saved coordinates only.', error);
       } finally {
-        gpsBtn.innerText = '📍 Get GPS';
+        gpsBtn.innerText = '📍 GPS';
         gpsBtn.disabled = false;
       }
     },
     error => {
       alert(`GPS Error: ${error.message}`);
-      gpsBtn.innerText = '📍 Get GPS';
+      gpsBtn.innerText = '📍 GPS';
       gpsBtn.disabled = false;
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }

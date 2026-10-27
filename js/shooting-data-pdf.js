@@ -11,3 +11,14 @@ export async function createShootingDataPdf(record, camera) {
   return new Uint8Array(doc.output('arraybuffer'));
 }
 
+
+// One PDF containing every selected record/camera, one page each.
+export async function createMergedShootingDataPdf(items) {
+  if (!window.jspdf?.jsPDF) throw new Error('PDF export library is unavailable. Please reload the app once while online.');
+  const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  for (const [index, { record, camera }] of items.entries()) {
+    if (index > 0) doc.addPage();
+    await renderTextPdfRecord(doc, { ...record, cameras: [camera] });
+  }
+  return new Uint8Array(doc.output('arraybuffer'));
+}

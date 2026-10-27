@@ -37,7 +37,7 @@
 
     <!-- Record Sheet Page -->
     <section id="recordPage" class="hidden">
-    <form id="vfxForm" data-action="save-record" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-5">
+    <form id="vfxForm" data-action="save-record" class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-3">
       
       <!-- Edit Mode Banner -->
       <div id="editModeBanner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex justify-between items-center">
@@ -50,7 +50,7 @@
       <!-- Section 1: General Info -->
       <div class="space-y-3">
         <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">1. General Information</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="general-row">
           <div>
             <label class="form-label" data-initial-setting="operator">Operator</label>
             <input type="text" id="operator" placeholder="Name" class="form-input">
@@ -67,9 +67,6 @@
             <label class="form-label" data-initial-setting="location">Location</label>
             <input type="text" id="location" placeholder="Stage A / Location" class="form-input">
           </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
             <label class="form-label" data-initial-setting="episode">Episode</label>
             <input type="text" id="episode" placeholder="EP01" class="form-input">
@@ -83,18 +80,16 @@
             <input type="text" id="shot" placeholder="001" required class="form-input font-mono font-bold text-amber-300">
           </div>
           <div>
-            <label class="form-label" data-initial-setting="gps_location">GPS Location / Place</label>
-            <div class="flex flex-wrap sm:flex-nowrap gap-2">
-              <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-[120px]" readonly>
-              <button type="button" data-action="get-gps" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-2 rounded-lg border border-slate-700 text-xs whitespace-nowrap shrink-0">
-                📍 Get GPS
+            <label class="form-label" data-initial-setting="gps_location">GPS</label>
+            <div class="flex gap-1.5">
+              <input type="text" id="gps_location" placeholder="Lat, Lng" class="form-input font-mono text-xs flex-1 min-w-0" readonly>
+              <button type="button" data-action="get-gps" id="gpsBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-2 py-1 rounded-lg border border-slate-700 text-[11px] whitespace-nowrap shrink-0">
+                📍 GPS
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      <hr class="border-slate-800">
 
       <!-- Section 2: Multi-Cam Setup -->
       <div class="space-y-3">
@@ -111,23 +106,20 @@
         </div>
 
         <!-- Camera Tab Content Area -->
-        <div id="cameraTabContents" class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 space-y-4">
+        <div id="cameraTabContents" class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-2.5">
           <!-- Rendered via JS -->
         </div>
       </div>
 
-      <hr class="border-slate-800">
-
       <!-- Section 3: HDRI Setup -->
       <div class="space-y-3">
-        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider" data-initial-setting="hdri">3. HDRI Setup</h2>
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+        <div class="bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 space-y-2">
           <div class="flex items-center gap-3">
+            <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider" data-initial-setting="hdri">3. HDRI Captured</h2>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" id="hdri_captured" data-action="toggle-hdri" class="sr-only peer">
               <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
             </label>
-            <span class="text-sm font-bold text-slate-200">HDRI Captured</span>
           </div>
 
           <!-- Weather Select Area -->
@@ -151,32 +143,35 @@
         </div>
       </div>
 
-      <hr class="border-slate-800">
-
       <!-- Section 4: Canvas & Notes -->
       <div class="space-y-3">
-        <h2 class="text-xs font-semibold text-amber-400/80 uppercase tracking-wider">4. VFX Field Notes & Sketch</h2>
-        
+        <div class="thumb-notes-row">
+        <div class="rounded-xl border border-slate-800 bg-slate-950 p-2 space-y-1" title="Attach a slate, reference, or camera-data photo. Stored locally with this record.">
+          <div class="flex items-center justify-between">
+            <label class="form-label !mb-0" data-initial-setting="shot_thumbnails">Thumbnail</label>
+            <button type="button" id="shotThumbnailClearBtn" data-action="clear-shot-thumbnails" class="hidden text-[11px] text-rose-300 px-1">Clear</button>
+          </div>
+          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" data-action="add-shot-thumbnails">
+          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-shot-thumbnails">
+          <div class="flex flex-wrap items-center gap-2">
+            <div id="shotThumbnailPreview" class="contents" aria-label="Shot thumbnail previews"></div>
+            <div id="shotThumbnailAddWrap" class="relative">
+              <button type="button" data-action="toggle-shot-thumbnail-menu" aria-label="Add shot thumbnail" aria-haspopup="menu" class="flex h-9 w-12 items-center justify-center rounded border border-dashed border-slate-600 text-slate-500 hover:border-amber-400 hover:text-amber-300"><svg class="canvas-toolbar-icon !h-6 !w-6" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 18 5-5 3.5 3.5 2.5-2.5 5 4"/></svg></button>
+              <div id="shotThumbnailMenu" role="menu" class="hidden absolute left-0 top-full z-30 mt-1 w-32 rounded-lg border border-slate-700 bg-slate-900 p-1 shadow-xl">
+                <button type="button" role="menuitem" data-action="pick-shot-thumbnail-source" data-input-id="shotThumbnailLibraryInput" class="block w-full rounded px-2 py-1.5 text-left text-xs text-slate-200 hover:bg-slate-800">🖼️ Library</button>
+                <button type="button" role="menuitem" data-action="pick-shot-thumbnail-source" data-input-id="shotThumbnailCameraInput" class="block w-full rounded px-2 py-1.5 text-left text-xs text-slate-200 hover:bg-slate-800">📷 Camera</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="w-full">
           <label class="form-label" data-initial-setting="notes">Notes</label>
           <textarea id="notes" rows="2" placeholder="Write general notes, spatial info, lighting details..." class="form-input w-full"></textarea>
         </div>
-
-        <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3">
-          <div class="flex-1">
-            <label class="form-label" data-initial-setting="shot_thumbnails">Shot Data Thumbnail</label>
-            <p class="text-[11px] text-slate-500">Attach a slate, reference, or camera-data photo. Stored locally with this record.</p>
-          </div>
-          <input type="file" id="shotThumbnailLibraryInput" accept="image/*" multiple class="hidden" data-action="add-shot-thumbnails">
-          <input type="file" id="shotThumbnailCameraInput" accept="image/*" capture="environment" class="hidden" data-action="add-shot-thumbnails">
-          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailLibraryInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">🖼️ Library</button>
-          <button type="button" data-action="open-file-input" data-input-id="shotThumbnailCameraInput" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700">📷 Camera</button>
-          <button type="button" data-action="clear-shot-thumbnails" class="text-xs text-rose-300 px-2 py-2">Clear</button>
-          <div id="shotThumbnailPreview" class="hidden flex flex-wrap gap-2" aria-label="Shot thumbnail previews"></div>
         </div>
 
-        <div class="space-y-2 pt-1">
-          <label class="form-label" data-initial-setting="sketch">Sketch</label>
+        <div class="space-y-1.5">
+          <label class="form-label !mb-0" data-initial-setting="sketch">Sketch</label>
           <!-- Canvas Toolbar -->
           <div class="flex flex-wrap gap-2 items-center bg-slate-950 p-2 rounded-xl border border-slate-800">
             <button type="button" data-action="set-canvas-mode" data-mode="draw" id="btnDraw" aria-label="Draw" title="Draw" class="canvas-toolbar-button bg-amber-500 text-slate-950 font-bold p-2 rounded-lg inline-flex items-center justify-center"><svg class="canvas-toolbar-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4L16.5 3.5Z"/></svg></button>
@@ -330,6 +325,7 @@
             <button type="button" data-action="save-new-record" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-700">Save as New Entry</button>
             <button type="button" data-action="save-existing-record" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Update Record</button>
           </div>
+          <button type="submit" form="vfxForm" id="modalSaveBtn" class="items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400">Save VFX Sheet</button>
           <button type="button" data-action="close-edit-modal" class="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-800">Close</button>
         </div>
       </div>

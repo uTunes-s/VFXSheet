@@ -14,6 +14,7 @@ export function createEmptyCameraItem(label) {
     iso_ei: '',
     white_balance: '',
     nd_filter: '',
+    codec: '',
     clip_name: '',
     lut_info: '',
     cramerawork_preset: '',

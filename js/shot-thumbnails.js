@@ -24,7 +24,7 @@ export function renderShotThumbnailPreviews() {
     const image = document.createElement('img');
     image.src = URL.createObjectURL(file);
     image.alt = `Shot thumbnail ${index + 1}`;
-    image.className = 'h-16 w-24 rounded border border-slate-700 object-cover';
+    image.className = 'h-9 w-12 rounded border border-slate-700 object-cover';
     image.onload = () => URL.revokeObjectURL(image.src);
 
     const remove = document.createElement('button');
@@ -59,6 +59,7 @@ export function renderShotThumbnailPreviews() {
     preview.append(wrapper);
   });
   preview.classList.toggle('hidden', !state.pendingShotThumbnails.length);
+  document.getElementById('shotThumbnailClearBtn')?.classList.toggle('hidden', !state.pendingShotThumbnails.length);
 }
 
 export function moveShotThumbnail(index, direction) {
@@ -73,6 +74,7 @@ export function clearShotThumbnail() {
   state.pendingShotThumbnails = [];
   preview.replaceChildren();
   preview.classList.add('hidden');
+  document.getElementById('shotThumbnailClearBtn')?.classList.add('hidden');
   document.getElementById('shotThumbnailLibraryInput').value = '';
   document.getElementById('shotThumbnailCameraInput').value = '';
 }

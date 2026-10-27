@@ -8,7 +8,7 @@ export async function addInvisiblePdfTextLayer(doc, record) {
     getCameraFieldLabel(camera), camera.camera, camera.lens, camera.focal_length,
     camera.t_stop, camera.clip_name, camera.cramerawork, camera.lut_info,
     camera.shutter_speed, camera.frame_rate, camera.iso_ei, camera.white_balance,
-    camera.nd_filter, camera.height_value, camera.distance_value, camera.tilt_value
+    camera.nd_filter, camera.codec, camera.height_value, camera.distance_value, camera.tilt_value
   ].filter(Boolean).join(' / ')).join('\n');
   const allText = [
     'VFX Sheet', `Record #${record.id || ''}`, record.show_title, record.operator,

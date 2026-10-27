@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v202';
+const CACHE_NAME = 'vfx-sheet-v214';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -82,7 +82,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL.map(url => new Request(url, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {

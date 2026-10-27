@@ -25,6 +25,7 @@ export function getSavedCameras() {
     iso_ei: camera.iso_ei,
     white_balance: camera.white_balance,
     nd_filter: camera.nd_filter,
+    codec: camera.codec,
     clip_name: camera.clip_name,
     lut_info: camera.lut_info,
     cramerawork: camera.cramerawork_preset === '__custom__' ? camera.cramerawork_custom : camera.cramerawork_preset,

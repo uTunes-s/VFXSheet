@@ -72,6 +72,7 @@ export async function loadRecordForEdit(id, duplicate = false) {
         iso_ei: c.iso_ei || '',
         white_balance: c.white_balance || '',
         nd_filter: c.nd_filter || '',
+        codec: c.codec || '',
         clip_name: c.clip_name || '',
         lut_info: c.lut_info || '',
         cramerawork_preset: cramerawork.preset,

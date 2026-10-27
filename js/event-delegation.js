@@ -59,6 +59,8 @@ import { renderList } from './record-list-renderer.js';
     const willOpen = popover.classList.contains('hidden');
     closeCameraSettingPopovers();
     popover.classList.toggle('hidden', !willOpen);
+    popover.style.left = ''; popover.style.right = '';
+    if (willOpen && popover.getBoundingClientRect().right > window.innerWidth - 8) { popover.style.left = 'auto'; popover.style.right = '0'; }
     input.setAttribute('aria-expanded', String(willOpen));
   };
   const setCameraSetting = element => {
@@ -92,6 +94,8 @@ import { renderList } from './record-list-renderer.js';
     'move-lens-series': element => toggleLensSeries(element.dataset.lensSeries, element.dataset.enabled === 'true'),
     'add-camera': () => addCameraTab(),
     'toggle-hdri': element => toggleHdriWeather(element.checked),
+    'toggle-shot-thumbnail-menu': () => document.getElementById('shotThumbnailMenu')?.classList.toggle('hidden'),
+    'pick-shot-thumbnail-source': element => { document.getElementById('shotThumbnailMenu')?.classList.add('hidden'); document.getElementById(element.dataset.inputId)?.click(); },
     'open-file-input': element => document.getElementById(element.dataset.inputId)?.click(),
     'add-shot-thumbnails': (_, event) => addShotThumbnails(event),
     'clear-shot-thumbnails': () => clearShotThumbnail(),
@@ -222,6 +226,7 @@ export function initEventDelegation() {
     const swatch = event.target.closest?.('[data-action="set-canvas-color"][data-color]');
     if (swatch) setCanvasColor(swatch.dataset.color);
     if (!event.target.closest?.('.camera-setting-field')) closeCameraSettingPopovers();
+    if (!event.target.closest?.('#shotThumbnailAddWrap')) document.getElementById('shotThumbnailMenu')?.classList.add('hidden');
   });
   ['change', 'input'].forEach(type => document.addEventListener(type, event => {
     if (state.isEditingInModal && event.target.closest?.('#vfxForm')) state.isEditorDirty = true;
