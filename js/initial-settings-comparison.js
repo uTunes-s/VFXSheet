@@ -9,6 +9,7 @@ export function getCurrentDefaultSettingsValues() {
     operator: document.getElementById('operator').value,
     show_title: document.getElementById('show_title').value,
     location: document.getElementById('location').value,
+    reel: document.getElementById('reel').value,
     hdri_captured: document.getElementById('hdri_captured').checked,
     hdri_weather: getWeatherValues(),
     hdri_notes: document.getElementById('hdri_notes').value,
@@ -21,6 +22,7 @@ export function getDefaultSettingsChangeSummary(currentValues, newValues, includ
     ['operator', 'Operator'],
     ['show_title', 'Show / Title'],
     ['location', 'Location'],
+    ['reel', 'Reel'],
     ['hdri_captured', 'HDRI Captured'],
     ['hdri_weather', 'HDRI Weather'],
     ['hdri_notes', 'HDRI Notes'],
@@ -31,4 +33,3 @@ export function getDefaultSettingsChangeSummary(currentValues, newValues, includ
     .map(([, label]) => `• ${label}`);
   return changedFields.length ? changedFields.join('\n') : 'No changes';
 }
-

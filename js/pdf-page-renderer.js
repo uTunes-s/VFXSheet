@@ -12,7 +12,7 @@ export async function renderRecordPdfPage(record) {
   drawPdfHeaderMeta(ctx, record);
   let y = 128;
   y = drawPdfSectionTitle(ctx, '1. General Information', y);
-  y = drawPdfTable(ctx, y, [[{ label: 'Location', value: record.location }, { label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }]], 4);
+  y = drawPdfTable(ctx, y, [[{ label: 'Location', value: record.location }, { label: 'Episode', value: record.episode }, { label: 'Scene', value: record.scene }, { label: 'Shot', value: record.shot }, { label: 'Reel', value: record.reel }]], 5);
   y = drawPdfSectionTitle(ctx, '2. Multi-Camera Setup', y + 12);
   const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
   cameras.forEach((camera, index) => { y = drawPdfCameraTable(ctx, y, camera, index + 1); y += 10; });
@@ -20,7 +20,7 @@ export async function renderRecordPdfPage(record) {
   y = drawPdfTable(ctx, y, [[{ label: 'HDRI Captured', value: record.hdri_captured || 'NO' }, { label: 'Weather', value: Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather }, { label: 'HDRI Notes / EV', value: record.hdri_notes }]], 3);
   y = drawPdfSectionTitle(ctx, '4. VFX Field Notes & Sketch', y + 12);
   y = drawPdfTable(ctx, y, [[{ label: 'VFX Notes', value: record.notes }]], 1);
-  const thumbnails = await Promise.all(getRecordShotThumbnails(record).map(imageFromBlob));
+  const thumbnails = await Promise.all(getRecordShotThumbnails(record).map((blob, index) => imageFromBlob(blob, `Thumbnail ${index + 1}`)));
   const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
   const thumbnailBoxes = [];
   let imageY = Math.max(y + 14, 760);
@@ -38,4 +38,3 @@ export async function renderRecordPdfPage(record) {
   compressedCanvas.getContext('2d').drawImage(canvas, 0, 0, compressedCanvas.width, compressedCanvas.height);
   return { background: compressedCanvas.toDataURL('image/jpeg', 0.66), thumbnailBoxes, sketchBox: sketch ? { image: sketch, x: 40, y: imageY + 12, width: 1160, height: 760 } : null };
 }
-

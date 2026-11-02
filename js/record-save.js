@@ -9,6 +9,8 @@ import { exportCanvasToBlob } from './canvas-actions.js';
 import { closeEditRecordModal } from './record-modal.js';
 import { prepareNextRecord } from './record-flow.js';
 import { renderList } from './record-list-renderer.js';
+import { copyImageBlob, imageFromBlob } from './media-utils.js';
+import { normalizeReel } from './clip-names.js';
 
 export function getSavedCameras() {
   return state.cameraListState.map(camera => ({
@@ -35,52 +37,70 @@ export function getSavedCameras() {
     tilt_value: camera.tilt_value,
     flag_chart: camera.flag_chart,
     flag_cleanplate: camera.flag_cleanplate,
-    flag_reference: camera.flag_reference
+    flag_reference: camera.flag_reference,
+    chart_clip_name: camera.chart_clip_name || '',
+    cleanplate_clip_name: camera.cleanplate_clip_name || '',
+    reference_clip_name: camera.reference_clip_name || ''
   }));
 }
 
 export async function saveRecord(event, mode) {
   event?.preventDefault();
   const form = document.getElementById('vfxForm');
+  const reelInput = document.getElementById('reel');
+  reelInput.value = normalizeReel(reelInput.value);
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
   }
+  if (state.isSavingRecord) return;
+  if (state.pendingThumbnailLoads) return alert('Please wait for the selected images to finish loading before saving.');
   saveActiveTabState();
 
-  const isUpdate = mode === 'update' && state.currentEditingId;
-  const existingRecord = isUpdate ? await db.sheets.get(state.currentEditingId) : null;
+  state.isSavingRecord = true;
+  const editingId = state.currentEditingId;
+  const isUpdate = mode === 'update' && editingId;
+  const thumbnails = [...state.pendingShotThumbnails];
   const isHdri = document.getElementById('hdri_captured').checked;
-  const canvasBlob = await exportCanvasToBlob();
-  const currentThumbnails = state.pendingShotThumbnails.length
-    ? state.pendingShotThumbnails
-    : existingRecord?.shot_thumbnails || (existingRecord?.shot_thumbnail ? [existingRecord.shot_thumbnail] : []);
-
   const field = id => document.getElementById(id).value;
   const payload = {
     operator: field('operator'), show_title: field('show_title'), shoot_datetime: field('shoot_datetime'),
     location: field('location'), gps_location: field('gps_location'), episode: field('episode'),
-    scene: field('scene'), shot: field('shot'), hdri_captured: isHdri ? 'YES' : 'NO',
+    scene: field('scene'), shot: field('shot'), reel: field('reel'), hdri_captured: isHdri ? 'YES' : 'NO',
     hdri_weather: isHdri ? getWeatherValues() : [], hdri_notes: isHdri ? field('hdri_notes') : '',
-    cameras: getSavedCameras(), notes: field('notes'), images: [canvasBlob],
-    shot_thumbnails: currentThumbnails,
+    cameras: getSavedCameras(), notes: field('notes'),
+    shot_thumbnail: undefined,
     canvas_json: JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])),
-    canvas_version: 5, uuid: isUpdate ? existingRecord.uuid : newUuid(),
+    canvas_version: 5,
     synced: 0, syncError: '', created_at: new Date().toISOString()
   };
+  form.inert = true;
 
   try {
+    const canvasBlob = await exportCanvasToBlob();
+    const existingRecord = isUpdate ? await db.sheets.get(editingId) : null;
+    if (isUpdate && !existingRecord) throw new Error('Record no longer exists. Close the editor and reopen the record.');
+    payload.uuid = isUpdate ? existingRecord.uuid : newUuid();
+    payload.images = [canvasBlob];
+    payload.shot_thumbnails = await Promise.all(thumbnails.map(async (image, index) => {
+      const blob = await copyImageBlob(image, `Thumbnail ${index + 1}`);
+      await imageFromBlob(blob, `Thumbnail ${index + 1}`);
+      return blob;
+    }));
     if (isUpdate) {
-      await db.sheets.update(state.currentEditingId, payload);
-      alert(`Record ID: ${state.currentEditingId} updated.`);
+      await db.sheets.update(editingId, payload);
+      alert(`Record ID: ${editingId} updated.`);
     } else {
       const id = await db.sheets.add(payload);
       alert(`Saved as new record (ID: ${id}).`);
     }
   } catch (error) {
     console.error('Save Record Error:', error);
-    alert('Failed to save record to IndexedDB.');
+    alert(`Failed to save record. ${error.message || 'Could not write to IndexedDB.'}`);
     return;
+  } finally {
+    state.isSavingRecord = false;
+    form.inert = false;
   }
 
   if (state.isEditingInModal) {
@@ -91,4 +111,3 @@ export async function saveRecord(event, mode) {
   }
   await renderList();
 }
-

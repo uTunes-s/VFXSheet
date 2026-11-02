@@ -14,11 +14,13 @@ export function showInitialSettingToggles(enabled) {
     control.dataset.action = 'toggle-initial-setting';
     control.dataset.initialSetting = key;
     element.prepend(control);
-    const field = element.parentElement?.querySelector('input:not([id^="initialSetting_"]), textarea, select');
-    if (field) {
+    const fields = key.endsWith('_reference_flags')
+      ? element.closest('.camera-card').querySelectorAll('input[type="checkbox"][data-camera-field], [data-reference-clip-for] input')
+      : [element.parentElement?.querySelector('input:not([id^="initialSetting_"]), textarea, select')].filter(Boolean);
+    fields.forEach(field => {
       field.addEventListener('input', () => markInitialSettingEnabled(key));
       field.addEventListener('change', () => markInitialSettingEnabled(key));
-    }
+    });
   });
 }
 
@@ -37,4 +39,3 @@ export function markInitialSettingEnabled(key) {
   if (toggle) toggle.checked = true;
   state.initialSettingToggleStates[key] = true;
 }
-

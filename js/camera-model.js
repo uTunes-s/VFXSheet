@@ -24,7 +24,10 @@ export function createEmptyCameraItem(label) {
     tilt_value: '',
     flag_chart: 'NO',
     flag_cleanplate: 'NO',
-    flag_reference: 'NO'
+    flag_reference: 'NO',
+    chart_clip_name: '',
+    cleanplate_clip_name: '',
+    reference_clip_name: ''
   };
 }
 
@@ -39,4 +42,16 @@ export function getCameraReelName(camera) {
 
 export function getCameraFieldLabel(camera) {
   return `Cam ${getCameraReelName(camera)}`;
+}
+
+export const referenceClipFields = {
+  flag_chart: 'chart_clip_name',
+  flag_cleanplate: 'cleanplate_clip_name',
+  flag_reference: 'reference_clip_name'
+};
+
+export function getReferenceFlagText(camera, flagKey) {
+  const flag = camera[flagKey] || 'NO';
+  const clip = String(camera[referenceClipFields[flagKey]] || '').trim();
+  return flag === 'YES' && clip ? `YES (${clip})` : flag;
 }

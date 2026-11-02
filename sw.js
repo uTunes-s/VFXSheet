@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vfx-sheet-v214';
+const CACHE_NAME = 'vfx-sheet-v218';
 const APP_SHELL = [
   './index.html',
   './css/app.css',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './js/event-delegation.js',
   './js/form-ui.js',
   './js/shot-thumbnails.js',
+  './js/thumbnail-viewer.js',
   './js/gps.js',
   './js/preset-catalog-meta.js',
   './js/preset-catalog-cameras.js',
@@ -25,6 +26,7 @@ const APP_SHELL = [
   './js/media-modals.js',
   './js/record-thumbnails.js',
   './js/camera-model.js',
+  './js/clip-names.js',
   './js/camera-tabs-state.js',
   './js/camera-tabs-interactions.js',
   './js/preset-options.js',

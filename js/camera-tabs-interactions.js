@@ -1,7 +1,6 @@
 // Camera tab preset-selection interactions.
-export function onTabPresetChange(type) {
-  const preset = document.getElementById(`tab_${type}_preset`);
-  const custom = document.getElementById(`tab_${type}_custom`);
+export function onTabPresetChange(type, preset) {
+  const custom = preset.closest('.camera-card').querySelector(`[data-camera-field="${type}_custom"]`);
   if (preset.value === '__custom__') {
     custom.classList.remove('hidden');
     preset.classList.replace('w-full', 'w-1/2');
@@ -12,11 +11,12 @@ export function onTabPresetChange(type) {
   }
 }
 
-export function onTabLensChange() {
-  onTabPresetChange('lens');
-  const preset = document.getElementById('tab_lens_preset');
-  const focalInput = document.getElementById('tab_focal_length');
+export function onTabLensChange(preset) {
+  onTabPresetChange('lens', preset);
+  const focalInput = preset.closest('.camera-card').querySelector('[data-camera-field="focal_length"]');
   const focal = preset.options[preset.selectedIndex].getAttribute('data-focal');
-  if (focal && preset.value !== '__custom__') focalInput.value = focal;
+  if (focal && preset.value !== '__custom__') {
+    focalInput.value = focal;
+    focalInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 }
-

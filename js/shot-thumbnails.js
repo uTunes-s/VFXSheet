@@ -1,31 +1,64 @@
 // Pending shot-thumbnail selection, ordering, and preview rendering.
 import { state } from './state.js';
 import { markInitialSettingEnabled } from './initial-settings-ui.js';
+import { copyImageBlob, imageFromBlob } from './media-utils.js';
+import { refreshFloatingThumbnailViewer } from './thumbnail-viewer.js';
 
-export function addShotThumbnails(event) {
+let previewGeneration = 0;
+
+export async function addShotThumbnails(event) {
   const files = [...event.target.files];
+  const session = state.editorSession;
+  const selectionVersion = state.thumbnailSelectionVersion;
+  event.target.value = '';
   if (!files.length) return;
   if (files.some(file => !file.type.startsWith('image/'))) {
     alert('Please select image files only.');
     return;
   }
-  state.pendingShotThumbnails.push(...files);
-  markInitialSettingEnabled('shot_thumbnails');
-  renderShotThumbnailPreviews();
-  event.target.value = '';
+  state.pendingThumbnailLoads++;
+  try {
+    const images = await Promise.all(files.map(async (file, index) => {
+      const blob = await copyImageBlob(file, `Thumbnail ${index + 1}`);
+      await imageFromBlob(blob, `Thumbnail ${index + 1}`);
+      return blob;
+    }));
+    if (session !== state.editorSession || selectionVersion !== state.thumbnailSelectionVersion) return;
+    state.pendingShotThumbnails.push(...images);
+    state.isEditorDirty = true;
+    markInitialSettingEnabled('shot_thumbnails');
+    renderShotThumbnailPreviews();
+  } catch (error) {
+    if (session === state.editorSession) alert(error.message);
+  } finally {
+    if (session === state.editorSession) state.pendingThumbnailLoads--;
+  }
 }
 
 export function renderShotThumbnailPreviews() {
+  const generation = ++previewGeneration;
   const preview = document.getElementById('shotThumbnailPreview');
   preview.replaceChildren();
   state.pendingShotThumbnails.forEach((file, index) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'relative';
+    const open = document.createElement('button');
+    open.type = 'button';
+    open.dataset.action = 'open-floating-thumbnail';
+    open.dataset.thumbnailIndex = index;
+    open.setAttribute('aria-label', `Open thumbnail ${index + 1} in floating viewer`);
     const image = document.createElement('img');
-    image.src = URL.createObjectURL(file);
     image.alt = `Shot thumbnail ${index + 1}`;
     image.className = 'h-9 w-12 rounded border border-slate-700 object-cover';
-    image.onload = () => URL.revokeObjectURL(image.src);
+    imageFromBlob(file, `Thumbnail ${index + 1}`).then(loaded => {
+      if (generation === previewGeneration) image.src = loaded.src;
+    }).catch(error => {
+      if (generation === previewGeneration) {
+        image.alt = `Thumbnail ${index + 1}: unavailable`;
+        open.title = error.message;
+      }
+    });
+    open.append(image);
 
     const remove = document.createElement('button');
     remove.type = 'button';
@@ -35,7 +68,7 @@ export function renderShotThumbnailPreviews() {
     remove.dataset.thumbnailIndex = index;
 
     const order = document.createElement('div');
-    order.className = 'absolute inset-x-0 bottom-0 flex justify-between bg-slate-950/80 px-0.5';
+    order.className = 'flex justify-between bg-slate-950/80 px-0.5';
     const moveLeft = document.createElement('button');
     moveLeft.type = 'button';
     moveLeft.textContent = '←';
@@ -55,11 +88,12 @@ export function renderShotThumbnailPreviews() {
     moveRight.dataset.thumbnailIndex = index;
     moveRight.dataset.direction = '1';
     order.append(moveLeft, moveRight);
-    wrapper.append(image, order, remove);
+    wrapper.append(open, order, remove);
     preview.append(wrapper);
   });
   preview.classList.toggle('hidden', !state.pendingShotThumbnails.length);
   document.getElementById('shotThumbnailClearBtn')?.classList.toggle('hidden', !state.pendingShotThumbnails.length);
+  refreshFloatingThumbnailViewer();
 }
 
 export function moveShotThumbnail(index, direction) {
@@ -67,9 +101,12 @@ export function moveShotThumbnail(index, direction) {
   if (nextIndex < 0 || nextIndex >= state.pendingShotThumbnails.length) return;
   [state.pendingShotThumbnails[index], state.pendingShotThumbnails[nextIndex]] = [state.pendingShotThumbnails[nextIndex], state.pendingShotThumbnails[index]];
   renderShotThumbnailPreviews();
+  state.isEditorDirty = true;
 }
 
 export function clearShotThumbnail() {
+  ++previewGeneration;
+  state.thumbnailSelectionVersion++;
   const preview = document.getElementById('shotThumbnailPreview');
   state.pendingShotThumbnails = [];
   preview.replaceChildren();
@@ -77,5 +114,5 @@ export function clearShotThumbnail() {
   document.getElementById('shotThumbnailClearBtn')?.classList.add('hidden');
   document.getElementById('shotThumbnailLibraryInput').value = '';
   document.getElementById('shotThumbnailCameraInput').value = '';
+  refreshFloatingThumbnailViewer();
 }
-

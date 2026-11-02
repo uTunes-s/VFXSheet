@@ -220,13 +220,13 @@ html[data-theme="light"] .record-filter-option:hover { background: #f1f5f9; }
 .cam-stack { display: flex; flex-direction: column; gap: 0.25rem; }
 .cam-stack > * { width: 100% !important; }
 @media (min-width: 768px) {
-  .general-row { grid-template-columns: 1fr 1.2fr 1.6fr 1.1fr 0.6fr 0.6fr 0.6fr 1.5fr; }
-  .cam-row-model { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .general-row { grid-template-columns: 1fr 1.2fr 1.6fr 1.1fr 0.6fr 0.6fr 0.6fr 0.6fr 1.5fr; }
   .cam-row-1 { grid-template-columns: 0.9fr 0.8fr 0.9fr 0.8fr 1fr 1fr 0.9fr 1.1fr 1.2fr; }
-  .cam-row-2 { grid-template-columns: 1.4fr 1.3fr 0.9fr 0.9fr 0.8fr 0.9fr 1fr 0.8fr; }
+  .cam-row-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (min-width: 1150px) {
   #editRecordModal > div { max-width: 1400px; }
+  .cam-row-2 { grid-template-columns: 1.4fr 1.3fr 0.9fr 0.9fr 0.8fr 1.2fr 1.2fr 1.2fr; }
 }
 html[data-theme="light"] #vfxForm .form-label { color: #475569; }
 #vfxForm .space-y-3 > :not([hidden]) ~ :not([hidden]),
@@ -248,3 +248,57 @@ html[data-theme="light"] #vfxForm .form-label { color: #475569; }
 .flag-pill input:focus-visible + .flag-pill-face { outline: 2px solid #fbbf24; outline-offset: 1px; }
 html[data-theme="light"] .flag-pill-face { border-color: #cbd5e1; background: #f1f5f9; color: #64748b; }
 html[data-theme="light"] .flag-pill input:checked + .flag-pill-face { border-color: #60a5fa; background: #2563eb; color: #fff; }
+
+.camera-card { border: 1px solid #334155; border-radius: 0.75rem; scroll-margin-top: 0.5rem; }
+.camera-card:focus-within { border-color: #fbbf24; box-shadow: 0 0 0 1px #fbbf24; }
+.camera-card-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 0.75rem 0.75rem 0 0; border-bottom: 1px solid #334155; }
+.cam-row-model { flex: 1; min-width: 0; grid-template-columns: minmax(3rem, 0.6fr) repeat(2, minmax(0, 1.2fr)); align-items: start; }
+.camera-reel-control { min-width: 0; }
+.camera-reel-name { display: block; width: 100%; padding: 0.3rem 0.45rem; border: 1px solid #f59e0b; border-radius: 0.5rem; background: rgb(245 158 11 / 12%); text-align: center; font-size: 1.125rem; font-weight: 800; overflow-wrap: anywhere; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; }
+#vfxForm .camera-reel-control .form-input { border-color: #f59e0b; font-size: 1.125rem; font-weight: 800; text-align: center; }
+.camera-reel-name:focus-visible { outline: 2px solid #fbbf24; border-radius: 0.25rem; }
+.camera-remove { flex-shrink: 0; min-height: 36px; min-width: 28px; }
+.flag-pill[hidden], .reference-clip-field[hidden] { display: none; }
+.reference-clip-entry { display: flex; align-items: stretch; }
+.reference-clip-entry .form-input { flex: 1; min-width: 0; border-color: #f59e0b; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.reference-clip-disable { flex-shrink: 0; width: 1.5rem; border: 1px solid #f59e0b; border-left: 0; border-radius: 0 0.5rem 0.5rem 0; color: #fbbf24; background: rgb(245 158 11 / 12%); }
+.reference-clip-disable:focus-visible { outline: 2px solid #fbbf24; outline-offset: 1px; }
+.camera-card-fields { display: grid; gap: 0.625rem; padding: 0.75rem; }
+html[data-theme="light"] .camera-card, html[data-theme="light"] .camera-card-header { border-color: #cbd5e1; }
+html[data-theme="light"] .camera-card:focus-within { border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
+
+.thumbnail-viewer { position: fixed; z-index: 55; display: flex; flex-direction: column; border: 1px solid #64748b; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 12px 40px rgb(0 0 0 / 55%); }
+.thumbnail-viewer[hidden] { display: none; }
+.thumbnail-viewer-header { display: flex; flex-shrink: 0; align-items: center; min-height: 44px; padding: 0 0.25rem 0 0.75rem; cursor: move; touch-action: none; user-select: none; }
+.thumbnail-viewer-title { flex: 1; font-size: 0.75rem; font-weight: 700; }
+.thumbnail-viewer button { min-width: 32px; min-height: 36px; border-radius: 0.25rem; font-size: 0.875rem; }
+.thumbnail-viewer button:disabled { opacity: 0.3; }
+.thumbnail-viewer button:focus-visible { outline: 2px solid #fbbf24; }
+.thumbnail-viewer-body { position: relative; flex: 1; min-height: 0; overflow: auto; background: #000; }
+.thumbnail-viewer-surface { min-width: 100%; min-height: 100%; }
+.thumbnail-viewer-surface img { display: block; width: 100%; height: 100%; max-width: none; object-fit: contain; }
+.thumbnail-viewer-surface img:not([src]) { visibility: hidden; }
+.thumbnail-viewer-status { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; padding: 1rem; color: #fda4af; font-size: 0.75rem; }
+.thumbnail-viewer-status:empty { display: none; }
+.thumbnail-viewer-footer { display: flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.75rem; }
+.thumbnail-viewer-resize { position: absolute; bottom: 0; right: 0; padding: 0.5rem; cursor: nwse-resize; touch-action: none; }
+.thumbnail-viewer.is-minimized { height: auto !important; }
+.thumbnail-viewer.is-minimized .thumbnail-viewer-body, .thumbnail-viewer.is-minimized .thumbnail-viewer-footer { display: none; }
+
+.thumbnail-unavailable { display: flex; align-items: center; justify-content: center; padding: 0.5rem; border: 1px dashed #64748b; border-radius: 0.5rem; color: #94a3b8; font-size: 0.75rem; text-align: center; }
+.thumbnail-unavailable.hidden { display: none; }
+#recordList.record-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0.75rem; align-items: start; }
+#recordList.record-tiles > * { margin-top: 0; min-width: 0; }
+.record-tiles .record-card-header { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+.record-tiles .record-card-heading { flex-wrap: wrap; }
+.record-tiles .record-card-heading .truncate { flex: 1; white-space: normal; overflow-wrap: anywhere; }
+.record-tiles .record-card-actions { flex-wrap: wrap; }
+.record-tiles .record-card-media { flex-direction: column; }
+.record-tiles .record-thumbnail-carousel { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 0.5rem; overflow: hidden; }
+.record-tiles .record-thumbnail-image { width: 100%; height: 100%; object-fit: contain; }
+.record-tiles .record-card-detail { display: none; }
+@media (hover: none) { .record-thumbnail-control:not(.invisible) { opacity: 1; min-width: 32px; min-height: 44px; background: rgb(0 0 0 / 35%); } }
+@media (max-width: 767px) {
+  .record-card-header { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .record-card-heading, .record-card-actions { flex-wrap: wrap; }
+}

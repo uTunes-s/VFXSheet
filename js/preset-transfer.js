@@ -21,6 +21,7 @@ export async function exportFullPresetsJSON() {
       operator: document.getElementById('operator').value,
       show_title: document.getElementById('show_title').value,
       location: document.getElementById('location').value,
+      reel: document.getElementById('reel').value,
       hdri_captured: document.getElementById('hdri_captured').checked,
       hdri_weather: getWeatherValues(),
       hdri_notes: document.getElementById('hdri_notes').value,
@@ -56,4 +57,3 @@ export async function importFullPresetsJSON(event) {
 }
 
 // Public APIs are exposed only through named ES module exports.
-

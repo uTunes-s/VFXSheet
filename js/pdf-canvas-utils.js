@@ -1,4 +1,5 @@
 // Raster PDF page drawing helpers and high-resolution Fabric sketch rendering.
+import { getReferenceFlagText } from './camera-model.js';
 export async function renderHighResolutionSketch(record) {
   if (!record.canvas_json || !window.fabric) return null;
   const element = document.createElement('canvas');
@@ -73,9 +74,14 @@ export function drawPdfCameraTable(ctx, y, camera, number) {
   y = drawPdfTable(ctx, y, [[
     { label: 'Camera', value: camera.camera }, { label: 'Lens', value: camera.lens }, { label: 'Focal Length', value: camera.focal_length }, { label: 'Aperture', value: camera.t_stop }, { label: 'Shutter', value: camera.shutter_speed }, { label: 'Frame Rate', value: camera.frame_rate }, { label: 'ISO / EI', value: camera.iso_ei }, { label: 'White Balance', value: camera.white_balance }, { label: 'Codec', value: camera.codec }
   ]], 9);
+  y = drawPdfTable(ctx, y, [[
+    { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }, { label: 'Movement', value: camera.cramerawork }, { label: 'ND Filter', value: camera.nd_filter }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }
+  ]], 7);
   return drawPdfTable(ctx, y, [[
-    { label: 'Clip Name', value: camera.clip_name }, { label: 'LUT Info', value: camera.lut_info }, { label: 'Movement', value: camera.cramerawork }, { label: 'ND Filter', value: camera.nd_filter }, { label: 'Lens Height', value: camera.height_value }, { label: 'Target Distance', value: camera.distance_value }, { label: 'Tilt', value: camera.tilt_value || '-' }, { label: 'Chart / Plate / Ref.', value: `Chart:${camera.flag_chart || 'NO'} Plate:${camera.flag_cleanplate || 'NO'} Ref:${camera.flag_reference || 'NO'}` }
-  ]], 9);
+    { label: 'Chart', value: getReferenceFlagText(camera, 'flag_chart') },
+    { label: 'Clean Plate', value: getReferenceFlagText(camera, 'flag_cleanplate') },
+    { label: 'VFX Ref', value: getReferenceFlagText(camera, 'flag_reference') }
+  ]], 3);
 }
 
 export function wrapPdfText(ctx, text, maxWidth) {
@@ -86,4 +92,3 @@ export function drawImageContain(ctx, image, x, y, width, height) {
   const ratio = Math.min(width / image.width, height / image.height); const w = image.width * ratio; const h = image.height * ratio;
   ctx.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
 }
-

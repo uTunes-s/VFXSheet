@@ -3,11 +3,13 @@ import { db } from './database.js';
 import { state } from './state.js';
 import { escapeHtml } from './utils.js';
 import { getRecordShotThumbnails } from './export-naming.js';
-import { blobToBase64 } from './backup.js';
+import { imageFromBlob } from './media-utils.js';
+import { getCameraReelName, getReferenceFlagText } from './camera-model.js';
 import { updateHistorySelectionControls } from './record-selection.js';
 import { getRecordFilterOptions, getVisibleRecords } from './record-list-filters.js';
 
 const selectedRecordIds = state.selectedRecordIds;
+let renderGeneration = 0;
 const metadataFilterControls = {
   show_title: 'recordShowTitleFilter', operator: 'recordOperatorFilter', location: 'recordLocationFilter',
   episode: 'recordEpisodeFilter', scene: 'recordSceneFilter', camera: 'recordCameraFilter'
@@ -22,7 +24,10 @@ function updateCheckboxOptions(id, field, values, selectedValues) {
 }
 
 export async function renderList() {
+  const generation = ++renderGeneration;
+  const isTileView = state.recordListView === 'tiles';
   const records = await db.sheets.reverse().toArray();
+  if (generation !== renderGeneration) return;
   const visibleRecords = getVisibleRecords(records);
   const filterOptions = getRecordFilterOptions(records);
   const availableIds = new Set(records.map(record => record.id));
@@ -46,6 +51,8 @@ export async function renderList() {
   updateHistorySelectionControls(visibleRecords);
 
   const list = document.getElementById('recordList');
+  list.classList.toggle('record-tiles', isTileView);
+  document.querySelectorAll('[data-action="set-record-view"]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === (isTileView ? 'tiles' : 'list'))));
   if (!records.length) {
     list.innerHTML = '<p class="text-xs text-slate-600 text-center py-4">No records saved</p>';
     return;
@@ -57,13 +64,22 @@ export async function renderList() {
 
   const cards = await Promise.all(visibleRecords.map(async record => {
     const safe = escapeHtml;
-    const thumbnails = await Promise.all(getRecordShotThumbnails(record).map(blobToBase64));
-    const cameras = (record.cameras || []).map(camera => `
+    const thumbnails = await Promise.all(getRecordShotThumbnails(record).map(async (blob, index) => {
+      try {
+        const image = await imageFromBlob(blob, `Thumbnail ${index + 1}`);
+        return { url: image.src };
+      } catch (error) {
+        return { error: error.message };
+      }
+    }));
+    const cameras = (record.cameras || []).map(camera => isTileView
+      ? `<div class="text-slate-300"><strong>${safe(getCameraReelName(camera))}</strong> · ${safe(camera.camera || '-')} · ${safe(camera.clip_name || '-')}</div>`
+      : `
       <div class="bg-slate-900 border border-slate-800 px-2 py-1 rounded text-[10px] space-y-0.5">
         <div class="flex justify-between font-bold text-slate-200"><span>🎥 ${safe(camera.label)}: ${safe(camera.camera || '-')} (${safe(camera.lens || '-')})</span><span>Work: ${safe(camera.cramerawork || '-')}</span></div>
         <div class="text-slate-400 flex justify-between"><span>Clip: ${safe(camera.clip_name || '-')} Aperture: ${safe(camera.t_stop || '-')} Shutter: ${safe(camera.shutter_speed || '-')}</span><span>FPS: ${safe(camera.frame_rate || '-')} ISO/EI: ${safe(camera.iso_ei || '-')}</span></div>
         <div class="text-slate-400 flex justify-between"><span>WB: ${safe(camera.white_balance || '-')} ND: ${safe(camera.nd_filter || '-')}</span><span>H: ${safe(camera.height_value || '-')} D: ${safe(camera.distance_value || '-')} Tilt: ${safe(camera.tilt_value || '-')}</span></div>
-        <div class="text-slate-400 flex justify-between"><span>Chart: ${safe(camera.flag_chart || 'NO')} Clean: ${safe(camera.flag_cleanplate || 'NO')} Ref: ${safe(camera.flag_reference || 'NO')}</span><span>LUT: ${safe(camera.lut_info || '-')}</span></div>
+        <div class="text-slate-400 flex justify-between"><span>Chart: ${safe(getReferenceFlagText(camera, 'flag_chart'))} Clean: ${safe(getReferenceFlagText(camera, 'flag_cleanplate'))} Ref: ${safe(getReferenceFlagText(camera, 'flag_reference'))}</span><span>LUT: ${safe(camera.lut_info || '-')}</span></div>
       </div>`).join('');
     const badge = record.syncState === 'syncing'
       ? `<span class="inline-flex min-w-24 items-center gap-1.5 rounded border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] text-sky-300"><span class="h-1.5 w-12 overflow-hidden rounded-full bg-sky-950"><span class="block h-full bg-sky-400 transition-all" style="width: ${record.syncProgress || 8}%"></span></span>Syncing</span>`
@@ -74,33 +90,35 @@ export async function renderList() {
       ? `<div class="rounded border border-rose-900/70 bg-rose-950/40 p-2 text-[11px] text-rose-300"><span class="font-bold">FlowPT sync error:</span> ${safe(record.syncError)}</div>`
       : '';
     const thumbnailView = thumbnails.length
-      ? `<div class="record-thumbnail-carousel relative flex w-28 shrink-0 items-center justify-center">${thumbnails.map((url, index) => `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="record-thumbnail-image h-20 w-28 rounded-lg border border-slate-800 object-cover ${index ? 'hidden' : ''}" data-thumbnail-index="${index}">`).join('')}${thumbnails.length > 1 ? '<button type="button" data-action="change-record-thumbnail" data-direction="-1" aria-label="Previous thumbnail" class="record-thumbnail-control record-thumbnail-previous invisible absolute left-1 top-1/2 z-10 -translate-y-1/2 text-2xl leading-none text-white drop-shadow-md" tabindex="-1">‹</button><button type="button" data-action="change-record-thumbnail" data-direction="1" aria-label="Next thumbnail" class="record-thumbnail-control record-thumbnail-next absolute right-1 top-1/2 z-10 -translate-y-1/2 text-2xl leading-none text-white drop-shadow-md" tabindex="-1">›</button>' : ''}</div>`
-      : '';
+      ? `<div class="record-thumbnail-carousel relative flex w-28 shrink-0 items-center justify-center">${thumbnails.map(({ url, error }, index) => url
+        ? `<img src="${url}" alt="Shot thumbnail ${index + 1}" class="record-thumbnail-image h-20 w-28 rounded-lg border border-slate-800 object-cover ${index ? 'hidden' : ''}" data-thumbnail-index="${index}">`
+        : `<div class="record-thumbnail-image thumbnail-unavailable h-20 w-28 ${index ? 'hidden' : ''}" title="${safe(error)}" role="img" aria-label="${safe(error)}">Thumbnail ${index + 1} unavailable</div>`).join('')}${thumbnails.length > 1 ? '<button type="button" data-action="change-record-thumbnail" data-direction="-1" aria-label="Previous thumbnail" class="record-thumbnail-control record-thumbnail-previous invisible absolute left-1 top-1/2 z-10 -translate-y-1/2 text-2xl leading-none text-white drop-shadow-md">‹</button><button type="button" data-action="change-record-thumbnail" data-direction="1" aria-label="Next thumbnail" class="record-thumbnail-control record-thumbnail-next absolute right-1 top-1/2 z-10 -translate-y-1/2 text-2xl leading-none text-white drop-shadow-md">›</button>' : ''}</div>`
+      : isTileView ? '<div class="record-thumbnail-carousel thumbnail-unavailable">No thumbnail</div>' : '';
     const hdri = record.hdri_captured === 'YES'
       ? `<span class="text-amber-400 font-bold">HDRI: YES (${safe(Array.isArray(record.hdri_weather) ? record.hdri_weather.join(' / ') : record.hdri_weather || '-')})</span>`
       : '<span class="text-slate-500">HDRI: NO</span>';
 
     return `
-      <div data-action="open-record-preview" data-record-id="${record.id}" class="cursor-pointer bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(record.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs hover:border-slate-600">
-        <div class="flex justify-between items-center">
-          <div class="flex min-w-0 items-center gap-2">
+      <div data-action="open-record-preview" data-record-id="${record.id}" class="record-card cursor-pointer bg-slate-950 p-3.5 rounded-xl border ${selectedRecordIds.has(record.id) ? 'border-amber-400/70 ring-1 ring-amber-400/30' : 'border-slate-800'} space-y-2 text-xs hover:border-slate-600">
+        <div class="record-card-header flex justify-between items-center">
+          <div class="record-card-heading flex min-w-0 items-center gap-2">
             <input type="checkbox" aria-label="Select record ${record.id}" ${selectedRecordIds.has(record.id) ? 'checked' : ''} data-action="toggle-record-selection" data-record-id="${record.id}" class="h-4 w-4 shrink-0 accent-amber-400">
             <span class="font-mono text-amber-400 font-bold text-sm truncate">#${record.id} | ${safe(record.show_title)} ${safe(record.episode || '-')}_${safe(record.scene)}_${safe(record.shot)} | ${safe(record.location || '-')}</span>
             <span class="shrink-0 text-[10px] text-slate-500">${safe(record.shoot_datetime || '-')}</span>
           </div>
-          <div class="flex gap-2 items-center">${badge}
+          <div class="record-card-actions flex gap-2 items-center">${badge}
             <button type="button" data-action="load-record" data-record-id="${record.id}" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-3 py-1 rounded-md transition-colors">✏️ Edit</button>
             <button type="button" data-action="load-record" data-record-id="${record.id}" data-duplicate="true" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] px-3 py-1 rounded-md border border-slate-700 transition-colors">⧉ Duplicate</button>
             <button type="button" data-action="delete-record" data-record-id="${record.id}" class="text-slate-500 hover:text-rose-400 text-xs px-1">✕</button>
           </div>
         </div>
-        <div class="flex gap-2">${thumbnailView}<div class="min-w-0 flex-1 space-y-1">${cameras}</div></div>
-        <div class="text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">${hdri}<span class="text-slate-400">${safe(record.hdri_notes || '')}</span></div>
+        <div class="record-card-media flex gap-2">${thumbnailView}<div class="min-w-0 flex-1 space-y-1">${cameras}</div></div>
+        <div class="record-card-detail text-[11px] bg-slate-900/60 p-1.5 rounded border border-slate-800/60 flex justify-between">${hdri}<span class="text-slate-400">${safe(record.hdri_notes || '')}</span></div>
         ${syncError}
-        ${record.notes ? `<div class="text-[11px] text-slate-300 rounded border border-slate-800 bg-slate-900/60 p-2 whitespace-pre-wrap"><span class="mr-1 font-bold text-slate-500">Notes:</span>${safe(record.notes)}</div>` : ''}
+        ${record.notes ? `<div class="record-card-detail text-[11px] text-slate-300 rounded border border-slate-800 bg-slate-900/60 p-2 whitespace-pre-wrap"><span class="mr-1 font-bold text-slate-500">Notes:</span>${safe(record.notes)}</div>` : ''}
         <div class="text-slate-400 flex flex-wrap justify-between text-[11px] pt-0.5 border-t border-slate-900"><span>${record.gps_location ? `<span class="text-amber-300 font-mono">📍 ${safe(record.gps_location)}</span>` : ''}</span><span class="text-slate-500">Op: ${safe(record.operator || '-')}</span></div>
       </div>`;
   }));
 
-  list.innerHTML = cards.join('');
+  if (generation === renderGeneration) list.innerHTML = cards.join('');
 }

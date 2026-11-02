@@ -8,6 +8,7 @@ import { saveActiveTabState } from './camera-tabs-state.js';
 import { renderCameraTabs } from './camera-tabs-renderer.js';
 import { toggleHdriWeather } from './form-ui.js';
 import { cancelEditMode } from './record-flow.js';
+import { closeFloatingThumbnailViewer } from './thumbnail-viewer.js';
 
 export async function openNewRecordModal() {
   state.isConfiguringAddDefaults = false;
@@ -27,6 +28,9 @@ export async function openNewRecordModal() {
 }
 
 export function openEditRecordModal(showActions = true) {
+  state.editorSession++;
+  state.pendingThumbnailLoads = 0;
+  closeFloatingThumbnailViewer();
   const modal = document.getElementById('editRecordModal');
   const form = document.getElementById('vfxForm');
   document.getElementById('editRecordModalContent').appendChild(form);
@@ -40,7 +44,11 @@ export function openEditRecordModal(showActions = true) {
 
 export function closeEditRecordModal(discardChanges = false) {
   if (!state.isEditingInModal) return;
+  if (state.isSavingRecord) return;
   if (!discardChanges && state.isEditorDirty && !confirm('保存していない変更があります。保存せずに閉じますか？')) return;
+  state.editorSession++;
+  state.pendingThumbnailLoads = 0;
+  closeFloatingThumbnailViewer();
   const form = document.getElementById('vfxForm');
   form.classList.remove('configuring-initial-settings');
   form.querySelectorAll('.initial-setting-control').forEach(control => control.remove());
@@ -97,4 +105,3 @@ export function restoreRecordDraft(draft) {
   renderShotThumbnailPreviews();
   if (draft.canvasJson && state.fCanvas) state.fCanvas.loadFromJSON(draft.canvasJson, () => { state.fCanvas.renderAll(); setCanvasMode('select'); });
 }
-

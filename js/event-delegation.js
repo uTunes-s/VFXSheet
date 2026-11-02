@@ -6,7 +6,7 @@ import { saveRecord } from './record-save.js';
 import { getGPSLocation } from './gps.js';
 import { openPresetModal, closePresetModal } from './preset-modal.js';
 import { openPresetManager, closePresetManager, setPresetManagerFilter } from './preset-manager.js';
-import { addCameraTab, editCameraReelName, removeCameraTab, switchCameraTab } from './camera-tabs-state.js';
+import { addCameraTab, editCameraReelName, removeCameraTab, syncCameraField } from './camera-tabs-state.js';
 import { toggleHdriWeather, switchAppPage } from './form-ui.js';
 import { addShotThumbnails, clearShotThumbnail, moveShotThumbnail, renderShotThumbnailPreviews } from './shot-thumbnails.js';
 import { setCanvasMode } from './canvas-mode.js';
@@ -30,8 +30,11 @@ import { loadRecordForEdit } from './record-load.js';
 import { changeRecordThumbnail } from './record-thumbnails.js';
 import { onTabPresetChange, onTabLensChange } from './camera-tabs-interactions.js';
 import { setTheme, toggleTheme } from './theme.js';
-import { clearRecordListFilters, toggleRecordListFilterOption, updateRecordListFilter, updateRecordListSort } from './record-list-filters.js';
+import { clearRecordListFilters, toggleRecordListFilterOption, updateRecordListFilter, updateRecordListSort, updateRecordListView } from './record-list-filters.js';
 import { renderList } from './record-list-renderer.js';
+import { initFloatingThumbnailViewer, openFloatingThumbnailViewer } from './thumbnail-viewer.js';
+import { normalizeReel, refreshClipNameSuggestions } from './clip-names.js';
+import { referenceClipFields } from './camera-model.js';
   const number = value => Number.parseInt(value, 10);
   const toggleRecordListPopover = name => {
     const filterPopover = document.getElementById('recordFilterPopover');
@@ -54,7 +57,8 @@ import { renderList } from './record-list-renderer.js';
     document.querySelectorAll('[data-action="toggle-camera-setting-popover"]').forEach(input => input.setAttribute('aria-expanded', 'false'));
   };
   const toggleCameraSettingPopover = input => {
-    const popover = document.getElementById(`${input.dataset.fieldKey}Popover`);
+    if (input.dataset.cameraField === 'clip_name' || Object.values(referenceClipFields).includes(input.dataset.cameraField)) refreshClipNameSuggestions();
+    const popover = document.getElementById(input.getAttribute('aria-controls'));
     if (!popover) return;
     const willOpen = popover.classList.contains('hidden');
     closeCameraSettingPopovers();
@@ -65,10 +69,11 @@ import { renderList } from './record-list-renderer.js';
   };
   const setCameraSetting = element => {
     const key = element.dataset.fieldKey;
-    const input = document.getElementById(`tab_${key}`);
+    const input = element.closest('.camera-card')?.querySelector(`[data-camera-field="${key}"]`);
     if (!input) return;
     input.value = element.dataset.settingValue;
-    state.cameraListState[state.activeCamIndex][key] = element.dataset.settingValue;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.closest('.camera-setting-field').querySelectorAll('.camera-setting-option').forEach(button => button.classList.toggle('is-selected', button === element));
     if (state.isEditingInModal) state.isEditorDirty = true;
     closeCameraSettingPopovers();
   };
@@ -80,6 +85,7 @@ import { renderList } from './record-list-renderer.js';
     'toggle-record-filter-option': element => { toggleRecordListFilterOption(element.dataset.filter, element.value, element.checked); renderList(); },
     'set-record-filter': element => { updateRecordListFilter(element.dataset.filter, element.multiple ? [...element.selectedOptions].map(option => option.value) : element.value); renderList(); },
     'set-record-sort': element => { updateRecordListSort(element.value); renderList(); },
+    'set-record-view': element => { updateRecordListView(element.dataset.view); renderList(); },
     'clear-record-filters': () => { clearRecordListFilters(); renderList(); },
     'open-defaults-editor': () => openAddDefaultsEditor(),
     'save-record': (element, event) => saveRecord(event, element.dataset.mode || (state.currentEditingId ? 'update' : 'new')),
@@ -98,7 +104,8 @@ import { renderList } from './record-list-renderer.js';
     'pick-shot-thumbnail-source': element => { document.getElementById('shotThumbnailMenu')?.classList.add('hidden'); document.getElementById(element.dataset.inputId)?.click(); },
     'open-file-input': element => document.getElementById(element.dataset.inputId)?.click(),
     'add-shot-thumbnails': (_, event) => addShotThumbnails(event),
-    'clear-shot-thumbnails': () => clearShotThumbnail(),
+    'clear-shot-thumbnails': () => { clearShotThumbnail(); markThumbnailsChanged(); },
+    'open-floating-thumbnail': element => openFloatingThumbnailViewer(number(element.dataset.thumbnailIndex)),
     'set-canvas-mode': element => setCanvasMode(element.dataset.mode),
     'set-brush-size': element => setCanvasBrushSize(element.dataset.brush, element.value),
     'undo-canvas': () => undoCanvas(),
@@ -114,7 +121,10 @@ import { renderList } from './record-list-renderer.js';
     'delete-selected-records': () => deleteSelectedRecords(),
     'export-csv': () => exportToCSV(),
     'export-pdf': () => exportToPDF(),
-    'export-backup': () => exportBackupJSON(),
+    'export-backup': async () => {
+      try { await exportBackupJSON(); }
+      catch (error) { alert(`Backup Error: ${error.message}`); }
+    },
     'import-backup': (_, event) => importBackupJSON(event),
     'sync-data': () => syncData(),
     'toggle-flowpt-enabled': async element => {
@@ -173,19 +183,26 @@ import { renderList } from './record-list-renderer.js';
     'load-record': element => loadRecordForEdit(number(element.dataset.recordId), element.dataset.duplicate === 'true'),
     'delete-record': element => deleteRecord(number(element.dataset.recordId)),
     'change-record-thumbnail': element => changeRecordThumbnail(element, number(element.dataset.direction)),
-    'edit-camera-reel-name': (element, event) => editCameraReelName(number(element.dataset.cameraIndex), event),
     'remove-camera': (element, event) => removeCameraTab(number(element.dataset.cameraIndex), event),
-    'switch-camera': element => switchCameraTab(number(element.dataset.cameraIndex)),
     'toggle-camera-setting-popover': element => toggleCameraSettingPopover(element),
     'set-camera-setting': element => setCameraSetting(element),
-    'tab-preset-change': element => onTabPresetChange(element.dataset.presetType),
-    'tab-lens-change': () => onTabLensChange(),
+    'disable-reference': element => {
+      const flag = element.closest('.camera-card').querySelector(`[data-camera-field="${element.dataset.referenceFlag}"]`);
+      flag.checked = false;
+      flag.dispatchEvent(new Event('input', { bubbles: true }));
+      flag.dispatchEvent(new Event('change', { bubbles: true }));
+      closeCameraSettingPopovers();
+      flag.focus();
+    },
+    'tab-preset-change': element => onTabPresetChange(element.dataset.presetType, element),
+    'tab-lens-change': element => onTabLensChange(element),
     'toggle-preset-item': element => togglePresetItem(element.dataset.presetType, number(element.dataset.presetIndex), element.checked),
     'remove-preset-item': element => removePresetItem(element.dataset.presetType, number(element.dataset.presetIndex)),
     'open-media-lightbox': element => openMediaLightbox(element.currentSrc || element.src, element.alt),
     'remove-shot-thumbnail': element => {
       state.pendingShotThumbnails.splice(number(element.dataset.thumbnailIndex), 1);
       renderShotThumbnailPreviews();
+      markThumbnailsChanged();
     },
     'move-shot-thumbnail': element => moveShotThumbnail(number(element.dataset.thumbnailIndex), number(element.dataset.direction)),
     'toggle-initial-setting': (element, event) => {
@@ -195,6 +212,10 @@ import { renderList } from './record-list-renderer.js';
       state.initialSettingToggleStates[element.dataset.initialSetting] = input.checked;
     }
   };
+
+  function markThumbnailsChanged() {
+    if (state.isEditingInModal) state.isEditorDirty = true;
+  }
 
   function route(event) {
     if (event.type === 'keydown') {
@@ -221,16 +242,58 @@ import { renderList } from './record-list-renderer.js';
 export function initEventDelegation() {
   if (document.documentElement.dataset.eventDelegationReady) return;
   document.documentElement.dataset.eventDelegationReady = 'true';
+  initFloatingThumbnailViewer();
   ['click', 'change', 'input', 'submit', 'keydown', 'toggle'].forEach(type => document.addEventListener(type, route));
+  let reelHold = null;
+  const cancelReelHold = () => {
+    window.clearTimeout(reelHold?.timer);
+    reelHold = null;
+  };
+  document.addEventListener('pointermove', event => {
+    if (reelHold && Math.hypot(event.clientX - reelHold.x, event.clientY - reelHold.y) > 8) cancelReelHold();
+  });
+  ['pointerup', 'pointercancel', 'scroll'].forEach(type => document.addEventListener(type, cancelReelHold, true));
+  window.addEventListener('blur', cancelReelHold);
+  document.addEventListener('contextmenu', event => {
+    if (event.target.closest?.('[data-camera-reel-index]')) event.preventDefault();
+  });
+  document.addEventListener('keydown', event => {
+    const reel = event.target.closest?.('[data-camera-reel-index]');
+    if (reel && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      cancelReelHold();
+      editCameraReelName(number(reel.dataset.cameraReelIndex), event);
+    }
+  });
   document.addEventListener('pointerdown', event => {
+    cancelReelHold();
+    const reel = event.target.closest?.('[data-camera-reel-index]');
+    if (reel && event.isPrimary && event.button === 0) {
+      reelHold = {
+        x: event.clientX, y: event.clientY,
+        timer: window.setTimeout(() => {
+          cancelReelHold();
+          if (reel.isConnected) editCameraReelName(number(reel.dataset.cameraReelIndex));
+        }, 600)
+      };
+    }
     const swatch = event.target.closest?.('[data-action="set-canvas-color"][data-color]');
     if (swatch) setCanvasColor(swatch.dataset.color);
     if (!event.target.closest?.('.camera-setting-field')) closeCameraSettingPopovers();
     if (!event.target.closest?.('#shotThumbnailAddWrap')) document.getElementById('shotThumbnailMenu')?.classList.add('hidden');
   });
   ['change', 'input'].forEach(type => document.addEventListener(type, event => {
+    if (event.target.matches?.('[data-camera-field]')) syncCameraField(event.target);
+    if (event.type === 'change' && event.target.id === 'reel') event.target.value = normalizeReel(event.target.value);
+    if (event.type === 'change' && event.target.dataset?.cameraField === 'reel_name') event.target.value = event.target.value.trim().toUpperCase();
+    const key = event.target.dataset?.cameraField;
+    if (event.target.matches?.('#reel, #shoot_datetime, #show_title, [data-camera-field="reel_name"]') || key === 'clip_name' || referenceClipFields[key] || Object.values(referenceClipFields).includes(key)) refreshClipNameSuggestions();
+    if (event.type === 'change' && referenceClipFields[key] && event.target.checked) {
+      const clip = event.target.closest('.camera-card').querySelector(`[data-camera-field="${referenceClipFields[key]}"]`);
+      clip.focus({ preventScroll: true });
+      if (clip.getAttribute('aria-expanded') !== 'true') toggleCameraSettingPopover(clip);
+    }
     if (state.isEditingInModal && event.target.closest?.('#vfxForm')) state.isEditorDirty = true;
   }));
 }
 // Module API ends here.
-

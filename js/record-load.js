@@ -2,6 +2,7 @@
 import { db } from './database.js';
 import { state } from './state.js';
 import { getRecordShotThumbnails } from './export-naming.js';
+import { normalizeReel } from './clip-names.js';
 import { captureRecordDraft, openEditRecordModal } from './record-modal.js';
 import { getCameraReelPrefix, createEmptyCameraItem } from './camera-model.js';
 import { renderCameraTabs } from './camera-tabs-renderer.js';
@@ -46,6 +47,7 @@ export async function loadRecordForEdit(id, duplicate = false) {
   document.getElementById('episode').value = record.episode || '';
   document.getElementById('scene').value = record.scene || '';
   document.getElementById('shot').value = record.shot || '';
+  document.getElementById('reel').value = normalizeReel(record.reel);
 
   const isHdri = record.hdri_captured === 'YES' || record.hdri_captured === true;
   document.getElementById('hdri_captured').checked = isHdri;
@@ -82,7 +84,10 @@ export async function loadRecordForEdit(id, duplicate = false) {
         tilt_value: c.tilt_value || '',
         flag_chart: c.flag_chart || 'NO',
         flag_cleanplate: c.flag_cleanplate || 'NO',
-        flag_reference: c.flag_reference || 'NO'
+        flag_reference: c.flag_reference || 'NO',
+        chart_clip_name: c.chart_clip_name || '',
+        cleanplate_clip_name: c.cleanplate_clip_name || '',
+        reference_clip_name: c.reference_clip_name || ''
       };
     });
   } else {
@@ -93,7 +98,7 @@ export async function loadRecordForEdit(id, duplicate = false) {
 
   document.getElementById('notes').value = record.notes || '';
   clearShotThumbnail();
-  state.pendingShotThumbnails = getRecordShotThumbnails(record);
+  state.pendingShotThumbnails = [...getRecordShotThumbnails(record)];
   renderShotThumbnailPreviews();
 
   state.isUndoRedo = true;
@@ -121,4 +126,3 @@ export async function loadRecordForEdit(id, duplicate = false) {
 
   document.getElementById('editRecordModalContent').scrollTo({ top: 0, behavior: 'smooth' });
 }
-

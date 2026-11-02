@@ -4,6 +4,7 @@ import { state } from './state.js';
 import { getCurrentDefaultSettingsValues, getDefaultSettingsChangeSummary } from './initial-settings-comparison.js';
 import { toggleHdriWeather, setWeatherValues } from './form-ui.js';
 import { renderCameraTabs } from './camera-tabs-renderer.js';
+import { normalizeReel } from './clip-names.js';
 
 export async function loadDefaultSettings() {
   const defaultSettings = await db.presets.get('user_defaults');
@@ -23,6 +24,7 @@ export async function loadDefaultSettings() {
   document.getElementById('operator').value = values.operator || '';
   document.getElementById('show_title').value = values.show_title || '';
   document.getElementById('location').value = values.location || '';
+  document.getElementById('reel').value = normalizeReel(values.reel);
   document.getElementById('hdri_captured').checked = values.hdri_captured || false;
   toggleHdriWeather(values.hdri_captured || false);
   setWeatherValues(values.hdri_weather || ['Sunny']);
@@ -33,4 +35,3 @@ export async function loadDefaultSettings() {
   renderCameraTabs();
   alert('Default settings loaded!');
 }
-

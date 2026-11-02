@@ -12,9 +12,20 @@ import { setCanvasMode } from './canvas-mode.js';
 import { openEditRecordModal, closeEditRecordModal } from './record-modal.js';
 import { resetFormToDefault } from './initial-settings-reset.js';
 import { renderAddDefaultsSummary } from './initial-settings-transfer.js';
+import { copyImageBlob } from './media-utils.js';
+import { normalizeReel } from './clip-names.js';
 
 export async function saveCurrentAsDefaultSettings() {
+  if (state.pendingThumbnailLoads) return alert('Please wait for the selected images to finish loading before saving.');
   saveActiveTabState();
+  const reelInput = document.getElementById('reel');
+  reelInput.value = normalizeReel(reelInput.value);
+  if (!reelInput.reportValidity()) return;
+  const blankCamera = state.cameraListState.findIndex(camera => !camera.reel_name?.trim());
+  if (blankCamera !== -1) {
+    document.getElementById(`camera_${blankCamera}_heading`)?.focus();
+    return alert('Enter a reel name for each camera.');
+  }
   const defaultValues = {
     operator: document.getElementById('operator').value,
     show_title: document.getElementById('show_title').value,
@@ -23,12 +34,13 @@ export async function saveCurrentAsDefaultSettings() {
     episode: document.getElementById('episode').value,
     scene: document.getElementById('scene').value,
     shot: document.getElementById('shot').value,
+    reel: reelInput.value,
     gps_location: document.getElementById('gps_location').value,
     hdri_captured: document.getElementById('hdri_captured').checked,
     hdri_weather: getWeatherValues(),
     hdri_notes: document.getElementById('hdri_notes').value,
     notes: document.getElementById('notes').value,
-    shot_thumbnails: [...state.pendingShotThumbnails],
+    shot_thumbnails: await Promise.all(state.pendingShotThumbnails.map((blob, index) => copyImageBlob(blob, `Thumbnail ${index + 1}`))),
     canvas_json: state.fCanvas ? JSON.stringify(state.fCanvas.toJSON(['isSketchStroke', 'isSketchRaster'])) : '',
     cameras: state.cameraListState
   };
@@ -66,8 +78,11 @@ export async function openAddDefaultsEditor() {
   setCanvasMode('draw');
   const savedValues = (await db.presets.get('user_defaults'))?.values || {};
   state.initialSettingToggleStates = { ...getInitialSettingEnabledFields(savedValues), ...(savedValues.enabled_fields || {}) };
+  state.cameraListState.forEach((camera, index) => {
+    const key = `camera_${index}_reel_name`;
+    if (state.initialSettingToggleStates[key] === undefined) state.initialSettingToggleStates[key] = Boolean(savedValues.cameras?.[index]?.reel_name || savedValues.cameras?.[index]?.label);
+  });
   showInitialSettingToggles(state.initialSettingToggleStates);
   document.getElementById('submitBtnContainer').innerHTML = '';
   state.isEditorDirty = false;
 }
-

@@ -2,6 +2,7 @@
 import { state } from './state.js';
 
 const STORAGE_KEY = 'vfx-sheet-record-sort';
+const VIEW_STORAGE_KEY = 'vfx-sheet-record-view';
 
 const text = value => String(value || '').trim();
 const comparable = value => text(value).toLocaleLowerCase();
@@ -12,8 +13,18 @@ export function initRecordListPreferences() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved && typeof saved.field === 'string' && (saved.direction === 'asc' || saved.direction === 'desc')) state.recordListSort = saved;
+    state.recordListView = localStorage.getItem(VIEW_STORAGE_KEY) === 'tiles' ? 'tiles' : 'list';
   } catch (error) {
     console.warn('Unable to read record sort preference.', error);
+  }
+}
+
+export function updateRecordListView(view) {
+  state.recordListView = view === 'tiles' ? 'tiles' : 'list';
+  try {
+    localStorage.setItem(VIEW_STORAGE_KEY, state.recordListView);
+  } catch (error) {
+    console.warn('Unable to save record view preference.', error);
   }
 }
 

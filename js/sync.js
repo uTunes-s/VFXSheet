@@ -252,7 +252,7 @@ async function updateExistingShootingData(siteUrl, token, recordId, fields, exis
   };
 }
 
-async function upsertCameraShootingData(siteUrl, token, targetProject, record, camera, cameraIndex) {
+async function upsertCameraShootingData(siteUrl, token, targetProject, record, camera, cameraIndex, media) {
   const syncKey = makeCameraSyncKey(record, cameraIndex);
   const listFields = await validateListFields(siteUrl, token, camera);
   const links = await resolveShootingDataLinks(siteUrl, token, targetProject, record, camera);
@@ -266,7 +266,7 @@ async function upsertCameraShootingData(siteUrl, token, targetProject, record, c
     }
     const update = await updateExistingShootingData(siteUrl, token, existing.id, fields, existing?.attributes?.sg_comment);
     const id = update.response?.data?.id ?? existing.id;
-    await uploadShootingDataMedia(siteUrl, token, id, record, camera);
+    await uploadShootingDataMedia(siteUrl, token, id, record, camera, media);
     return { id, syncKey, action: 'updated', warnings: [...warnings, ...update.warnings] };
   }
 
@@ -282,7 +282,7 @@ async function upsertCameraShootingData(siteUrl, token, targetProject, record, c
   if (!createdRecord?.id || getProjectId(createdRecord) !== targetProject.id) {
     throw new Error(`Flow Production Tracking did not confirm that the created Shooting Data belongs to ${targetProject.name}.`);
   }
-  await uploadShootingDataMedia(siteUrl, token, createdRecord.id, record, camera);
+  await uploadShootingDataMedia(siteUrl, token, createdRecord.id, record, camera, media);
   return { id: createdRecord.id, syncKey, action: 'created', warnings };
 }
 
@@ -323,15 +323,8 @@ async function uploadFileToField(siteUrl, token, recordId, field, blob, filename
   }
 }
 
-async function uploadShootingDataMedia(siteUrl, token, recordId, record, camera) {
-  const thumbnails = getRecordShotThumbnails(record);
-  if (thumbnails.length) {
-    const collage = await createThumbnailCollage(thumbnails);
-    if (collage) {
-      await uploadFileToField(siteUrl, token, recordId, 'image', collage, getShootingDataExportFilename(record, camera, 'jpg'));
-    }
-  }
-  const pdf = new Blob([await createShootingDataPdf(record, camera)], { type: 'application/pdf' });
+async function uploadShootingDataMedia(siteUrl, token, recordId, record, camera, { collage, pdf }) {
+  if (collage) await uploadFileToField(siteUrl, token, recordId, 'image', collage, getShootingDataExportFilename(record, camera, 'jpg'));
   await uploadFileToField(siteUrl, token, recordId, 'sg_vfx_sheet', pdf, getShootingDataExportFilename(record, camera, 'pdf'));
 }
 
@@ -371,8 +364,18 @@ export async function syncData() {
         const results = [];
         await db.sheets.update(record.id, { syncState: 'syncing', syncProgress: 8, syncError: '' });
         await renderList();
+        // Validate every local attachment before creating or updating remote entities.
+        const collage = await createThumbnailCollage(getRecordShotThumbnails(record));
+        const media = [];
+        for (const camera of cameras) {
+          try {
+            media.push({ collage, pdf: new Blob([await createShootingDataPdf(record, camera)], { type: 'application/pdf' }) });
+          } catch (error) {
+            throw new Error(`Preparing PDF for ${getShootingDataName(record, camera)}: ${error.message}`);
+          }
+        }
         for (let cameraIndex = 0; cameraIndex < cameras.length; cameraIndex++) {
-          const result = await upsertCameraShootingData(connection.siteUrl, token.access_token, targetProject, record, cameras[cameraIndex], cameraIndex);
+          const result = await upsertCameraShootingData(connection.siteUrl, token.access_token, targetProject, record, cameras[cameraIndex], cameraIndex, media[cameraIndex]);
           results.push(result);
           result.warnings.forEach(warning => warnings.push(`#${record.id}: ${warning}`));
           await db.sheets.update(record.id, { syncProgress: Math.round(((cameraIndex + 1) / cameras.length) * 90) });
@@ -413,4 +416,3 @@ export async function syncData() {
     renderList();
   }
 }
-

@@ -2,7 +2,7 @@
 import { imageFromBlob } from './media-utils.js';
 
 export async function createThumbnailCollage(thumbnailBlobs) {
-  const images = (await Promise.all(thumbnailBlobs.map(imageFromBlob))).filter(Boolean);
+  const images = (await Promise.all(thumbnailBlobs.map((blob, index) => imageFromBlob(blob, `Thumbnail ${index + 1}`)))).filter(Boolean);
   if (!images.length) return null;
 
   const targetAspectRatio = 16 / 9;
@@ -60,6 +60,7 @@ export async function createThumbnailCollage(thumbnailBlobs) {
     y += height;
   });
 
-  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  return new Promise((resolve, reject) => canvas.toBlob(blob => blob
+    ? resolve(blob)
+    : reject(new Error('Could not generate the thumbnail collage.')), 'image/jpeg', 0.92));
 }
-

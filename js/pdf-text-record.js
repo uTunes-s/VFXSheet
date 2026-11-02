@@ -1,8 +1,7 @@
 // Text-first jsPDF record rendering with Japanese font support.
 import { getPdfTextWidth, loadJapanesePdfFont, writePdfText } from './pdf-text-layer.js';
-import { getCameraFieldLabel } from './camera-model.js';
+import { getCameraFieldLabel, getReferenceFlagText } from './camera-model.js';
 import { getRecordShotThumbnails } from './export-naming.js';
-import { blobToBase64 } from './backup.js';
 import { imageFromBlob } from './media-utils.js';
 import { renderHighResolutionSketch } from './pdf-canvas-utils.js';
 
@@ -64,7 +63,7 @@ export async function renderTextPdfRecord(doc, record) {
     ], y);
     return drawRow([
       ['LUT Info', camera.lut_info, 2], ['Movement', camera.cramerawork, 1.2], ['Lens Height', camera.height_value], ['Distance', camera.distance_value], ['Tilt', camera.tilt_value],
-      ['Chart', camera.flag_chart || 'NO', 0.8], ['Clean Plate', camera.flag_cleanplate || 'NO', 0.8], ['VFX Ref', camera.flag_reference || 'NO', 0.8]
+      ['Chart', getReferenceFlagText(camera, 'flag_chart'), 0.8], ['Clean Plate', getReferenceFlagText(camera, 'flag_cleanplate'), 0.8], ['VFX Ref', getReferenceFlagText(camera, 'flag_reference'), 0.8]
     ], y);
   };
 
@@ -92,7 +91,7 @@ export async function renderTextPdfRecord(doc, record) {
 
   let y = 25;
   y = drawTitle('General Information', y);
-  y = drawRow([['Operator', record.operator, 1], ['Date & Time', record.shoot_datetime, 1.2], ['Location', record.location, 1.6], ['GPS', record.gps_location, 1.4]], y) + 2;
+  y = drawRow([['Operator', record.operator, 1], ['Date & Time', record.shoot_datetime, 1.2], ['Location', record.location, 1.6], ['Reel', record.reel, 0.5], ['GPS', record.gps_location, 1.4]], y) + 2;
 
   const cameras = record.cameras?.length ? record.cameras : [{ label: 'A', reel_name: 'A' }];
   y = drawTitle('Camera Setup', y);
@@ -104,11 +103,11 @@ export async function renderTextPdfRecord(doc, record) {
 
   y = drawNotes(y) + 3;
 
-  const thumbnails = (await Promise.all(getRecordShotThumbnails(record).map(async blob => {
-    const [image, url] = await Promise.all([imageFromBlob(blob), blobToBase64(blob)]);
-    return image && url ? { image, url } : null;
+  const thumbnails = (await Promise.all(getRecordShotThumbnails(record).map(async (blob, index) => {
+    const image = await imageFromBlob(blob, `PDF thumbnail ${index + 1}`);
+    return image ? { image, url: image.src } : null;
   }))).filter(Boolean);
-  const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0]);
+  const sketch = await renderHighResolutionSketch(record) || await imageFromBlob(record.images?.[0], 'PDF sketch');
 
   // Sketch always spans the full width; thumbnails use whatever height remains.
   const labelHeight = 4;

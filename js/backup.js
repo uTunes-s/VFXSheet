@@ -1,7 +1,7 @@
 // Portable VFX Sheet backup import/export with embedded Blob assets.
 import { db } from './database.js';
 import { newUuid } from './utils.js';
-import { downloadExportBlob } from './media-utils.js';
+import { downloadExportBlob, readBlobAsDataUrl } from './media-utils.js';
 import { renderList } from './record-list-renderer.js';
 
 export async function exportBackupJSON() {
@@ -92,10 +92,4 @@ export async function dataUrlToBlob(dataUrl) {
   return response.blob();
 }
 
-export function blobToBase64(blob) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-}
+export const blobToBase64 = readBlobAsDataUrl;

@@ -68,6 +68,10 @@
             <input type="text" id="location" placeholder="Stage A / Location" class="form-input">
           </div>
           <div>
+            <label for="reel" class="form-label" data-initial-setting="reel">Reel</label>
+            <input type="text" id="reel" value="001" placeholder="001" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" title="Three-digit reel number (000–999)" class="form-input font-mono">
+          </div>
+          <div>
             <label class="form-label" data-initial-setting="episode">Episode</label>
             <input type="text" id="episode" placeholder="EP01" class="form-input">
           </div>
@@ -98,17 +102,13 @@
           <button type="button" data-action="open-preset-modal" class="text-[11px] text-amber-400/80 hover:text-amber-300 underline">Manage Presets</button>
         </div>
 
-        <!-- Camera Tabs Header -->
-        <div class="flex items-center gap-2 overflow-x-auto pb-1" id="cameraTabHeader">
+        <div id="cameraCards" class="space-y-3"></div>
+        <div class="flex items-center gap-2">
           <button type="button" data-action="add-camera" class="bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
             ➕ Add Camera
           </button>
         </div>
 
-        <!-- Camera Tab Content Area -->
-        <div id="cameraTabContents" class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-2.5">
-          <!-- Rendered via JS -->
-        </div>
       </div>
 
       <!-- Section 3: HDRI Setup -->
@@ -267,6 +267,10 @@
 
       <div class="record-list-tools relative flex items-center justify-end gap-2">
         <span id="filteredCount" class="mr-auto text-xs text-slate-400" aria-live="polite"></span>
+        <div class="theme-mode-options" role="group" aria-label="Record display">
+          <button type="button" class="theme-mode-option" data-action="set-record-view" data-view="list" aria-pressed="true">List</button>
+          <button type="button" class="theme-mode-option" data-action="set-record-view" data-view="tiles" aria-pressed="false">Tiles</button>
+        </div>
         <button id="recordFilterBtn" type="button" data-action="toggle-record-filter-popover" aria-controls="recordFilterPopover" aria-expanded="false" class="relative rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700" title="Filter records">
           <span aria-hidden="true">⚲</span><span class="sr-only">Filter records</span><span id="recordFilterActiveIndicator" class="hidden absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-slate-950"></span>
         </button>
@@ -331,6 +335,26 @@
       </div>
       <div id="editRecordModalContent" class="flex-1 overflow-y-auto p-3 md:p-5"></div>
     </div>
+    <aside id="floatingThumbnailViewer" class="thumbnail-viewer bg-slate-950 text-slate-200" hidden aria-label="Floating reference image">
+      <div class="thumbnail-viewer-header bg-slate-800" data-viewer-drag>
+        <span class="thumbnail-viewer-title">Reference <span id="floatingThumbnailCount"></span></span>
+        <button type="button" data-viewer-action="previous" aria-label="Previous reference image">‹</button>
+        <button type="button" data-viewer-action="next" aria-label="Next reference image">›</button>
+        <button type="button" data-viewer-action="minimize" aria-label="Minimize or restore reference image" aria-expanded="true">−</button>
+        <button type="button" data-viewer-action="close" aria-label="Close floating viewer">✕</button>
+      </div>
+      <div class="thumbnail-viewer-body">
+        <div id="floatingThumbnailSurface" class="thumbnail-viewer-surface"><img id="floatingThumbnailImage" alt="Reference image"></div>
+        <p id="floatingThumbnailStatus" class="thumbnail-viewer-status" role="status"></p>
+      </div>
+      <div class="thumbnail-viewer-footer bg-slate-900">
+        <button type="button" data-viewer-action="zoom-out" aria-label="Zoom out">−</button>
+        <span id="floatingThumbnailZoom">100%</span>
+        <button type="button" data-viewer-action="zoom-in" aria-label="Zoom in">＋</button>
+        <button type="button" data-viewer-action="reset">Fit</button>
+        <span class="thumbnail-viewer-resize" data-viewer-resize aria-hidden="true">◢</span>
+      </div>
+    </aside>
   </div>
 
   <div id="recordPreviewModal" class="fixed inset-0 z-[60] hidden bg-slate-950/85 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true" aria-labelledby="recordPreviewModalTitle">
