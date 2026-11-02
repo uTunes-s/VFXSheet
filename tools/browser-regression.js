@@ -202,11 +202,48 @@ export async function runBrowserRegression() {
       return json({ data: [] });
     };
     await db.presets.put({ type: 'flowpt_connection', values: { enabled: true, siteUrl: 'https://flowpt.invalid', scriptName: 'regression-placeholder', scriptKey: 'regression-placeholder', targetProject: { id: 1 } } });
-    await syncData();
-    assert((await db.sheets.get(first.id)).synced === 1 && remoteRecords.size === 2, 'Mocked sync must create one record per camera.');
-    await db.sheets.update(first.id, { synced: 0 });
-    await syncData();
-    assert(remoteRecords.size === 2, 'Retry created duplicate UUID-scoped remote records.');
+    const storedBlobs = new WeakMap();
+    const revisions = new Map();
+    let staleReads = 0;
+    const trackRecordBlobs = record => {
+      if (record?.id) {
+        for (const blob of [...(record.shot_thumbnails || []), record.shot_thumbnail, ...(record.images || [])]) {
+          if (blob instanceof Blob) storedBlobs.set(blob, { id: record.id, revision: revisions.get(record.id) || 0 });
+        }
+      }
+      return record;
+    };
+    const originalUpdate = db.sheets.update;
+    const originalRead = FileReader.prototype.readAsDataURL;
+    db.sheets.hook('reading', trackRecordBlobs);
+    db.sheets.update = async function (id, changes) {
+      const result = await originalUpdate.call(this, id, changes);
+      if (result) revisions.set(id, (revisions.get(id) || 0) + 1);
+      return result;
+    };
+    FileReader.prototype.readAsDataURL = function (blob) {
+      const stored = storedBlobs.get(blob);
+      if (stored && stored.revision !== (revisions.get(stored.id) || 0)) {
+        staleReads++;
+        Object.defineProperty(this, 'error', { value: new DOMException('Stored Blob handle changed after record update.', 'NotReadableError') });
+        queueMicrotask(() => this.dispatchEvent(new ProgressEvent('error')));
+        return;
+      }
+      return originalRead.call(this, blob);
+    };
+    try {
+      await syncData();
+      assert((await db.sheets.get(first.id)).synced === 1 && remoteRecords.size === 2, 'Mocked sync must prepare readable attachments before rewriting their record.');
+      await db.sheets.update(first.id, { synced: 0 });
+      await syncData();
+      assert(remoteRecords.size === 2, 'Retry created duplicate UUID-scoped remote records.');
+      assert(staleReads === 0, 'Sync tried to read a stale IndexedDB Blob after changing its record.');
+    } finally {
+      db.sheets.hook('reading').unsubscribe(trackRecordBlobs);
+      db.sheets.update = originalUpdate;
+      FileReader.prototype.readAsDataURL = originalRead;
+    }
+    results.push('Sync prepares local image data before metadata updates can invalidate stored Blob handles');
     const writesBeforeCorruption = remoteWrites;
     await db.sheets.update(first.id, { synced: 0, shot_thumbnails: [new Blob(['broken'], { type: 'image/png' })] });
     await syncData();

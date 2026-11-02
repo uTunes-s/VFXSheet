@@ -358,13 +358,13 @@ export async function syncData() {
     const token = await testFlowPtConnection();
     await verifyTargetProject(connection.siteUrl, token.access_token, targetProject);
 
-    for (const record of unsynced) {
+    for (const queuedRecord of unsynced) {
       try {
+        const record = await db.sheets.get(queuedRecord.id);
+        if (!record) throw new Error('The local sheet no longer exists. Refresh the list before syncing.');
         const cameras = record.cameras?.length ? record.cameras : [{}];
         const results = [];
-        await db.sheets.update(record.id, { syncState: 'syncing', syncProgress: 8, syncError: '' });
-        await renderList();
-        // Validate every local attachment before creating or updating remote entities.
+        // Finish stored Blob reads before updating local sync metadata or remote entities.
         const collage = await createThumbnailCollage(getRecordShotThumbnails(record));
         const media = [];
         for (const camera of cameras) {
@@ -374,6 +374,8 @@ export async function syncData() {
             throw new Error(`Preparing PDF for ${getShootingDataName(record, camera)}: ${error.message}`);
           }
         }
+        await db.sheets.update(record.id, { syncState: 'syncing', syncProgress: 8, syncError: '' });
+        await renderList();
         for (let cameraIndex = 0; cameraIndex < cameras.length; cameraIndex++) {
           const result = await upsertCameraShootingData(connection.siteUrl, token.access_token, targetProject, record, cameras[cameraIndex], cameraIndex, media[cameraIndex]);
           results.push(result);
@@ -394,8 +396,8 @@ export async function syncData() {
       } catch (error) {
         console.error('Flow Production Tracking sync error:', error);
         const message = String(error.message || error);
-        failures.push({ id: record.id, message });
-        await db.sheets.update(record.id, { syncError: message, syncState: '', syncProgress: 0 });
+        failures.push({ id: queuedRecord.id, message });
+        await db.sheets.update(queuedRecord.id, { syncError: message, syncState: '', syncProgress: 0 });
         await renderList();
       }
     }
