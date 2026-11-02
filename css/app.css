@@ -222,7 +222,11 @@ html[data-theme="light"] .record-filter-option:hover { background: #f1f5f9; }
 @media (min-width: 768px) {
   .general-row { grid-template-columns: 1fr 1.2fr 1.6fr 1.1fr 0.6fr 0.6fr 0.6fr 0.6fr 1.5fr; }
   .cam-row-1 { grid-template-columns: 0.9fr 0.8fr 0.9fr 0.8fr 1fr 1fr 0.9fr 1.1fr 1.2fr; }
-  .cam-row-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cam-row-2 { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr) repeat(2, minmax(0, 0.8fr)) minmax(0, 0.7fr) repeat(3, minmax(0, 1.1fr)); }
+}
+@media (min-width: 768px) and (max-width: 1149px) {
+  #vfxForm .reference-clip-entry .form-input { padding-inline: 0.2rem; font-size: 0.625rem; }
+  .reference-clip-entry .reference-clip-disable { width: 1rem; }
 }
 @media (min-width: 1150px) {
   #editRecordModal > div { max-width: 1400px; }

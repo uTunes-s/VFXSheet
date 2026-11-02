@@ -410,6 +410,12 @@ export async function runReferenceRegression() {
       click(`#camera_0_${key}Popover [data-setting-value="${value}"]`);
       assert(document.getElementById(`camera_0_${key}`).value === value && !state.cameraListState[1][key], 'Selecting a reference candidate wrote to the wrong field or camera.');
     }
+    if (matchMedia('(min-width: 768px)').matches) {
+      const rows = [...document.querySelectorAll('.camera-card[data-camera-index="0"] .camera-card-fields > .cam-row')];
+      assert(rows.length === 2 && rows.every(row => [...row.children].every(field => Math.abs(field.getBoundingClientRect().top - row.firstElementChild.getBoundingClientRect().top) < 1)), 'Tablet camera details must stay on two rows even with all reference clips enabled.');
+      const form = document.getElementById('vfxForm');
+      assert(form.scrollWidth <= form.clientWidth, 'Compact camera details must not cause horizontal overflow.');
+    }
     input('camera_0_clip_name', 'A095C010');
     await refreshClipNameSuggestions();
     assert(document.querySelector('#camera_0_chart_clip_namePopover [data-setting-value="A095C011"]') && document.getElementById('camera_0_chart_clip_name').value === 'A095C002', 'Changing the primary clip must refresh hints without overwriting entered reference clips.');
