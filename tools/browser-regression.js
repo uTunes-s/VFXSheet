@@ -172,11 +172,14 @@ export async function runBrowserRegression() {
     let remoteId = 100;
     const remoteRecords = new Map();
     let remoteWrites = 0;
+    let uuidUpdateAttempts = 0;
+    let forceFieldFallback = false;
+    let rejectedBulkUpdates = 0;
     window.fetch = async (resource, options = {}) => {
       const url = new URL(typeof resource === 'string' ? resource : resource.url, location.href);
-      if (url.origin === location.origin || url.protocol === 'data:') return original.fetch(resource, options);
+      if (url.origin === location.origin || url.protocol === 'data:') return original.fetch.call(window, resource, options);
       assert(url.origin === 'https://flowpt.invalid', 'Unexpected external request in regression test.');
-      const json = body => Promise.resolve(new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } }));
+      const json = (body, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
       const path = url.pathname;
       if (path.endsWith('/access_token')) return json({ access_token: 'regression-placeholder' });
       if (path.endsWith('/projects/1')) return json({ data: { id: 1 } });
@@ -192,6 +195,14 @@ export async function runBrowserRegression() {
         return json({ data: record });
       }
       if (/\/custom_entity01s\/\d+$/.test(path) && options.method === 'PUT') {
+        if (Object.hasOwn(fields, 'sg_vfx_sheet_uuid')) {
+          uuidUpdateAttempts++;
+          return json({ errors: [{ detail: 'UUID is read-only after creation.' }] }, 400);
+        }
+        if (forceFieldFallback && Object.keys(fields).length > 1) {
+          rejectedBulkUpdates++;
+          return json({ errors: [{ detail: 'Regression fixture requires individual field updates.' }] }, 400);
+        }
         remoteWrites++;
         const record = remoteRecords.get(Number(path.split('/').pop()));
         Object.assign(record.attributes, fields);
@@ -234,16 +245,34 @@ export async function runBrowserRegression() {
     try {
       await syncData();
       assert((await db.sheets.get(first.id)).synced === 1 && remoteRecords.size === 2, 'Mocked sync must prepare readable attachments before rewriting their record.');
-      await db.sheets.update(first.id, { synced: 0 });
+      const createdKeys = [...remoteRecords.values()].map(record => record.attributes.sg_vfx_sheet_uuid).sort();
+      assert(createdKeys.join() === [`${first.uuid}:1`, `${first.uuid}:2`].sort().join(), 'New remote records must receive their stable per-camera UUID keys.');
+      await loadRecordForEdit(first.id);
+      await until(() => !state.isUndoRedo);
+      input('notes', 'Updated after initial sync');
+      await saveRecord(null, 'update');
+      const edited = await db.sheets.get(first.id);
+      assert(edited.uuid === first.uuid, 'Editing must preserve the local UUID.');
+      assert(edited.notes === 'Updated after initial sync' && edited.synced === 0, 'Editing must save metadata and mark the record unsynced.');
       await syncData();
       assert(remoteRecords.size === 2, 'Retry created duplicate UUID-scoped remote records.');
+      assert(uuidUpdateAttempts === 0, 'Resync must not try to write even an unchanged read-only UUID.');
+      assert([...remoteRecords.values()].every(record => record.attributes.description === 'Updated after initial sync'), 'Resync must still update shooting metadata.');
+      forceFieldFallback = true;
+      await db.sheets.update(first.id, { synced: 0, notes: 'Updated through field fallback' });
+      await syncData();
+      assert(rejectedBulkUpdates === 2 && uuidUpdateAttempts === 0, 'Individual-field fallback must also exclude UUID writes.');
+      assert((await db.sheets.get(first.id)).synced === 1 && remoteRecords.size === 2, 'Field fallback must complete without creating duplicate records.');
+      assert([...remoteRecords.values()].every(record => record.attributes.description === 'Updated through field fallback') && [...remoteRecords.values()].map(record => record.attributes.sg_vfx_sheet_uuid).sort().join() === createdKeys.join(), 'Field fallback must update metadata without changing UUIDs.');
       assert(staleReads === 0, 'Sync tried to read a stale IndexedDB Blob after changing its record.');
     } finally {
+      forceFieldFallback = false;
       db.sheets.hook('reading').unsubscribe(trackRecordBlobs);
       db.sheets.update = originalUpdate;
       FileReader.prototype.readAsDataURL = originalRead;
     }
     results.push('Sync prepares local image data before metadata updates can invalidate stored Blob handles');
+    results.push('Create sets UUID once; edit/resync and individual-field fallback preserve read-only UUIDs');
     const writesBeforeCorruption = remoteWrites;
     await db.sheets.update(first.id, { synced: 0, shot_thumbnails: [new Blob(['broken'], { type: 'image/png' })] });
     await syncData();
@@ -497,6 +526,9 @@ export async function runReferenceRegression() {
     const drawText = doc.text;
     doc.text = function (text, ...args) { pdfText.push(String(text)); return drawText.call(this, text, ...args); };
     await renderTextPdfRecord(doc, saved);
+    const reelName = saved.cameras[0].reel_name;
+    assert(pdfText.includes(reelName) && !pdfText.includes(`Cam ${reelName}`), 'PDF Reel must show the reel name without a Cam prefix.');
+    assert(printable.includes(`<td>${reelName}</td>`) && !printable.includes(`<td>Cam ${reelName}</td>`), 'Printable Reel must not add a Cam prefix.');
     for (const output of [listText, previewText, printable, pdfText.join('')]) {
       assert(output.includes('A095C002') && output.includes('A095C003') && output.includes('B095C009'), 'Saved view/report omitted enabled reference clips.');
       assert(!output.includes('A095C004'), 'A NO reference must not display its retained clip.');

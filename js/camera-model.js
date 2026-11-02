@@ -41,7 +41,7 @@ export function getCameraReelName(camera) {
 }
 
 export function getCameraFieldLabel(camera) {
-  return `Cam ${getCameraReelName(camera)}`;
+  return getCameraReelName(camera);
 }
 
 export const referenceClipFields = {

@@ -216,15 +216,16 @@ async function findShootingData(siteUrl, token, syncKey) {
 }
 
 async function updateExistingShootingData(siteUrl, token, recordId, fields, existingComment = '') {
+  const updateFields = Object.fromEntries(Object.entries(fields).filter(([field]) => field !== UUID_FIELD));
   const url = `${siteUrl}/api/${FLOWPT_API_VERSION}/entity/${SHOOTING_DATA_ENDPOINT}/${recordId}?options[fields]=code,project,${UUID_FIELD}`;
   try {
-    return { response: await requestJson(url, { token, method: 'PUT', body: fields }), warnings: [] };
+    return { response: await requestJson(url, { token, method: 'PUT', body: updateFields }), warnings: [] };
   } catch (initialError) {
     console.warn(`FlowPT rejected one or more fields on existing Shooting Data ${recordId}; retrying fields individually.`, initialError);
   }
 
   const skipped = [];
-  for (const [field, value] of Object.entries(fields)) {
+  for (const [field, value] of Object.entries(updateFields)) {
     if (field === 'sg_comment') continue;
     try {
       await requestJson(url, { token, method: 'PUT', body: { [field]: value } });
@@ -233,7 +234,7 @@ async function updateExistingShootingData(siteUrl, token, recordId, fields, exis
     }
   }
 
-  const commentParts = [cleanText(existingComment), cleanText(fields.sg_comment)];
+  const commentParts = [cleanText(existingComment), cleanText(updateFields.sg_comment)];
   if (skipped.length) {
     commentParts.push(`VFX Sheet sync skipped non-editable FlowPT fields: ${skipped.map(({ field }) => field).join(', ')}.`);
   }
